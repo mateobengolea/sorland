@@ -27,17 +27,17 @@ const COMIDAS = [
   {id:'chori',nom:'Choripán',em:'🌭',precio:35,hambre:40,animo:10,nivel:3,desc:'Con chimichurri, obvio.'},
 ];
 const MUEBLES = [
-  {id:'planta',nom:'Cactus',em:'🌵',precio:40,nivel:1,desc:'Un toque verde que no hay que regar.'},
-  {id:'silla',nom:'Silla',em:'🪑',precio:50,nivel:1,desc:'Para sentarse a charlar.'},
-  {id:'cuadro',nom:'Cuadro',em:'🖼️',precio:60,nivel:1,pared:true,desc:'Va colgado en la pared.'},
-  {id:'peluche',nom:'Osito de peluche',em:'🧸',precio:70,nivel:2,desc:'Para dormir abrazado.'},
-  {id:'lampara',nom:'Lámpara',em:'🪔',precio:80,nivel:2,desc:'Luz cálida de noche.'},
-  {id:'reloj',nom:'Reloj de pared',em:'🕰️',precio:90,nivel:2,pared:true,desc:'Tic, tac.'},
-  {id:'sillon',nom:'Sillón',em:'🛋️',precio:150,nivel:3,desc:'Mullido y enorme.'},
-  {id:'guitarra',nom:'Guitarra',em:'🎸',precio:120,nivel:3,desc:'Para el fogón.'},
-  {id:'tele',nom:'Tele',em:'📺',precio:200,nivel:4,desc:'Partidos y dibujitos.'},
-  {id:'cama',nom:'Cama',em:'🛏️',precio:220,nivel:4,desc:'Dormir como se debe.'},
-  {id:'trofeo',nom:'Trofeo',em:'🏆',precio:300,nivel:5,desc:'Para cuando empiecen los combates.'},
+  {id:'planta',nom:'Cactus',em:'🌵',tam:72,precio:40,nivel:1,desc:'Un toque verde que no hay que regar.'},
+  {id:'silla',nom:'Silla',em:'🪑',tam:84,precio:50,nivel:1,desc:'Para sentarse a charlar.'},
+  {id:'cuadro',nom:'Cuadro',em:'🖼️',tam:54,precio:60,nivel:1,pared:true,desc:'Va colgado en la pared.'},
+  {id:'peluche',nom:'Osito de peluche',em:'🧸',tam:62,precio:70,nivel:2,desc:'Para dormir abrazado.'},
+  {id:'lampara',nom:'Lámpara',em:'🪔',tam:86,precio:80,nivel:2,desc:'Luz cálida de noche.'},
+  {id:'reloj',nom:'Reloj de pared',em:'🕰️',tam:54,precio:90,nivel:2,pared:true,desc:'Tic, tac.'},
+  {id:'sillon',nom:'Sillón',em:'🛋️',tam:124,precio:150,nivel:3,desc:'Mullido y enorme.'},
+  {id:'guitarra',nom:'Guitarra',em:'🎸',tam:92,precio:120,nivel:3,desc:'Para el fogón.'},
+  {id:'tele',nom:'Tele',em:'📺',tam:96,precio:200,nivel:4,desc:'Partidos y dibujitos.'},
+  {id:'cama',nom:'Cama',em:'🛏️',tam:132,precio:220,nivel:4,desc:'Dormir como se debe.'},
+  {id:'trofeo',nom:'Trofeo',em:'🏆',tam:58,precio:300,nivel:5,desc:'Para cuando empiecen los combates.'},
 ];
 const ACCESORIOS = [
   {id:'mono',nom:'Moño',em:'🎀',precio:60,nivel:1,desc:'Coqueto.'},
@@ -84,7 +84,7 @@ function nuevaPartida(especie, nombre){
     nec:{hambre:70,limpieza:60,animo:70,energia:80},
     stats:{...e.base},
     inv:{comida:{croquetas:3,[fav.id]:2}, muebles:{planta:1}, accesorios:[], fondos:['durazno']},
-    casa:[{id:'planta',x:84,y:78}], puesto:null, fondo:'durazno',
+    casa:[{id:'planta',x:86,y:90}], puesto:null, fondo:'durazno',
     durmiendo:false, ultimoBono:null,
   };
 }
@@ -462,7 +462,9 @@ function pintarMuebles(){
     const it = POR_ID[m.id]; if(!it) return;
     const d = document.createElement('div');
     d.className = 'mueble' + (it.pared ? ' pared-item' : '');
+    m.y = it.pared ? clamp(m.y, 14, 60) : clamp(m.y, 74, 99);
     d.style.left = m.x + '%'; d.style.top = m.y + '%';
+    d.style.fontSize = (it.tam || 64) + 'px';
     d.dataset.i = i; d.textContent = it.em;
     d.style.zIndex = it.pared ? 1 : (m.y > 85 ? 5 : 2);
     if(modo === 'decorar'){
@@ -650,7 +652,8 @@ function arrastrar(ev){
   el.style.cursor = 'grabbing';
   const mover = e => {
     m.x = clamp((e.clientX - r.left) / r.width * 100, 6, 94);
-    m.y = clamp((e.clientY - r.top + 20) / r.height * 100, 18, 99);
+    const y = (e.clientY - r.top + 20) / r.height * 100;
+    m.y = POR_ID[m.id].pared ? clamp(y, 14, 60) : clamp(y, 74, 99);
     el.style.left = m.x + '%'; el.style.top = m.y + '%';
   };
   const soltar = () => {
@@ -775,7 +778,7 @@ function ponerMueble(id){
   if(S.casa.length >= 4 + S.nivel*2) return;
   S.inv.muebles[id]--; if(!S.inv.muebles[id]) delete S.inv.muebles[id];
   const it = POR_ID[id];
-  S.casa.push({id, x: 20 + Math.random()*60, y: it.pared ? 40 : 82});
+  S.casa.push({id, x: 20 + Math.random()*60, y: it.pared ? 40 : 88});
   guardar(); empezarDecorar();
 }
 
