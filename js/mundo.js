@@ -191,7 +191,7 @@ function alLlegar(){
       if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; avisar('Saliste a curarte: el Cuartel Supremo vuelve a empezar.'); }
       S.respawn = {mapa: M.id, ...afuera};
       guardar();
-      dialogo('Enfermera Clara', ['¡Bienvenido al Centro de Rehabilitación! Dejame a tus criaturas un ratito...', 'Listo: tu equipo está como nuevo. Si te va mal en una pelea, volvés a este centro.']);
+      dialogo('Enfermera Remedios Caseros', ['¡Bienvenido al Centro de Rehabilitación! Dejame a tus criaturas un ratito...', 'Listo: tu equipo está como nuevo. Si te va mal en una pelea, volvés a este centro.']);
       return false;
     }
     if(acc === 'market'){ pestana.tienda = 'aventura'; abrirHoja('tienda'); return false; }
@@ -259,11 +259,11 @@ async function entrarCuartel(){
   if(!S.cuartel) S.cuartel = {racha: 0};
   const r = S.cuartel.racha;
   if(r === 0){
-    await dialogo('Portero del Cuartel', S.campeon
+    await dialogo('Portero Aquiles Pero', S.campeon
       ? ['¡Campeón! ¿Venís por la revancha?', 'Las reglas son las mismas: cinco peleas seguidas, sin curarte en el medio.']
       : ['Bienvenido al Cuartel Supremo.', 'Vas a pelear contra los cuatro miembros del Cuartel y después contra la Campeona, uno tras otro.', 'No se puede salir a curarse: si salís o perdés, empezás de nuevo. Podés usar jarabes.']);
   }
-  if(!hayLuchadorEnPie()){ await dialogo('Portero del Cuartel', ['Tu equipo está agotado. Pasá por el Centro de Rehabilitación primero.']); return; }
+  if(!hayLuchadorEnPie()){ await dialogo('Portero Aquiles Pero', ['Tu equipo está agotado. Pasá por el Centro de Rehabilitación primero.']); return; }
   siguienteCuartel();
 }
 async function siguienteCuartel(){
