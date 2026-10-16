@@ -8,23 +8,35 @@
 <meta name="theme-color" content="#BFE4F3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap">
-<link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/estilos.css?v=202610162305">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>
 <div class="app" id="app"></div>
 <div class="avisos" id="avisos" aria-live="polite"></div>
+<script>
+// Si algo falla al arrancar, mostrarlo en vez de dejar la pantalla vacía.
+window.addEventListener('error', function(e){
+  var app = document.getElementById('app');
+  if(app && !app.children.length){
+    app.innerHTML = '<div style="max-width:420px;margin:40px auto;padding:16px;background:#fff;border:2.5px solid #22304A;border-radius:16px;font-family:sans-serif">'
+      + '<h2 style="margin:0 0 8px">No se pudo cargar Sorlandia</h2><p>Probá recargar la página con <b>Ctrl + F5</b>. Si sigue igual, mandá una captura de esto:</p>'
+      + '<pre style="white-space:pre-wrap;font-size:12px;background:#F1F5FA;padding:8px;border-radius:8px"></pre></div>';
+    app.querySelector('pre').textContent = (e.message || 'Error') + (e.filename ? '\n' + e.filename.split('/').pop() + ':' + e.lineno : '');
+  }
+});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="js/config.js"></script>
-<script src="js/estado.js"></script>
-<script src="js/criaturas.js"></script>
-<script src="js/dibujos.js"></script>
-<script src="js/cuenta.js"></script>
-<script src="js/combate.js"></script>
-<script src="js/mapas.js"></script>
-<script src="js/mundo.js"></script>
-<script src="js/online.js"></script>
-<script src="js/duelo.js"></script>
-<script src="js/juego.js"></script>
+<script src="js/config.js?v=202610162305"></script>
+<script src="js/estado.js?v=202610162305"></script>
+<script src="js/criaturas.js?v=202610162305"></script>
+<script src="js/dibujos.js?v=202610162305"></script>
+<script src="js/cuenta.js?v=202610162305"></script>
+<script src="js/combate.js?v=202610162305"></script>
+<script src="js/mapas.js?v=202610162305"></script>
+<script src="js/mundo.js?v=202610162305"></script>
+<script src="js/online.js?v=202610162305"></script>
+<script src="js/duelo.js?v=202610162305"></script>
+<script src="js/juego.js?v=202610162305"></script>
 </body>
 </html>
