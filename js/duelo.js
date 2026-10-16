@@ -96,6 +96,7 @@ function empezarDuelo(equipoA, equipoB){
   Object.assign(DU, {st: {A: armarLado(equipoA), B: armarLado(equipoB)}, turno: 1, mias: {}, suyas: {}, ocupado: false, fin: false,
                      ultimaActividad: Date.now()});
   DU.otro = DU.lado === 'A' ? 'B' : 'A';
+  if(typeof registrarDuelo === 'function') registrarDuelo(DU.sala, DU.rival.id);
   const canal = db.channel(DU.sala, {config: {private: true, broadcast: {self: false}}});
   DU.canal = canal;
   canal.on('broadcast', {event: 'accion'}, ({payload}) => recibirAccion(payload))
@@ -318,8 +319,25 @@ async function terminarDuelo(ganador, motivo){
     ganar(20);
     await mensaje(`${rival} ganó el duelo. Por la buena pelea te llevás 20 monedas.`, 1800);
   }
-  const canal = DU.canal;
+  const canal = DU.canal, sala = DU.sala, rivalId = DU.rival.id;
   setTimeout(() => { try { db.removeChannel(canal); } catch(e){} }, 1500);
+  if(typeof reportarDuelo === 'function'){
+    const antes = RK.ficha ? RK.ficha.puntos : null;
+    reportarDuelo(sala, gane ? usuarioId : rivalId).then(async r => {
+      if(!r) return;
+      if(r.estado === 'listo'){
+        const f = await actualizarFicha(true);
+        const d = r.delta | 0;
+        if(!d) avisar('Duelo repetido contra el mismo rival: hoy ya no suma puntos de ranking.');
+        else {
+          const subio = f && antes != null && rangoDe(f.puntos).id !== rangoDe(antes).id;
+          avisar(`Ranking: ${gane ? '+' : '−'}${d} puntos${f ? ` (${f.puntos})` : ''}`, subio ? 'nivel' : '');
+          if(subio) setTimeout(() => avisar(`¡${gane ? 'Subiste' : 'Bajaste'} a ${rangoDe(f.puntos).nom}!`, 'nivel'), 900);
+        }
+      } else if(r.estado === 'pendiente') avisar('El resultado se va a sumar al ranking en unos minutos.');
+      else if(r.estado === 'conflicto') avisar('Este duelo no cuenta para el ranking (los resultados no coincidieron).');
+    });
+  }
   DU = null;
   guardar();
   pintarMundo();

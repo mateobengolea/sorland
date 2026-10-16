@@ -96,7 +96,7 @@ function dondeEstoy(){
   const M = S && S.mundo && MAPAS[S.mundo.mapa];
   return M ? (M.tema.interior ? 'De visita en ' + M.nombre : M.nombre) : 'Paseando';
 }
-function presenciaGlobal(){ return {apodo, donde: dondeEstoy(), medallas: cantMedallas(), campeon: !!(S && S.campeon), ent: S && S.entrenador}; }
+function presenciaGlobal(){ return {apodo, donde: dondeEstoy(), medallas: cantMedallas(), campeon: !!(S && S.campeon), ent: S && S.entrenador, puntos: RK.ficha ? RK.ficha.puntos : null}; }
 function conectarGlobal(){
   if(!onlineListo() || ONG.canal) return;
   const canal = db.channel('sl:global', {config: {private: true, presence: {key: usuarioId}}});
@@ -133,12 +133,14 @@ function pintarOnline(){
     <p class="rotulo-chico">${lista.length || 1} jugador${lista.length === 1 ? '' : 'es'} en Sorlandia en este momento.</p>
     <div class="lista-online">${lista.map(p => `<div class="fila-online"><span class="cr-mini" style="width:38px;height:52px">${svgEntrenador(p.ent)}</span>
       <span class="fo-txt"><b></b><small></small></span>
-      <span class="fo-med">${p.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}${'★'.repeat(p.medallas || 0)}</span></div>`).join('')}</div></div>`;
+      <span class="fo-med">${p.puntos != null ? chipRango(p.puntos, false) : ''}${p.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}<br>${'★'.repeat(p.medallas || 0)}</span></div>`).join('')}</div>
+    <button class="grande" id="ver-ranking" style="margin-top:10px">Ver ranking</button></div>`;
   v.querySelectorAll('.fila-online').forEach((f, i) => {
     f.querySelector('b').textContent = lista[i].apodo + (lista[i].id === usuarioId ? ' (vos)' : '');
     f.querySelector('small').textContent = lista[i].donde || '';
   });
   v.querySelector('.cerrar').onclick = cerrarHoja;
+  $('#ver-ranking').onclick = abrirRanking;
 }
 
 function alMoverme(){

@@ -31,6 +31,7 @@ async function guardarNube(){
     user_id: usuarioId, nombre: S.equipo[0] ? S.equipo[0].nombre : '', especie: S.equipo[0] ? S.equipo[0].esp : '', nivel: S.equipo[0] ? S.equipo[0].nivel : 1, data: S,
   });
   estadoNube = error ? 'error' : 'guardado'; pintarCuenta();
+  if(!error && typeof actualizarFicha === 'function') actualizarFicha();
 }
 
 async function entrarAlJuego(){

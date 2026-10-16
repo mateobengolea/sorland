@@ -396,3 +396,17 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .fo-txt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fo-txt small{color:var(--tinta-suave);font-weight:700}
 .fo-med{color:#E8A900;font-size:1rem;white-space:nowrap}
+
+/* ======================= Ranking ======================= */
+.nav{grid-template-columns:repeat(4,1fr)}
+.chip-rango{display:inline-block;background:var(--rc);border:2px solid var(--rb);color:#22304A;border-radius:99px;padding:0 8px;font-size:.7rem;font-weight:800;white-space:nowrap;vertical-align:middle;margin-right:4px}
+#rango-top .chip-rango{margin:0 0 0 6px}
+.fila-rank{display:flex;align-items:center;gap:8px;padding:5px 10px;border:2px solid var(--tinta);border-radius:12px;background:#fff}
+.fila-rank.yo{background:#FFF6D6}
+.rk-pos{width:26px;text-align:center;font-weight:800;font-family:var(--font-display);font-size:1.05rem}
+.rk-pos.podio{border-radius:50%;height:26px;line-height:22px;border:2px solid var(--tinta)}
+.rk-pos.p1{background:#FFD23F}.rk-pos.p2{background:#D9DEE6}.rk-pos.p3{background:#C98B5A}
+.rk-val{text-align:right;white-space:nowrap}
+.rk-val small{color:var(--tinta-suave);font-weight:700}
+.mi-rango{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;margin:8px 0 4px;border:2px dashed var(--tinta);border-radius:12px;background:#fff;font-weight:700}
+.fo-med{text-align:right}

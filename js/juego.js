@@ -168,7 +168,7 @@ function cabeceraHTML(){
   const n = cantMedallas();
   return `<header class="panel top">
       <span class="top-avatar">${svgEntrenador(S.entrenador)}</span>
-      <div class="quien"><h1 id="nom"></h1>${S.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}<span class="medallas-top">${MEDALLAS.map(m => svgMedalla(m, 20, !S.medallas[m.id])).join('')}<small>${n}/4</small></span></div>
+      <div class="quien"><h1 id="nom"></h1>${S.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}${typeof RK !== 'undefined' && RK.ficha ? `<span id="rango-top">${chipRango(RK.ficha.puntos)}</span>` : '<span id="rango-top"></span>'}<span class="medallas-top">${MEDALLAS.map(m => svgMedalla(m, 20, !S.medallas[m.id])).join('')}<small>${n}/4</small></span></div>
       <div class="top-der"><div class="monedas" title="Monedas"><span class="moneda">$</span><span id="mon"></span></div>
       <button class="online-badge" id="online-badge" hidden></button></div>
     </header>`;
@@ -195,6 +195,7 @@ function pintarJuego(){
       <button id="n-equipo">Criaturas</button>
       <button id="n-mochila">Mochila</button>
       <button id="n-decorar">Decorar</button>
+      <button id="n-ranking">Ranking</button>
     </nav>
     <p class="pie">Tu casa: decorala con lo que compres en el Market de cada pueblo. Entrar acá cura a todo tu equipo.</p>
     <p class="pie" id="cuenta"></p>`;
@@ -207,6 +208,8 @@ function pintarJuego(){
   if(typeof conectarGlobal === 'function'){ conectarGlobal(); avisarDondeEstoy(); prepararBadge(); }
 }
 function prepararBadge(){
+  const r = $('#n-ranking'); if(r) r.onclick = abrirRanking;
+  if(typeof actualizarFicha === 'function') actualizarFicha();
   const b = $('#online-badge'); if(!b) return;
   b.onclick = abrirOnline;
   actualizarOnline();
