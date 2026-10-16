@@ -283,3 +283,16 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .medalla-premio b{font-family:var(--font-display);font-size:1.4rem}
 @keyframes medalla{from{transform:scale(.3);opacity:0}}
 @keyframes gira{50%{transform:rotate(-8deg) scale(1.05)}}
+
+/* ======================= Online ======================= */
+.conectados{background:rgba(34,48,74,.78);color:#fff;border-radius:99px;padding:2px 8px;font-size:.7rem;font-weight:800;text-align:center}
+.ficha-jugador{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.ficha-jugador p{margin:0 0 4px}
+.medallas-mini{display:flex;gap:4px}
+.rotulo-chico{margin:6px 0;font-size:.78rem;font-weight:800;letter-spacing:.04em;color:var(--tinta-suave)}
+.frases{display:flex;flex-wrap:wrap;gap:6px}
+.frases button{padding:6px 12px;border:2px solid var(--tinta);border-radius:99px;background:#fff;font-weight:800;box-shadow:0 2px 0 var(--sombra)}
+.frases button:active{transform:translateY(2px);box-shadow:none;background:var(--sol)}
+.acciones-jugador{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.acciones-jugador .btn{padding:10px;border:2px solid var(--tinta);border-radius:12px;font-weight:800}
+.pedido-txt{font-size:1.05rem;margin:0 0 4px}

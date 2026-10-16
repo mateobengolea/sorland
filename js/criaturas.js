@@ -184,13 +184,13 @@ function vidaMax(stats, nivel){ return Math.round(14 + stats.vida * 1.2 + nivel 
 function statsPorNivel(base, nivel){
   return {vida: base.vida + (nivel-1)*2, fuerza: Math.round(base.fuerza + (nivel-1)*.8), velocidad: Math.round(base.velocidad + (nivel-1)*.8)};
 }
-function calcularDanio(atacante, defensor, mov){
+function calcularDanio(atacante, defensor, mov, rnd = Math.random){
   const atk = atacante.stats.fuerza * (atacante.modFuerza || 1) * (atacante.penal || 1);
   const def = 4 + defensor.stats.vida * .35 + defensor.nivel * .5;
   const stab = mov.tipo === atacante.tipo ? 1.25 : 1;
   const ef = efectividad(mov.tipo, defensor.tipo);
-  const azar = .85 + Math.random() * .15;
-  const critico = Math.random() < .06 ? 1.5 : 1;
+  const azar = .85 + rnd() * .15;
+  const critico = rnd() < .06 ? 1.5 : 1;
   const base = (mov.poder * (2 + atacante.nivel * .25) * atk / def) / 10 + 2;
   const salvaje = atacante.salvaje ? .62 : (atacante.mult || 1);
   return { danio: Math.max(1, Math.round(base * stab * ef * azar * critico * salvaje)), ef, critico: critico > 1 };

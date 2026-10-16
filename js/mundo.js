@@ -467,4 +467,5 @@ function jugador(ctx, cx, piso, t){
   if(MW.img.complete) ctx.drawImage(MW.img, -tam / 2, -tam + 2, tam, tam);
   ctx.restore();
   etiqueta(ctx, apodo || S.nombre, cx, piso - tam - 16 - salto);
+  if(typeof ON !== 'undefined' && ON.miBurbuja && ON.miBurbuja.hasta > t) burbuja(ctx, ON.miBurbuja.txt, cx, piso - tam - 22 - salto);
 }

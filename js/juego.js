@@ -298,6 +298,7 @@ function pintarApodo(aviso){
 async function salir(){
   clearTimeout(timerGuardar);
   if(typeof salirDelMundo === 'function') salirDelMundo();
+  if(typeof cortarOnline === 'function') cortarOnline();
   B = null;
   if(S) await guardarNube();
   if(db) await db.auth.signOut();
@@ -486,6 +487,7 @@ function cabeceraHTML(){
 }
 function pintarJuego(){
   if(typeof salirDelMundo === 'function') salirDelMundo();
+  if(typeof dejarCanal === 'function') dejarCanal();
   vista = 'casa'; modo = null;
   curarEquipo();
   $('#app').innerHTML = `
@@ -819,7 +821,7 @@ function salirModo(){
 /* ======================= Hojas: comida, tienda, mochila ======================= */
 let hojaActual = null, pestana = {tienda:'aventura', mochila:'aventura', equipo:'equipo'};
 function abrirHoja(tipo){
-  if(vista === 'combate') return;
+  if(vista === 'combate' || vista === 'duelo') return;
   if(modo === 'decorar' && tipo !== 'mochila') salirModo();
   hojaActual = tipo;
   let velo = $('#velo');
