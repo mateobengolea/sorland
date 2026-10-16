@@ -257,6 +257,19 @@ async function ganarCombate(){
     await mensaje(`¡Le ganaste a ${e.titulo} ${e.nombre}!`, 1100);
     for(const l of e.despues) await mensaje(`${e.nombre}: «${l}»`, 1700);
     await mensaje(`Ganaste ${e.premio} monedas.`);
+    if(e.cuartel){
+      S.cuartel.racha++;
+      if(e.campeona){
+        S.cuartel.racha = 0;
+        const primera = !S.campeon;
+        S.campeon = S.campeon || Date.now();
+        S.salonFama = S.salonFama || [];
+        S.salonFama.push({fecha: Date.now(), equipo: S.equipo.map(c => ({esp: c.esp, nombre: c.nombre, nivel: c.nivel, shiny: !!c.shiny}))});
+        mostrarCorona();
+        await mensaje(primera ? '¡Sos el nuevo Campeón de Sorlandia!' : '¡Defendiste el título de Campeón!', 2600);
+        if(primera){ S.inv.muebles.copa = (S.inv.muebles.copa || 0) + 1; await mensaje('Te dieron la Copa del Campeón para tu casa.', 1800); }
+      } else S.cuartel.continuar = true;
+    }
     if(e.medalla && !S.medallas[e.medalla]){
       S.medallas[e.medalla] = Date.now();
       const m = MEDALLAS.find(x => x.id === e.medalla);
@@ -273,6 +286,12 @@ async function ganarCombate(){
     await mensaje(`Ganaste ${mon} monedas.`);
   }
   terminarCombate();
+}
+function mostrarCorona(){
+  const d = document.createElement('div');
+  d.className = 'medalla-premio';
+  d.innerHTML = `${svgCopa(150)}<b>¡Campeón de Sorlandia!</b>`;
+  const arena = document.querySelector('.arena'); if(arena) arena.appendChild(d);
 }
 function mostrarMedalla(m){
   const d = document.createElement('div');
@@ -320,6 +339,7 @@ async function propioCaido(){
   S.monedas -= perdida;
   const posada = S.respawn && MAPAS[S.respawn.mapa];
   if(B.legendaria) S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
+  if(S.cuartel){ S.cuartel.racha = 0; S.cuartel.continuar = false; }
   await mensaje(`Tu equipo quedó agotado. Volvés corriendo ${posada ? 'al Centro de Rehabilitación' : 'a casa'}${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1700);
   B.lista.forEach(guardarHp);
   curarEquipo();

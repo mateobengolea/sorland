@@ -19,6 +19,7 @@ const MUEBLES = [
   {id:'tele', nom:'Tele', em:'📺', tam:96, precio:200, medallas:1, desc:'Partidos y dibujitos.'},
   {id:'cama', nom:'Cama', em:'🛏️', tam:132, precio:220, medallas:1, desc:'Dormir como se debe.'},
   {id:'trofeo', nom:'Trofeo', em:'🏆', tam:58, precio:300, medallas:2, desc:'Para lucirse.'},
+  {id:'copa', nom:'Copa del Campeón', svg:() => svgCopa(100), tam:96, precio:0, oculto:true, desc:'Solo para quien le gana a la Campeona.'},
   {id:'vitrina', nom:'Vitrina de medallas', svg:() => svgVitrina(S.medallas), tam:120, precio:250, desc:'Muestra las medallas que vas ganando.'},
   ...PELUCHES.map((e, i) => ({id:'peluche_' + e, nom:'Peluche de ' + ESPECIES[e].nombre, peluche:true, svg:() => svgPeluche(e), tam:78,
     precio: 120 + (i % 4) * 30 + (e === 'yaguarayo' ? 200 : 0), medallas: e === 'yaguarayo' ? 3 : i >= 8 ? 2 : i >= 4 ? 1 : 0, desc:'Suavecito, para decorar la casa.'})),
@@ -167,12 +168,14 @@ function cabeceraHTML(){
   const n = cantMedallas();
   return `<header class="panel top">
       <span class="top-avatar">${svgEntrenador(S.entrenador)}</span>
-      <div class="quien"><h1 id="nom"></h1><span class="medallas-top">${MEDALLAS.map(m => svgMedalla(m, 20, !S.medallas[m.id])).join('')}<small>${n}/4</small></span></div>
-      <div class="monedas" title="Monedas"><span class="moneda">$</span><span id="mon"></span></div>
+      <div class="quien"><h1 id="nom"></h1>${S.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}<span class="medallas-top">${MEDALLAS.map(m => svgMedalla(m, 20, !S.medallas[m.id])).join('')}<small>${n}/4</small></span></div>
+      <div class="top-der"><div class="monedas" title="Monedas"><span class="moneda">$</span><span id="mon"></span></div>
+      <button class="online-badge" id="online-badge" hidden></button></div>
     </header>`;
 }
 function pintarJuego(){
   if(typeof salirDelMundo === 'function') salirDelMundo();
+  if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; S.cuartel.continuar = false; }
   if(typeof dejarCanal === 'function') dejarCanal();
   vista = 'casa'; modo = null;
   curarEquipo();
@@ -201,6 +204,12 @@ function pintarJuego(){
   $('#n-mochila').onclick = () => abrirHoja('mochila');
   $('#n-decorar').onclick = () => modo === 'decorar' ? salirModo() : empezarDecorar();
   pintarTodo(); pintarCuenta();
+  if(typeof conectarGlobal === 'function'){ conectarGlobal(); avisarDondeEstoy(); prepararBadge(); }
+}
+function prepararBadge(){
+  const b = $('#online-badge'); if(!b) return;
+  b.onclick = abrirOnline;
+  actualizarOnline();
 }
 function pintarTodo(){
   if(!S) return;
@@ -308,7 +317,7 @@ function pintarHoja(){
     titulo = 'Market';
     pest = pestanas([['aventura', 'Aventura'], ['muebles', 'Muebles'], ['peluches', 'Peluches'], ['fondos', 'Casa']], pestana.tienda);
     const t = pestana.tienda;
-    const lista = t === 'aventura' ? OBJETOS : t === 'muebles' ? MUEBLES.filter(m => !m.peluche) : t === 'peluches' ? MUEBLES.filter(m => m.peluche) : FONDOS;
+    const lista = t === 'aventura' ? OBJETOS : t === 'muebles' ? MUEBLES.filter(m => !m.peluche && !m.oculto) : t === 'peluches' ? MUEBLES.filter(m => m.peluche) : FONDOS;
     cuerpo = lista.map(it => {
       const bloq = bloqueado(it), tiene = t === 'fondos' && S.inv.fondos.includes(it.id);
       let btn;

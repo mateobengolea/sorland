@@ -384,3 +384,15 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .fx-numero.efectivo{color:#FF8A6A}
 .fx-numero.flojo{font-size:1.2rem;color:#D6DCE6}
 @media (prefers-reduced-motion:reduce){.nube,.bicho-combate .cuerpo{animation:none}}
+
+/* ======================= Online y campeón ======================= */
+.top-der{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.online-badge{display:flex;align-items:center;gap:6px;padding:2px 10px;border:2px solid var(--tinta);border-radius:99px;background:#fff;font-weight:800;font-size:.78rem;white-space:nowrap}
+.punto-online{width:9px;height:9px;border-radius:50%;background:var(--verde);box-shadow:0 0 0 3px rgba(76,194,122,.25);animation:titila 1.6s ease-in-out infinite}
+.titulo-campeon{display:inline-block;background:linear-gradient(#FFE27A,#E8A900);border:2px solid var(--tinta);border-radius:99px;padding:0 8px;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+.lista-online{display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.fila-online{display:flex;align-items:center;gap:10px;padding:6px 10px;border:2px solid var(--tinta);border-radius:12px;background:#fff}
+.fo-txt{display:flex;flex-direction:column;flex:1;min-width:0}
+.fo-txt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fo-txt small{color:var(--tinta-suave);font-weight:700}
+.fo-med{color:#E8A900;font-size:1rem;white-space:nowrap}

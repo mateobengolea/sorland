@@ -55,6 +55,30 @@ function entrenador(id, x, y, titulo, nombre, equipo, premio, antes, despues, ro
 }
 
 /* ---------------- Líderes ---------------- */
+// El Cuartel Supremo: cuatro miembros y la campeona, en fila y sin curarse en el medio.
+const CUARTEL = [
+  {id:'brisa', titulo:'Cuartel Supremo', nombre:'Gaucha Brisa', premio:1500, ropa:'#CFE3F7', pelo:'#E8C25A', cuartel:true,
+    equipo:[['picaflor',29],['barriletazo',30],['horneron',30],['condoralto',31]],
+    antes:['Bienvenido al Cuartel Supremo. Soy Brisa, la primera.', 'Mis criaturas de Viento te van a hacer volar.'],
+    despues:['¡Qué ventarrón el tuyo!', 'Pasá a la siguiente sala. Te espera el Maestro Escarcha.']},
+  {id:'escarcha', titulo:'Cuartel Supremo', nombre:'Maestro Escarcha', premio:1700, ropa:'#BFE9FF', pelo:'#FFFFFF', cuartel:true,
+    equipo:[['escarchon',30],['pinguinazo',31],['huemul',31],['glaciaro',32]],
+    antes:['Brrr. Llegaste hasta acá con el corazón caliente.', 'Vamos a ver cuánto aguanta el frío de la cumbre.'],
+    despues:['Me derretiste. Increíble.', 'Seguí. Doña Raíz te espera en la sala verde.']},
+  {id:'raiz', titulo:'Cuartel Supremo', nombre:'Doña Raíz', premio:1900, ropa:'#4F9A3F', pelo:'#6B4226', cuartel:true,
+    equipo:[['jacaranda',31],['cardonal',31],['hormigazo',32],['yerbatero',33]],
+    antes:['Las raíces más profundas aguantan cualquier tormenta.', 'Mi equipo tiene paciencia. ¿Y el tuyo?'],
+    despues:['Me arrancaste de raíz, pibe.', 'Falta uno: el Coronel Trueno. Después, la Campeona.']},
+  {id:'trueno', titulo:'Cuartel Supremo', nombre:'Coronel Trueno', premio:2100, ropa:'#4656A0', pelo:'#2A2420', cuartel:true,
+    equipo:[['tormenton',32],['geodon',32],['voltazo',33],['cerrazo',34]],
+    antes:['¡Firmes! Soy el Coronel Trueno, el último miembro del Cuartel.', 'Rayo y piedra: nada pasa por esta puerta.'],
+    despues:['¡Retirada! Me ganaste en buena ley.', 'La Campeona Aurora te espera en la sala del trono. Suerte.']},
+  {id:'aurora', titulo:'Campeona', nombre:'Aurora', premio:3500, ropa:'#FFD23F', pelo:'#B5452B', cuartel:true, campeona:true,
+    equipo:[['nanduron',34],['sapucay',35],['carpinchon',35],['fogonazo',35],['zorrofogon',36],['tatupenon',36]],
+    antes:['Así que llegaste hasta la sala del trono.', 'Soy Aurora, la Campeona de Sorlandia. Hace años que nadie me gana.', 'Mostrame todo lo que aprendiste en el viaje.'],
+    despues:['...Increíble. Me ganaste.', '¡Sos el nuevo Campeón de Sorlandia! Tu nombre queda en el Salón de la Fama.']},
+];
+
 const LIDERES = {
   tosca:{id:'tosca', titulo:'Líder', nombre:'Tosca', medalla:'penasco', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
     equipo:[['fosilito',10],['morrito',11],['tatupiedra',12]],
@@ -288,6 +312,11 @@ function mapaFogon(){
   M.rect(13, 20, 15, 21, ':'); M.rect(17, 20, 19, 21, ':');
   M.borde('#');
   M.salida(16, 25, 'tormenta', 16, 1);
+  M.camino(27, 1, 27, 6);
+  M.salida(27, 0, 'supremo', 15, 28);
+  M.npc({id:'guardia_supremo', x:27, y:1, tipo:'guardia', nombre:'Guardiana Elvira', requiere:'todas', ropa:'#C9A227', pelo:'#E9E2D3',
+    frases:['Este sendero lleva a la Cumbre Suprema, donde está el Cuartel Supremo.', 'Solo pueden subir quienes tengan las cuatro medallas de Sorlandia.'],
+    abierto:['¡Las cuatro medallas! Subí: en la cumbre te espera el Cuartel Supremo.', 'Allá vas a pelear contra los cuatro mejores entrenadores y el Campeón, uno tras otro.']});
   M.m[3][16] = 'A'; M.altares['16,3'] = 'intiraya';
   M.npc({id:'vecino_fog', x:12, y:21, tipo:'vecino', nombre:'Doña Pocha', ropa:'#F2B63D', pelo:'#3B2A22', suelo:':',
     frases:['Don Rulo es el líder más fuerte de todos.', 'Sus criaturas de Fuego no aguantan el Agua ni la Piedra.']});
@@ -301,6 +330,36 @@ function mapaFogon(){
     ['Conozco cada piedra de este volcán. Y mis bichos también.'], ['Buena pelea, gurí.'], '#7E5434'));
   M.zonas = [['fogon', 1, 12, 30, 24], ['volcan', 1, 1, 30, 11]];
   M.zonaBase = 'volcan';
+  return M;
+}
+
+/* ---------------- Cumbre Suprema (secreta) ---------------- */
+function mapaSupremo(){
+  const M = nuevoMapa('supremo', 'Cumbre Suprema', 30, 30, 4444, '.', {pasto:'#9CCB8C', pastoAlto:'#5E9E6A', brizna:'#3A7A4A', tierra:'#D9C9A8', arbol:'pino', fondo:'#2F5E48', tinte:'rgba(255,170,90,.10)'});
+  // Camino de la Victoria: pasto alto con criaturas fuertes
+  M.mancha(1, 14, 28, 27, 16, ',', 1.4, 3);
+  M.salpicar(1, 14, 28, 28, .09, 'T', ['.']);
+  M.salpicar(1, 14, 28, 28, .05, '#', ['.']);
+  M.camino(15, 12, 15, 28);
+  M.camino(5, 20, 25, 20);
+  // Ciudad en la cumbre
+  M.rect(3, 2, 26, 12, ':');
+  M.edificio(10, 2, 9, 'cuartel', {cuartel: true}, {color:'#C9A227'});
+  M.edificio(4, 7, 5, 'centro', 'centro');
+  M.edificio(21, 7, 5, 'market', 'market');
+  M.salpicar(3, 5, 26, 12, .05, 'f', [':']);
+  M.borde('T');
+  M.salida(15, 29, 'fogon', 27, 1);
+  M.npc({id:'vecino_sup', x:12, y:9, tipo:'vecino', nombre:'Cronista Pía', ropa:'#7A4FC9', pelo:'#2A2420', suelo:':',
+    frases:['Bienvenido a la Cumbre Suprema. Muy pocos llegan hasta acá.', 'En el Cuartel se pelea contra cinco entrenadores seguidos, sin curarse en el medio.', 'Si salís a curarte o perdés, tenés que empezar de nuevo. Llevá jarabes.']});
+  M.npc(entrenador('veterano1', 9, 17, 'Veterano', 'Osvaldo', [['ranacua',26],['pampero',26],['chispon',27]], 600,
+    ['Hace veinte años que intento llegar al Cuartel. Practiquemos.'], ['Vos sí que vas a llegar.'], '#7E5434'));
+  M.npc(entrenador('veterana2', 21, 23, 'Veterana', 'Marta', [['ceibal',27],['bagron',27],['condoralto',28]], 650,
+    ['El Camino de la Victoria no perdona.'], ['Buen equipo. Cuidalo.'], '#E07BA0'));
+  M.npc(entrenador('veterano3', 18, 14, 'As del Camino', 'Rolo', [['morro',28],['escarchon',28],['hormigon',29]], 700,
+    ['Soy el último antes de la cumbre. ¡No pasás!'], ['Pasá nomás. Te ganaste el lugar.'], '#22304A'));
+  M.zonas = [['supremo', 1, 1, 28, 12], ['victoria', 1, 13, 28, 28]];
+  M.zonaBase = 'victoria';
   return M;
 }
 
@@ -354,7 +413,7 @@ function repartirObjetos(M, cant){
     M.items.push({id: 'it_' + M.id + '_' + i, x, y});
   }
 }
-[mapaCeibo, mapaVillaPiedra, mapaCamalote, mapaTormenta, mapaFogon].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
+[mapaCeibo, mapaVillaPiedra, mapaCamalote, mapaTormenta, mapaFogon, mapaSupremo].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
 INTERIORES.forEach((info, n) => { const M = mapaInterior(info, n); MAPAS[M.id] = M; });
 const SALIDA_CASA = {mapa: 'ceibo', x: 11, y: 24};
 
@@ -364,7 +423,10 @@ function zonaEn(M, x, y){
 }
 function npcEn(M, x, y){ return M.npcs.find(n => n.x === x && n.y === y && !(n.tipo === 'guardia' && guardiaAbierto(n))); }
 function itemEn(M, x, y){ return M.items.find(it => it.x === x && it.y === y && !(S && S.recogidos[it.id])); }
-function guardiaAbierto(n){ return typeof S !== 'undefined' && S && S.medallas && S.medallas[n.requiere]; }
+function guardiaAbierto(n){
+  if(typeof S === 'undefined' || !S || !S.medallas) return false;
+  return n.requiere === 'todas' ? MEDALLAS.every(m => S.medallas[m.id]) : !!S.medallas[n.requiere];
+}
 function transitable(M, x, y){
   return x >= 0 && y >= 0 && x < M.w && y < M.h && !BLOQUEA.has(M.m[y][x]) && !npcEn(M, x, y);
 }

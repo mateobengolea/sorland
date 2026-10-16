@@ -19,7 +19,7 @@ const onlineListo = () => !!(db && usuarioId && apodo);
 
 function miPresencia(){
   return {id: usuarioId, apodo, esp: S.equipo[0] ? S.equipo[0].esp : 'carosor', shiny: !!(S.equipo[0] && S.equipo[0].shiny), ent: S.entrenador,
-          nivel: nivelEntrenador(), medallas: cantMedallas(),
+          nivel: nivelEntrenador(), medallas: cantMedallas(), campeon: !!S.campeon,
           x: S.mundo.x, y: S.mundo.y, dir: MW ? MW.dir : 1, mira: MW ? MW.mira : 'abajo', t: Date.now()};
 }
 function nivelEntrenador(){ return S.equipo.reduce((m, c) => Math.max(m, c.nivel), 1); }
@@ -36,6 +36,7 @@ function imagenDe(esp){
 /* ---------------- Entrar y salir del canal del mapa ---------------- */
 function alEntrarAlMapa(){
   pintarBotonHablar();
+  conectarGlobal(); avisarDondeEstoy();
   if(!onlineListo()) return;
   const id = S.mundo.mapa;
   if(ON.canal && ON.mapa === id){
@@ -55,7 +56,7 @@ function alEntrarAlMapa(){
         if(!p || p.id === usuarioId) continue;
         vistos.add(p.id);
         const o = ON.otros.get(p.id);
-        if(o){ Object.assign(o, {apodo: p.apodo, esp: p.esp, shiny: p.shiny, ent: p.ent, nivel: p.nivel, medallas: p.medallas}); if(!o.movido){ o.x = p.x; o.y = p.y; } }
+        if(o){ Object.assign(o, {apodo: p.apodo, esp: p.esp, shiny: p.shiny, ent: p.ent, nivel: p.nivel, medallas: p.medallas, campeon: p.campeon}); if(!o.movido){ o.x = p.x; o.y = p.y; } }
         else ON.otros.set(p.id, {...p, px: p.x, py: p.y});
       }
       for(const k of [...ON.otros.keys()]) if(!vistos.has(k)) ON.otros.delete(k);
@@ -81,7 +82,64 @@ function dejarCanal(){
   ON.canal = null; ON.mapa = null; ON.otros.clear();
 }
 // Al salir del juego (cerrar sesión) se llama desde salir().
-function cortarOnline(){ dejarCanal(); }
+function cortarOnline(){
+  dejarCanal();
+  if(ONG.canal){ try { db.removeChannel(ONG.canal); } catch(e){} }
+  ONG.canal = null; ONG.estado = {};
+}
+
+/* ---------------- Cuántos hay online (en todo el juego) ---------------- */
+const ONG = {canal: null, estado: {}, ultimo: 0};
+function dondeEstoy(){
+  if(vista === 'casa') return 'En su casa';
+  if(vista === 'combate' || vista === 'duelo') return 'Peleando';
+  const M = S && S.mundo && MAPAS[S.mundo.mapa];
+  return M ? (M.tema.interior ? 'De visita en ' + M.nombre : M.nombre) : 'Paseando';
+}
+function presenciaGlobal(){ return {apodo, donde: dondeEstoy(), medallas: cantMedallas(), campeon: !!(S && S.campeon), ent: S && S.entrenador}; }
+function conectarGlobal(){
+  if(!onlineListo() || ONG.canal) return;
+  const canal = db.channel('sl:global', {config: {private: true, presence: {key: usuarioId}}});
+  ONG.canal = canal;
+  canal.on('presence', {event: 'sync'}, () => { ONG.estado = canal.presenceState(); actualizarOnline(); })
+       .subscribe(async estado => { if(estado === 'SUBSCRIBED'){ ONG.ultimo = Date.now(); await canal.track(presenciaGlobal()); } });
+}
+function avisarDondeEstoy(){
+  if(!ONG.canal) return;
+  ONG.ultimo = Date.now();
+  ONG.canal.track(presenciaGlobal());
+}
+function jugadoresOnline(){
+  return Object.entries(ONG.estado).map(([id, l]) => ({id, ...(l[l.length - 1] || {})})).filter(p => p.apodo);
+}
+function actualizarOnline(){
+  const b = document.getElementById('online-badge'); if(!b) return;
+  if(!onlineListo()){ b.hidden = true; return; }
+  const n = Math.max(1, jugadoresOnline().length);
+  b.hidden = false;
+  b.innerHTML = `<i class="punto-online"></i>${n} online`;
+  b.setAttribute('aria-label', `${n} jugador${n > 1 ? 'es' : ''} online`);
+  if(hojaActual === 'online') pintarOnline();
+}
+function abrirOnline(){
+  hojaActual = 'online';
+  nuevoVelo();
+  pintarOnline();
+}
+function pintarOnline(){
+  const v = $('#velo'); if(!v) return;
+  const lista = jugadoresOnline().sort((a, b) => (b.id === usuarioId) - (a.id === usuarioId) || b.medallas - a.medallas);
+  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Jugadores online"><div class="hoja-cab"><h2>Online ahora</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <p class="rotulo-chico">${lista.length || 1} jugador${lista.length === 1 ? '' : 'es'} en Sorlandia en este momento.</p>
+    <div class="lista-online">${lista.map(p => `<div class="fila-online"><span class="cr-mini" style="width:38px;height:52px">${svgEntrenador(p.ent)}</span>
+      <span class="fo-txt"><b></b><small></small></span>
+      <span class="fo-med">${p.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}${'★'.repeat(p.medallas || 0)}</span></div>`).join('')}</div></div>`;
+  v.querySelectorAll('.fila-online').forEach((f, i) => {
+    f.querySelector('b').textContent = lista[i].apodo + (lista[i].id === usuarioId ? ' (vos)' : '');
+    f.querySelector('small').textContent = lista[i].donde || '';
+  });
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+}
 
 function alMoverme(){
   if(!ON.canal) return;
@@ -109,7 +167,7 @@ function otroJugador(ctx, cx, piso, o, t){
   const paso = anda ? (Math.floor(t / 160) % 2 ? 1 : 2) : 0;
   ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
   dibujarEntrenador(ctx, spritesEntrenador(o.ent), cx, piso, o.mira || 'abajo', paso, 48);
-  etiqueta(ctx, o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - 62, 'rgba(122,79,201,.9)');
+  etiqueta(ctx, (o.campeon ? '♛ ' : '') + o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - 62, o.campeon ? 'rgba(184,134,11,.95)' : 'rgba(122,79,201,.9)');
   if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - 68);
 }
 function burbuja(ctx, txt, cx, abajo){

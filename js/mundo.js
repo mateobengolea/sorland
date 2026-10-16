@@ -35,6 +35,7 @@ function pintarMundo(){
     <p class="pie">El pasto alto esconde criaturas. Hablá con la gente caminando hacia ella. Para volver a casa, entrá por tu puerta en Pueblo Ceibo.</p>
     <p class="pie" id="cuenta"></p>`;
   pintarTodo(); pintarCuenta();
+  if(typeof prepararBadge === 'function') prepararBadge();
   $('#m-equipo').onclick = () => abrirEquipo();
   $('#m-mochila').onclick = () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); };
   $('#dialogo').onclick = avanzarDialogo;
@@ -56,6 +57,7 @@ function pintarMundo(){
   });
   mostrarZona(true);
   MW.raf = requestAnimationFrame(cuadro);
+  if(S.cuartel && S.cuartel.continuar){ S.cuartel.continuar = false; setTimeout(() => { if(MW) siguienteCuartel(); }, 500); }
   if(typeof alEntrarAlMapa === 'function') alEntrarAlMapa();
 }
 
@@ -186,6 +188,7 @@ function alLlegar(){
     MW.pos = afuera; S.mundo = {mapa: M.id, ...afuera};
     if(acc === 'centro'){
       curarEquipo();
+      if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; avisar('Saliste a curarte: el Cuartel Supremo vuelve a empezar.'); }
       S.respawn = {mapa: M.id, ...afuera};
       guardar();
       dialogo('Enfermera Clara', ['¡Bienvenido al Centro de Rehabilitación! Dejame a tus criaturas un ratito...', 'Listo: tu equipo está como nuevo. Si te va mal en una pelea, volvés a este centro.']);
@@ -193,6 +196,7 @@ function alLlegar(){
     }
     if(acc === 'market'){ pestana.tienda = 'aventura'; abrirHoja('tienda'); return false; }
     if(acc && acc.lider){ desafiarLider(LIDERES[acc.lider], M); return false; }
+    if(acc && acc.cuartel){ entrarCuartel(); return false; }
     return false;
   }
   // Entrenadores que te ven al pasar al lado
@@ -250,6 +254,25 @@ async function desafiarLider(L, M){
   await dialogo(`${L.titulo} ${L.nombre}`, L.antes);
   lanzarPeleaEntrenador({...L, lider: true}, M.zonas[0][0]);
 }
+/* ---------------- Cuartel Supremo ---------------- */
+async function entrarCuartel(){
+  if(!S.cuartel) S.cuartel = {racha: 0};
+  const r = S.cuartel.racha;
+  if(r === 0){
+    await dialogo('Portero del Cuartel', S.campeon
+      ? ['¡Campeón! ¿Venís por la revancha?', 'Las reglas son las mismas: cinco peleas seguidas, sin curarte en el medio.']
+      : ['Bienvenido al Cuartel Supremo.', 'Vas a pelear contra los cuatro miembros del Cuartel y después contra la Campeona, uno tras otro.', 'No se puede salir a curarse: si salís o perdés, empezás de nuevo. Podés usar jarabes.']);
+  }
+  if(!hayLuchadorEnPie()){ await dialogo('Portero del Cuartel', ['Tu equipo está agotado. Pasá por el Centro de Rehabilitación primero.']); return; }
+  siguienteCuartel();
+}
+async function siguienteCuartel(){
+  const rival = CUARTEL[S.cuartel.racha]; if(!rival) return;
+  if(S.cuartel.racha > 0) await dialogo('Cuartel Supremo', [`Sala ${S.cuartel.racha + 1} de 5.`]);
+  await dialogo(`${rival.titulo} ${rival.nombre}`, rival.antes);
+  lanzarPeleaEntrenador({...rival, lider: true, premio: S.campeon ? Math.round(rival.premio / 4) : rival.premio}, 'supremo');
+}
+
 function lanzarPeleaEntrenador(n, zona){
   const mult = n.lider ? .95 : .8;
   const rivales = n.equipo.map(([esp, nivel]) => {
@@ -564,7 +587,7 @@ function roca(ctx, sx, sy, x, y, M){
   if(!osc && h > .6){ ctx.fillStyle = '#79B95F'; ctx.beginPath(); ctx.ellipse(sx + 12, sy + 9, 5, 2.5, -.4, 0, 7); ctx.fill(); }
 }
 
-const COLOR_EDIF = {mia:'#E2574C', centro:'#FF7FA3', market:'#3B82D6'};
+const COLOR_EDIF = {mia:'#E2574C', centro:'#FF7FA3', market:'#3B82D6', cuartel:'#C9A227'};
 function edificioDe(M, x, y){ return M.edificios.find(e => x >= e.x && x < e.x + e.ancho && (y === e.y || y === e.y + 1)); }
 function edificioTile(ctx, sx, sy, x, y, c, M){
   const e = edificioDe(M, x, y) || {tipo:'casa', color:'#6BAF5B', x, ancho:1, y};
@@ -608,7 +631,7 @@ function edificioTile(ctx, sx, sy, x, y, c, M){
 }
 
 function cartelEdificio(ctx, e, camX, camY){
-  const textos = {centro:'CENTRO', market:'MARKET', gimnasio:'GIMNASIO', mia:'TU CASA'};
+  const textos = {centro:'CENTRO', market:'MARKET', gimnasio:'GIMNASIO', mia:'TU CASA', cuartel:'CUARTEL SUPREMO'};
   const t = textos[e.tipo]; if(!t) return;
   const cx = (e.x + e.ancho / 2) * TS - camX, cy = e.y * TS - camY + 18;
   if(cx < -80 || cx > MW.vw + 80 || cy < -40 || cy > MW.vh + 40) return;

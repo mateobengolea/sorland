@@ -642,3 +642,17 @@ function svgVitrina(medallas){
     <rect x="30" y="112" width="40" height="7" rx="2" fill="#FFD23F" stroke="#22304A" stroke-width="2"/>
   </svg>`;
 }
+
+function svgCopa(tam = 80){
+  return `<svg viewBox="0 0 100 120" width="${tam * .83}" height="${tam}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="50" cy="116" rx="34" ry="4" fill="rgba(34,48,74,.18)"/>
+    <path d="M22 18 C4 18 6 46 28 48 M78 18 C96 18 94 46 72 48" fill="none" stroke="#22304A" stroke-width="9" stroke-linecap="round"/>
+    <path d="M22 18 C4 18 6 46 28 48 M78 18 C96 18 94 46 72 48" fill="none" stroke="#FFC93C" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M20 10 H80 C80 46 66 62 50 62 C34 62 20 46 20 10Z" fill="#FFC93C" stroke="#22304A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M28 16 C28 38 34 50 42 56" fill="none" stroke="#FFF3B0" stroke-width="5" stroke-linecap="round"/>
+    <rect x="44" y="62" width="12" height="20" fill="#E8A900" stroke="#22304A" stroke-width="3"/>
+    <rect x="28" y="82" width="44" height="12" rx="3" fill="#FFC93C" stroke="#22304A" stroke-width="3"/>
+    <rect x="22" y="94" width="56" height="18" rx="3" fill="#8A5A35" stroke="#22304A" stroke-width="3"/>
+    <path d="M50 22 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1z" fill="#fff" opacity=".85"/>
+  </svg>`;
+}
