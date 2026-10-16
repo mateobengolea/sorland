@@ -8,9 +8,9 @@ Juego web de mascotas: elegís a **Carosor** (fuego), **Matesor** (planta) o **R
 - `css/estilos.css` — el diseño.
 - `js/juego.js` — toda la lógica del juego.
 - `js/config.js` — conexión a Supabase (URL y clave pública).
-- `supabase/001_partidas.sql` — estructura de la base de datos.
+- `supabase/` — estructura de la base de datos (partidas y perfiles).
 
-Se publica con **GitHub Pages** desde la rama `main`. Las cuentas y las partidas viven en **Supabase**: cada jugador entra con un link por mail y solo puede leer y modificar su propia partida.
+Se publica con **GitHub Pages** desde la rama `main`. Las cuentas y las partidas viven en **Supabase**: cada jugador se registra con mail, contraseña y un apodo único, y solo puede leer y modificar su propia partida.
 
 ## Hoja de ruta
 
