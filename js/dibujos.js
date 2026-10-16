@@ -511,36 +511,114 @@ const ASPECTO = {
 const NOMBRES_PEINADO = {corto: 'Corto', largo: 'Largo', colita: 'Colita', rulos: 'Rulos', rapado: 'Rapado'};
 function aspectoPorDefecto(){ return {piel: ASPECTO.piel[0], pelo: ASPECTO.pelo[1], peinado: 'corto', ropa: ASPECTO.ropa[0], gorra: ASPECTO.gorra[1]}; }
 
-function svgEntrenador(e, tam){
+// dir: 'abajo' (de frente), 'arriba' (de espaldas) o 'lado' (perfil mirando a la derecha). paso: 0 quieto, 1 y 2 caminando.
+function svgEntrenador(e, tam, dir = 'abajo', paso = 0){
   e = e || aspectoPorDefecto();
-  const T = '#22304A', s = 'stroke="#22304A" stroke-width="3"';
-  const pelo = e.pelo, piel = e.piel, ropa = e.ropa;
-  let peloAtras = '', peloFrente = '';
-  if(e.peinado === 'largo') peloAtras = `<path d="M24 40 C22 74 30 84 38 86 L62 86 C70 84 78 74 76 40Z" fill="${pelo}" ${s}/>`;
-  if(e.peinado === 'colita') peloAtras = `<ellipse cx="78" cy="48" rx="10" ry="16" fill="${pelo}" ${s} transform="rotate(25 78 48)"/>`;
-  if(e.peinado === 'rulos') peloFrente = `<g fill="${pelo}" ${s}>${[[28,34],[36,22],[50,18],[64,22],[72,34]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="10"/>`).join('')}</g>`;
-  else if(e.peinado === 'rapado') peloFrente = `<path d="M27 38 C27 20 73 20 73 38 C64 32 36 32 27 38Z" fill="${pelo}" opacity=".85"/>`;
-  else peloFrente = `<path d="M25 42 C23 14 77 14 75 42 C70 30 60 26 54 30 C48 24 34 28 25 42Z" fill="${pelo}" ${s} stroke-linejoin="round"/>`;
-  const gorra = e.gorra && e.gorra !== 'ninguna'
-    ? `<path d="M26 32 C26 10 74 10 74 32Z" fill="${e.gorra}" ${s}/><path d="M48 30 C60 28 80 28 86 34 C76 38 60 36 48 34Z" fill="${e.gorra}" ${s}/><circle cx="50" cy="13" r="3" fill="#fff"/>` : '';
+  const T = '#22304A', s = 'stroke="#22304A" stroke-width="3"', pelo = e.pelo, piel = e.piel, ropa = e.ropa;
+  const pantalon = '#3B4A6B', mochila = '#8A5A35';
+  const conGorra = e.gorra && e.gorra !== 'ninguna';
+  const bob = paso ? -1.5 : 0;
   const w = tam ? `width="${tam * .72}" height="${tam}"` : '';
+  let cuerpo = '';
+  if(dir === 'lado'){
+    const zancada = paso === 1 ? 9 : paso === 2 ? -9 : 0;
+    const pierna = (dx, color) => `<g transform="rotate(${dx} 50 100)"><rect x="45" y="98" width="11" height="28" rx="4" fill="${color}" ${s}/><ellipse cx="54" cy="128" rx="9" ry="5" fill="${T}"/></g>`;
+    let peloAtras = '';
+    if(e.peinado === 'largo') peloAtras = `<path d="M30 34 C24 60 32 78 44 82 L52 70 C46 58 44 44 46 34Z" fill="${pelo}" ${s}/>`;
+    if(e.peinado === 'colita') peloAtras = `<ellipse cx="25" cy="46" rx="9" ry="15" fill="${pelo}" ${s} transform="rotate(-25 25 46)"/>`;
+    let peloArriba;
+    if(e.peinado === 'rulos') peloArriba = `<g fill="${pelo}" ${s}>${[[30,36],[34,24],[46,18],[58,20],[30,48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="10"/>`).join('')}</g>`;
+    else if(e.peinado === 'rapado') peloArriba = `<path d="M27 40 C27 20 66 18 70 34 C58 28 40 30 27 40Z" fill="${pelo}" opacity=".85"/>`;
+    else peloArriba = `<path d="M26 50 C20 22 46 10 66 20 C74 24 76 32 74 36 C64 30 52 32 46 36 C44 44 40 50 26 50Z" fill="${pelo}" ${s} stroke-linejoin="round"/>`;
+    const gorra = conGorra ? `<path d="M26 34 C26 10 72 10 72 32Z" fill="${e.gorra}" ${s}/><path d="M66 28 C76 28 88 30 90 35 C82 38 72 36 64 34Z" fill="${e.gorra}" ${s}/>` : '';
+    cuerpo = `${peloAtras}${pierna(-zancada, '#2C3854')}
+      <rect x="26" y="66" width="14" height="30" rx="5" fill="${mochila}" ${s}/>
+      <path d="M38 70 C38 62 62 62 62 70 L64 104 H36Z" fill="${ropa}" ${s} stroke-linejoin="round"/>
+      ${pierna(zancada, pantalon)}
+      <g transform="rotate(${-zancada * 1.6} 50 72)"><ellipse cx="52" cy="86" rx="7" ry="15" fill="${ropa}" ${s}/><circle cx="52" cy="100" r="6" fill="${piel}" ${s}/></g>
+      <circle cx="50" cy="42" r="24" fill="${piel}" ${s}/>
+      <path d="M72 44 q5 3 0 6" fill="${piel}" ${s}/>
+      ${peloArriba}${gorra}
+      <ellipse cx="44" cy="46" rx="4" ry="5" fill="${piel}" ${s}/>
+      <ellipse cx="63" cy="45" rx="3.2" ry="4.2" fill="${T}"/><circle cx="64" cy="43.5" r="1.2" fill="#fff"/>
+      <ellipse cx="62" cy="54" rx="4" ry="2.5" fill="#FF8FAE" opacity=".7"/>
+      <path d="M66 56 q3 1.5 5 -1" fill="none" stroke="${T}" stroke-width="2.5" stroke-linecap="round"/>`;
+  } else {
+    const izq = paso === 1 ? -4 : 0, der = paso === 2 ? -4 : 0;
+    const brazoI = paso === 1 ? 22 : paso === 2 ? 2 : 12, brazoD = paso === 2 ? -22 : paso === 1 ? -2 : -12;
+    const piernas = `<rect x="37" y="${98 + izq}" width="11" height="28" rx="4" fill="${pantalon}" ${s}/><rect x="52" y="${98 + der}" width="11" height="28" rx="4" fill="${pantalon}" ${s}/>
+      <ellipse cx="42" cy="${129 + izq}" rx="9" ry="5" fill="${T}"/><ellipse cx="58" cy="${129 + der}" rx="9" ry="5" fill="${T}"/>`;
+    const brazos = `<ellipse cx="27" cy="84" rx="8" ry="16" fill="${ropa}" ${s} transform="rotate(${brazoI} 27 72)"/><ellipse cx="73" cy="84" rx="8" ry="16" fill="${ropa}" ${s} transform="rotate(${brazoD} 73 72)"/>`;
+    const manos = `<circle cx="24" cy="99" r="6" fill="${piel}" ${s} transform="rotate(${brazoI} 27 72)"/><circle cx="76" cy="99" r="6" fill="${piel}" ${s} transform="rotate(${brazoD} 73 72)"/>`;
+    if(dir === 'arriba'){
+      let peloEspalda;
+      if(e.peinado === 'rulos') peloEspalda = `<g fill="${pelo}" ${s}>${[[28,34],[36,22],[50,18],[64,22],[72,34],[34,48],[50,52],[66,48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="11"/>`).join('')}</g>`;
+      else if(e.peinado === 'rapado') peloEspalda = `<circle cx="50" cy="42" r="24" fill="${pelo}" opacity=".55"/>`;
+      else peloEspalda = `<path d="M26 44 C22 14 78 14 74 44 C74 56 64 64 50 64 C36 64 26 56 26 44Z" fill="${pelo}" ${s}/>`;
+      const largo = e.peinado === 'largo' ? `<path d="M26 44 C24 72 32 86 40 88 L60 88 C68 86 76 72 74 44Z" fill="${pelo}" ${s}/>` : '';
+      const colita = e.peinado === 'colita' ? `<ellipse cx="50" cy="72" rx="9" ry="15" fill="${pelo}" ${s}/>` : '';
+      const gorra = conGorra ? `<path d="M26 34 C26 10 74 10 74 34Z" fill="${e.gorra}" ${s}/><rect x="40" y="30" width="20" height="5" rx="2" fill="${T}" opacity=".6"/>` : '';
+      cuerpo = `${piernas}${brazos}${manos}
+        <path d="M32 70 C32 62 68 62 68 70 L70 104 H30Z" fill="${ropa}" ${s} stroke-linejoin="round"/>
+        <rect x="36" y="68" width="28" height="30" rx="6" fill="${mochila}" ${s}/><path d="M36 80 H64" stroke="${T}" stroke-width="2.5"/><rect x="46" y="84" width="8" height="6" rx="2" fill="#FFD23F" ${s}/>
+        <circle cx="50" cy="42" r="24" fill="${piel}" ${s}/>
+        <ellipse cx="25" cy="46" rx="4" ry="5" fill="${piel}" ${s}/><ellipse cx="75" cy="46" rx="4" ry="5" fill="${piel}" ${s}/>
+        ${largo}${peloEspalda}${colita}${gorra}`;
+    } else {
+      let peloAtras = '', peloFrente = '';
+      if(e.peinado === 'largo') peloAtras = `<path d="M24 40 C22 74 30 84 38 86 L62 86 C70 84 78 74 76 40Z" fill="${pelo}" ${s}/>`;
+      if(e.peinado === 'colita') peloAtras = `<ellipse cx="78" cy="48" rx="10" ry="16" fill="${pelo}" ${s} transform="rotate(25 78 48)"/>`;
+      if(e.peinado === 'rulos') peloFrente = `<g fill="${pelo}" ${s}>${[[28,34],[36,22],[50,18],[64,22],[72,34]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="10"/>`).join('')}</g>`;
+      else if(e.peinado === 'rapado') peloFrente = `<path d="M27 38 C27 20 73 20 73 38 C64 32 36 32 27 38Z" fill="${pelo}" opacity=".85"/>`;
+      else peloFrente = `<path d="M25 42 C23 14 77 14 75 42 C70 30 60 26 54 30 C48 24 34 28 25 42Z" fill="${pelo}" ${s} stroke-linejoin="round"/>`;
+      const gorra = conGorra ? `<path d="M26 32 C26 10 74 10 74 32Z" fill="${e.gorra}" ${s}/><path d="M48 30 C60 28 80 28 86 34 C76 38 60 36 48 34Z" fill="${e.gorra}" ${s}/><circle cx="50" cy="13" r="3" fill="#fff"/>` : '';
+      cuerpo = `${peloAtras}${piernas}${brazos}${manos}
+        <path d="M32 70 C32 62 68 62 68 70 L70 104 H30Z" fill="${ropa}" ${s} stroke-linejoin="round"/>
+        <path d="M32 84 H68" stroke="#fff" stroke-width="4" opacity=".55"/>
+        <path d="M42 66 L50 74 L58 66" fill="none" stroke="#fff" stroke-width="3" opacity=".8"/>
+        <path d="M34 66 L40 92 M66 66 L60 92" stroke="${mochila}" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="42" r="24" fill="${piel}" ${s}/>
+        ${peloFrente}${gorra}
+        <ellipse cx="41" cy="46" rx="3.2" ry="4.2" fill="${T}"/><ellipse cx="59" cy="46" rx="3.2" ry="4.2" fill="${T}"/>
+        <circle cx="42" cy="44.5" r="1.2" fill="#fff"/><circle cx="60" cy="44.5" r="1.2" fill="#fff"/>
+        <ellipse cx="35" cy="53" rx="4" ry="2.5" fill="#FF8FAE" opacity=".7"/><ellipse cx="65" cy="53" rx="4" ry="2.5" fill="#FF8FAE" opacity=".7"/>
+        <path d="M45 55 Q50 59 55 55" fill="none" stroke="${T}" stroke-width="2.5" stroke-linecap="round"/>`;
+    }
+  }
   return `<svg viewBox="0 0 100 140" ${w} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <ellipse cx="50" cy="134" rx="24" ry="5" fill="rgba(34,48,74,.18)"/>
-    ${peloAtras}
-    <rect x="37" y="98" width="11" height="28" rx="4" fill="#3B4A6B" ${s}/><rect x="52" y="98" width="11" height="28" rx="4" fill="#3B4A6B" ${s}/>
-    <ellipse cx="42" cy="129" rx="9" ry="5" fill="${T}"/><ellipse cx="58" cy="129" rx="9" ry="5" fill="${T}"/>
-    <ellipse cx="27" cy="84" rx="8" ry="16" fill="${ropa}" ${s} transform="rotate(12 27 84)"/><ellipse cx="73" cy="84" rx="8" ry="16" fill="${ropa}" ${s} transform="rotate(-12 73 84)"/>
-    <circle cx="24" cy="99" r="6" fill="${piel}" ${s}/><circle cx="76" cy="99" r="6" fill="${piel}" ${s}/>
-    <path d="M32 70 C32 62 68 62 68 70 L70 104 H30Z" fill="${ropa}" ${s} stroke-linejoin="round"/>
-    <path d="M32 84 H68" stroke="#fff" stroke-width="4" opacity=".55"/>
-    <path d="M42 66 L50 74 L58 66" fill="none" stroke="#fff" stroke-width="3" opacity=".8"/>
-    <circle cx="50" cy="42" r="24" fill="${piel}" ${s}/>
-    ${peloFrente}${gorra}
-    <ellipse cx="41" cy="46" rx="3.2" ry="4.2" fill="${T}"/><ellipse cx="59" cy="46" rx="3.2" ry="4.2" fill="${T}"/>
-    <circle cx="42" cy="44.5" r="1.2" fill="#fff"/><circle cx="60" cy="44.5" r="1.2" fill="#fff"/>
-    <ellipse cx="35" cy="53" rx="4" ry="2.5" fill="#FF8FAE" opacity=".7"/><ellipse cx="65" cy="53" rx="4" ry="2.5" fill="#FF8FAE" opacity=".7"/>
-    <path d="M45 55 Q50 59 55 55" fill="none" stroke="${T}" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`;
+    <ellipse cx="50" cy="134" rx="24" ry="5" fill="rgba(34,48,74,.18)"/><g transform="translate(0 ${bob})">${cuerpo}</g></svg>`;
+}
+
+// Imágenes listas para dibujar en el mapa: 3 vistas x 3 pasos, nítidas en pantallas de alta resolución.
+const _spritesCache = {};
+function imagenSvg(svg, w, h){
+  const i = new Image();
+  i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', `<svg width="${w}" height="${h}" `));
+  return i;
+}
+function spritesEntrenador(e){
+  const k = JSON.stringify(e || {});
+  if(!_spritesCache[k]){
+    const set = {};
+    for(const dir of ['abajo', 'arriba', 'lado']) set[dir] = [0, 1, 2].map(p => imagenSvg(svgEntrenador(e, 0, dir, p), 108, 150));
+    _spritesCache[k] = set;
+  }
+  return _spritesCache[k];
+}
+const _criaturaCache = {};
+function imagenCriatura(esp, shiny){
+  const k = esp + (shiny ? '*' : '');
+  if(!_criaturaCache[k]) _criaturaCache[k] = imagenSvg(svgEspecie(esp, {humor: 'feliz', shiny}), 144, 144);
+  return _criaturaCache[k];
+}
+// Dibuja un entrenador en el canvas. mira: abajo, arriba, izq o der.
+function dibujarEntrenador(ctx, sprites, cx, piso, mira, paso, alto = 48){
+  const dir = mira === 'izq' || mira === 'der' ? 'lado' : mira || 'abajo';
+  const img = sprites[dir][paso || 0], ancho = alto * .72;
+  ctx.save(); ctx.translate(cx, piso);
+  if(mira === 'izq') ctx.scale(-1, 1);
+  if(img.complete && img.naturalWidth) ctx.drawImage(img, -ancho / 2, -alto + 2, ancho, alto);
+  ctx.restore();
 }
 
 function svgPeluche(esp){

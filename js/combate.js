@@ -54,6 +54,8 @@ function pintarCombate(){
     <section class="combate">
       ${B.ent ? `<div class="banda-ent">${B.ent.lider ? 'Gimnasio · ' : ''}${B.ent.titulo} <b></b> · <span id="cuenta-rivales"></span></div>` : ''}
       <div class="arena arena-${ARENAS[z] || 'ciudad'}">
+        <div class="nube n1"></div><div class="nube n2"></div>
+        <div class="plataforma rival"></div><div class="plataforma propio"></div>
         <div class="ficha-luch rival" id="f-rival"></div>
         <div class="bicho-combate rival" id="b-rival"></div>
         <div class="bicho-combate propio" id="b-propio"></div>
@@ -66,6 +68,7 @@ function pintarCombate(){
   $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
   pintarPropio();
   fichas();
+  animar('b-rival', 'entra-rival', 700); animar('b-propio', 'entra-propio', 700);
 }
 const nomRival = () => B.ent ? `${B.salvaje.nombre} de ${B.ent.nombre}` : `${B.salvaje.nombre} salvaje`;
 function pintarPropio(){
@@ -206,9 +209,11 @@ async function turnoRival(){
 
 async function atacar(a, d, mov, esPropio){
   const quien = esPropio ? a.nombre : nomRival();
-  animar(esPropio ? 'b-propio' : 'b-rival', esPropio ? 'embiste-propio' : 'embiste-rival', 400);
-  await mensaje(`${quien} usó ${mov.nom}.`, 700);
-  if(Math.random() * 100 >= mov.prec){ await mensaje('¡Pero falló!'); return; }
+  const idA = esPropio ? 'b-propio' : 'b-rival', idD = esPropio ? 'b-rival' : 'b-propio';
+  await mensaje(`${quien} usó ${mov.nom}.`, 420);
+  const acierta = Math.random() * 100 < mov.prec;
+  await animarAtaque(mov, idA, idD, acierta);
+  if(!acierta){ await mensaje('¡Pero falló!'); return; }
   if(mov.efecto === 'bajaFuerza'){
     d.modFuerza = Math.max(.5, (d.modFuerza || 1) * .75);
     await mensaje(`Le bajó la fuerza a ${esPropio ? nomRival() : d.nombre}.`);
@@ -216,9 +221,11 @@ async function atacar(a, d, mov, esPropio){
   }
   const {danio, ef, critico} = calcularDanio(a, d, mov);
   d.hp = Math.max(0, d.hp - danio);
-  animar(esPropio ? 'b-rival' : 'b-propio', 'golpeado', 500);
+  animar(idD, 'golpeado', 500);
+  numeroDanio(idD, danio, critico, ef);
+  if(critico || ef > 1) sacudirArena(critico && ef > 1);
   fichas();
-  await espera(350);
+  await espera(450);
   if(critico) await mensaje('¡Golpe crítico!', 750);
   if(ef > 1) await mensaje('¡Es muy efectivo!', 750);
   else if(ef < 1) await mensaje('No es muy efectivo...', 750);
@@ -326,6 +333,7 @@ async function tirarCapsula(o){
   S.inv.objetos[o.id]--;
   await mensaje(`Tiraste una ${o.nom}...`, 600);
   const rival = $('#b-rival'), guardado = rival.innerHTML;
+  await animarCapsula(o);
   rival.innerHTML = `<div class="capsula-tirada">${iconoObjeto(o, 90)}</div>`;
   const minimo = B.legendaria ? .005 : .05;
   const prob = Math.max(minimo, Math.min(.95, ESPECIES[el.esp].captura * (1.3 - el.hp / el.max) * o.captura));

@@ -336,3 +336,51 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 @keyframes evoluciona{0%{filter:none}20%,40%,60%,80%{filter:brightness(4) saturate(0)}30%,50%,70%{filter:brightness(1.6)}100%{filter:none}}
 .bicho-combate.propio.evoluciona{animation:evoluciona 1.8s ease-in-out}
 .nav{grid-template-columns:repeat(3,1fr)}
+
+/* ======================= Batallas animadas ======================= */
+.arena{background:linear-gradient(#9FD8F5 0%,#D6F0FB 52%,#A5DA8E 52%,#7EC46E 100%)}
+.arena-bosque{background:linear-gradient(#8FCBA8 0%,#CDEBD4 52%,#6FB070 52%,#4E9A55 100%)}
+.arena-rio{background:linear-gradient(#9FD8F5 0%,#D6F0FB 48%,#6FC0EA 48%,#5AB4E8 60%,#9ED68C 60%,#7EC46E 100%)}
+.arena-sierras{background:linear-gradient(#F7D9A8 0%,#FBEBD0 52%,#E3C893 52%,#CDAF78 100%)}
+.arena-cumbres{background:linear-gradient(#8E9BD0 0%,#D9DEF2 52%,#EDF4F8 52%,#C9DDE8 100%)}
+.arena-volcan{background:linear-gradient(#E8875E 0%,#F6C6A0 52%,#8F7B6A 52%,#6E5A4A 100%)}
+.arena-ciudad{background:linear-gradient(#C9D8F5 0%,#EEF2FB 52%,#D9D0C1 52%,#C4B9A6 100%)}
+.arena::before,.arena::after{display:none}
+.plataforma{position:absolute;border-radius:50%;z-index:1;background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.35),rgba(255,255,255,0) 60%),rgba(34,48,74,.18);box-shadow:inset 0 -6px 0 rgba(34,48,74,.12)}
+.plataforma.rival{width:170px;height:34px;right:14px;top:132px}
+.plataforma.propio{width:200px;height:40px;left:8px;bottom:12px}
+.nube{position:absolute;height:22px;border-radius:99px;background:rgba(255,255,255,.75);z-index:0;animation:nube 40s linear infinite}
+.nube::before{content:"";position:absolute;width:30px;height:30px;border-radius:50%;background:inherit;left:14px;top:-14px}
+.nube.n1{width:80px;top:26px;left:-90px}
+.nube.n2{width:60px;top:64px;left:-70px;animation-duration:55s;animation-delay:-20s;opacity:.7}
+@keyframes nube{to{transform:translateX(620px)}}
+.bicho-combate .cuerpo{transform-origin:100px 186px;animation:respira 2.4s ease-in-out infinite}
+.entra-rival{animation:entraR .7s cubic-bezier(.2,1.2,.4,1)}
+.entra-propio{animation:entraP .7s cubic-bezier(.2,1.2,.4,1)}
+@keyframes entraR{from{transform:translateX(160px);opacity:0}}
+@keyframes entraP{from{transform:scaleX(-1) translateX(160px);opacity:0}}
+.grita-rival{animation:grita .6s ease-in-out}
+.grita-propio{animation:gritaP .6s ease-in-out}
+@keyframes grita{30%,70%{transform:scale(1.1)}}
+@keyframes gritaP{30%,70%{transform:scaleX(-1.1) scaleY(1.1)}}
+.achica{animation:achica .5s ease-in-out}
+@keyframes achica{50%{filter:brightness(.7);transform:scale(.92)}}
+.bicho-combate.propio.achica{animation:achicaP .5s ease-in-out}
+@keyframes achicaP{50%{filter:brightness(.7);transform:scaleX(-.92) scaleY(.92)}}
+.tambalea{animation:tambalea .6s ease-in-out}
+@keyframes tambalea{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+.bicho-combate.propio.tambalea{animation:tambaleaP .6s ease-in-out}
+@keyframes tambaleaP{25%{transform:scaleX(-1) rotate(-12deg)}75%{transform:scaleX(-1) rotate(12deg)}}
+.efectos{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.fx{position:absolute;left:0;top:0;will-change:transform,opacity}
+.fx-proy{line-height:0}
+.fx-punto{border-radius:50%;border:1.5px solid rgba(34,48,74,.5)}
+.fx-anillo{border:4px solid #fff;border-radius:50%;box-sizing:border-box}
+.fx-flash{inset:0;width:100%;height:100%;opacity:0}
+.fx-bola{width:30px;height:30px;border-radius:50%;border:2px solid #22304A;box-shadow:0 0 14px 4px rgba(255,170,60,.7)}
+.fx-tajo{width:70px;height:5px;border-radius:3px;background:#fff;box-shadow:0 0 6px #7CC46A;transform-origin:left center}
+.fx-numero{font-family:var(--font-display);font-weight:800;font-size:1.5rem;color:#fff;-webkit-text-stroke:1.6px #22304A;white-space:nowrap;z-index:6}
+.fx-numero.critico{font-size:1.8rem;color:#FFD23F}
+.fx-numero.efectivo{color:#FF8A6A}
+.fx-numero.flojo{font-size:1.2rem;color:#D6DCE6}
+@media (prefers-reduced-motion:reduce){.nube,.bicho-combate .cuerpo{animation:none}}

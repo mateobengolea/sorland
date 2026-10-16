@@ -20,7 +20,7 @@ const onlineListo = () => !!(db && usuarioId && apodo);
 function miPresencia(){
   return {id: usuarioId, apodo, esp: S.equipo[0] ? S.equipo[0].esp : 'carosor', shiny: !!(S.equipo[0] && S.equipo[0].shiny), ent: S.entrenador,
           nivel: nivelEntrenador(), medallas: cantMedallas(),
-          x: S.mundo.x, y: S.mundo.y, dir: MW ? MW.dir : 1, t: Date.now()};
+          x: S.mundo.x, y: S.mundo.y, dir: MW ? MW.dir : 1, mira: MW ? MW.mira : 'abajo', t: Date.now()};
 }
 function nivelEntrenador(){ return S.equipo.reduce((m, c) => Math.max(m, c.nivel), 1); }
 function imagenEntrenador(ent){
@@ -63,7 +63,7 @@ function alEntrarAlMapa(){
     })
     .on('broadcast', {event: 'mov'}, ({payload: p}) => {
       const o = ON.otros.get(p.id); if(!o) return;
-      o.x = p.x; o.y = p.y; o.dir = p.dir; o.movido = true;
+      o.x = p.x; o.y = p.y; o.dir = p.dir; o.mira = p.mira || o.mira; o.movido = true;
     })
     .on('broadcast', {event: 'decir'}, ({payload: p}) => {
       if(ON.silenciados.has(p.id)) return;
@@ -86,7 +86,7 @@ function cortarOnline(){ dejarCanal(); }
 function alMoverme(){
   if(!ON.canal) return;
   const p = miPresencia();
-  ON.canal.send({type: 'broadcast', event: 'mov', payload: {id: p.id, x: p.x, y: p.y, dir: p.dir}});
+  ON.canal.send({type: 'broadcast', event: 'mov', payload: {id: p.id, x: p.x, y: p.y, dir: p.dir, mira: p.mira}});
   if(Date.now() - ON.ultimaPresencia > 2500){ ON.ultimaPresencia = Date.now(); ON.canal.track(p); }
 }
 
@@ -105,15 +105,12 @@ function jugadoresVisibles(){
   return lista;
 }
 function otroJugador(ctx, cx, piso, o, t){
-  const alto = 46, ancho = alto * .72, img = imagenEntrenador(o.ent);
   const anda = Math.abs(o.x - o.px) + Math.abs(o.y - o.py) > .05;
-  const salto = anda ? Math.abs(Math.sin(t / 90)) * 3 : 0;
-  ctx.fillStyle = 'rgba(34,48,74,.2)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
-  ctx.save(); ctx.translate(cx, piso - salto); if(o.dir < 0) ctx.scale(-1, 1);
-  if(img.complete) ctx.drawImage(img, -ancho / 2, -alto + 1, ancho, alto);
-  ctx.restore();
-  etiqueta(ctx, o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - alto - 14 - salto, 'rgba(122,79,201,.9)');
-  if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - alto - 20 - salto);
+  const paso = anda ? (Math.floor(t / 160) % 2 ? 1 : 2) : 0;
+  ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
+  dibujarEntrenador(ctx, spritesEntrenador(o.ent), cx, piso, o.mira || 'abajo', paso, 48);
+  etiqueta(ctx, o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - 62, 'rgba(122,79,201,.9)');
+  if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - 68);
 }
 function burbuja(ctx, txt, cx, abajo){
   ctx.font = '700 12px Nunito, sans-serif'; ctx.textAlign = 'center';

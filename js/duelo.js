@@ -120,6 +120,8 @@ function pintarDuelo(){
     <section class="combate">
       <div class="banda-ent">Duelo contra <b id="du-rival"></b> <span id="cuenta-rivales"></span></div>
       <div class="arena arena-ciudad">
+        <div class="nube n1"></div><div class="nube n2"></div>
+        <div class="plataforma rival"></div><div class="plataforma propio"></div>
         <div class="ficha-luch rival" id="f-rival"></div>
         <div class="bicho-combate rival" id="b-rival"></div>
         <div class="bicho-combate propio" id="b-propio"></div>
@@ -258,7 +260,7 @@ function resolverTurno(st, acc, rnd){
     if(mov.efecto === 'bajaFuerza'){ d.modFuerza = Math.max(.5, (d.modFuerza || 1) * .75); ev.push({t: 'baja', lado: dl}); continue; }
     const r = calcularDanio(a, d, mov, rnd);
     d.hp = Math.max(0, d.hp - r.danio);
-    ev.push({t: 'golpe', lado: dl, hp: d.hp, ef: r.ef, crit: r.critico});
+    ev.push({t: 'golpe', lado: dl, hp: d.hp, ef: r.ef, crit: r.critico, danio: r.danio});
     if(d.hp <= 0){
       ev.push({t: 'debil', lado: dl});
       const sig = st[dl].lista.findIndex(x => x.hp > 0);
@@ -270,16 +272,20 @@ function resolverTurno(st, acc, rnd){
 }
 
 async function reproducir(eventos){
-  for(const e of eventos){
+  for(let k = 0; k < eventos.length; k++){
+    const e = eventos[k];
     if(!DU) return;
     const mio = e.lado === DU.lado, idB = mio ? 'b-propio' : 'b-rival';
     if(e.t === 'usa'){
-      animar(idB, mio ? 'embiste-propio' : 'embiste-rival', 400);
-      await mensaje(`${nomDu(e.lado)} usó ${MOVS[e.mov].nom}.`, 750);
+      await mensaje(`${nomDu(e.lado)} usó ${MOVS[e.mov].nom}.`, 420);
+      const sig = eventos[k + 1];
+      await animarAtaque(MOVS[e.mov], idB, mio ? 'b-rival' : 'b-propio', !(sig && sig.t === 'falla'));
     } else if(e.t === 'falla') await mensaje('¡Pero falló!', 800);
     else if(e.t === 'baja') await mensaje(`Le bajó la fuerza a ${nomDu(e.lado)}.`, 900);
     else if(e.t === 'golpe'){
-      animar(idB, 'golpeado', 500); fichasDuelo(); await espera(350);
+      animar(idB, 'golpeado', 500); numeroDanio(idB, e.danio || 0, e.crit, e.ef);
+      if(e.crit || e.ef > 1) sacudirArena(e.crit && e.ef > 1);
+      fichasDuelo(); await espera(450);
       if(e.crit) await mensaje('¡Golpe crítico!', 700);
       if(e.ef > 1) await mensaje('¡Es muy efectivo!', 700); else if(e.ef < 1) await mensaje('No es muy efectivo...', 700);
     } else if(e.t === 'debil'){
