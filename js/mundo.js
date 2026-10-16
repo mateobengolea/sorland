@@ -248,7 +248,7 @@ async function desafiarLider(L, M){
 function lanzarPeleaEntrenador(n, zona){
   const mult = n.lider ? .95 : .8;
   const rivales = n.equipo.map(([esp, nivel]) => {
-    const sp = SALVAJES[esp], stats = statsPorNivel(sp.base, nivel);
+    const sp = ESPECIES[esp], stats = statsPorNivel(sp.base, nivel);
     return {esp, nombre: sp.nombre, nivel, stats, hp: vidaMax(stats, nivel), tipo: sp.tipo, mult};
   });
   salirDelMundo(); guardar();
