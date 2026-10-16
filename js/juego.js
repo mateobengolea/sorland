@@ -27,7 +27,7 @@ const COMIDAS = [
   {id:'chori',nom:'Choripán',em:'🌭',precio:35,hambre:40,animo:10,nivel:3,desc:'Con chimichurri, obvio.'},
 ];
 const MUEBLES = [
-  {id:'planta',nom:'Planta',em:'🪴',precio:40,nivel:1,desc:'Un toque verde.'},
+  {id:'planta',nom:'Cactus',em:'🌵',precio:40,nivel:1,desc:'Un toque verde que no hay que regar.'},
   {id:'silla',nom:'Silla',em:'🪑',precio:50,nivel:1,desc:'Para sentarse a charlar.'},
   {id:'cuadro',nom:'Cuadro',em:'🖼️',precio:60,nivel:1,pared:true,desc:'Va colgado en la pared.'},
   {id:'peluche',nom:'Osito de peluche',em:'🧸',precio:70,nivel:2,desc:'Para dormir abrazado.'},
