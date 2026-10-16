@@ -80,24 +80,24 @@ const CUARTEL = [
 ];
 
 const LIDERES = {
-  tosca:{id:'tosca', titulo:'Líder', nombre:'Tosca', medalla:'penasco', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
+  tosca:{id:'tosca', titulo:'Líder', nombre:'Graciela', medalla:'penasco', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
     equipo:[['fosilito',10],['morrito',11],['tatupiedra',12]],
     antes:['¡Bienvenido al gimnasio de Villa Piedra!', 'Acá entrenamos duro, como las piedras de la sierra.', 'Si querés la Medalla Peñasco, vas a tener que romperme la defensa.'],
     despues:['¡Uf! Me rompiste el caparazón.', 'Te ganaste la Medalla Peñasco. Con ella, el guardia del camino al puerto te deja pasar.'],
     yaGano:'Ya tenés mi medalla. Seguí hacia Puerto Camalote, al este de Pueblo Ceibo.'},
-  iara:{id:'iara', titulo:'Líder', nombre:'Capitana Iara', medalla:'camalote', premio:700, ropa:'#3B82D6', pelo:'#2A2420',
+  iara:{id:'iara', titulo:'Líder', nombre:'Capitana Vero', medalla:'camalote', premio:700, ropa:'#3B82D6', pelo:'#2A2420',
     equipo:[['ranacua',14],['bagrecito',15],['carpincho',16]],
-    antes:['¡Ahoy! Soy la Capitana Iara.', 'En este puerto el agua manda. ¿Vas a nadar o te vas a hundir?'],
+    antes:['¡Ahoy! Soy la Capitana Vero.', 'En este puerto el agua manda. ¿Vas a nadar o te vas a hundir?'],
     despues:['¡Me dejaste a la deriva!', 'Tomá la Medalla Camalote. El camino al norte, a Cerro Tormenta, ya está abierto.'],
     yaGano:'Ya navegaste conmigo. Cerro Tormenta queda al norte del puerto.'},
-  fulgencio:{id:'fulgencio', titulo:'Líder', nombre:'Fulgencio', medalla:'relampago', premio:1000, ropa:'#4656A0', pelo:'#FFD23F',
+  fulgencio:{id:'fulgencio', titulo:'Líder', nombre:'Gustavo', medalla:'relampago', premio:1000, ropa:'#4656A0', pelo:'#FFD23F',
     equipo:[['pilon',18],['nubarron',19],['chispon',19],['yaguarayo',20]],
-    antes:['¿Sentís el aire cargado? Es mi equipo, que ya te tiene ganas.', 'Soy Fulgencio. Si aguantás la tormenta, la medalla es tuya.'],
+    antes:['¿Sentís el aire cargado? Es mi equipo, que ya te tiene ganas.', 'Soy Gustavo. Si aguantás la tormenta, la medalla es tuya.'],
     despues:['¡Me dejaste sin batería!', 'La Medalla Relámpago es tuya. Al norte, en Monte Fogón, te espera el último líder.'],
     yaGano:'Ya te ganaste el relámpago. Andá a Monte Fogón, al norte.'},
-  rulo:{id:'rulo', titulo:'Líder', nombre:'Don Rulo', medalla:'brasa', premio:1400, ropa:'#C2412B', pelo:'#3B2A22',
+  rulo:{id:'rulo', titulo:'Líder', nombre:'Don Rubén', medalla:'brasa', premio:1400, ropa:'#C2412B', pelo:'#3B2A22',
     equipo:[['fogonero',22],['ajipicante',23],['brasero',24],['zorrolumbre',25]],
-    antes:['¡Pasá, pasá, que el fuego está a punto!', 'Soy Don Rulo, el último líder de Sorlandia.', 'A ver si tu equipo aguanta el calor de la parrilla.'],
+    antes:['¡Pasá, pasá, que el fuego está a punto!', 'Soy Don Rubén, el último líder de Sorlandia.', 'A ver si tu equipo aguanta el calor de la parrilla.'],
     despues:['¡Se me apagó el fogón!', 'Te llevás la Medalla Brasa. ¡Con las cuatro medallas sos campeón de Sorlandia!', 'Dicen que con las cuatro medallas, las leyendas de Sorlandia se dejan ver...'],
     yaGano:'¡Campeón! Volvé cuando quieras a comer un asadito.'},
 };
@@ -160,7 +160,7 @@ function mapaCeibo(){
   M.npc(entrenador('sol', 26, 20, 'Pescadora', 'Sol', [['renacuajin',7],['carpinchito',7]], 100,
     ['El río está lleno de criaturas. Probá las mías.'], ['Buena mano. En el puerto hay criaturas de agua más fuertes.'], '#3B82D6'));
   M.npc(entrenador('beto', 8, 7, 'Montañista', 'Beto', [['tatupiedra',8],['cardoncito',8]], 120,
-    ['¡Las sierras son mías! Bueno, de mis bichos.'], ['Para Tosca vas a necesitar ataques de Agua o de Planta, que a la Piedra le pegan fuerte.'], '#A9612F'));
+    ['¡Las sierras son mías! Bueno, de mis bichos.'], ['Para Graciela vas a necesitar ataques de Agua o de Planta, que a la Piedra le pegan fuerte.'], '#A9612F'));
   M.zonas = [['pueblo', 1, 21, 26, 28], ['sierras', 1, 1, 15, 10], ['bosque', 24, 1, 38, 13], ['rio', 24, 14, 38, 28], ['pradera', 1, 1, 23, 20]];
   M.zonaBase = 'pradera';
   return M;
@@ -186,18 +186,18 @@ function mapaVillaPiedra(){
   M.edificio(4, 17, 5, 'centro', 'centro');
   M.edificio(21, 17, 5, 'market', 'market');
   casaConInterior(M, 4, 21, '#A9612F', {nombre: 'Casa de Rosa', npc: {nombre: 'Señora Rosa', ropa: '#E07BA0', pelo: '#3B2A22', regalo: true,
-    frases: ['¿Venís a desafiar a Tosca? Es durísima.', 'Mi nieto le ganó usando criaturas de Agua y de Planta.', 'Tomá, para el viaje.']}});
+    frases: ['¿Venís a desafiar a Graciela? Es durísima.', 'Mi nieto le ganó usando criaturas de Agua y de Planta.', 'Tomá, para el viaje.']}});
   M.borde('#');
   M.camino(15, 24, 15, 24);
   M.salida(15, 25, 'ceibo', 11, 1);
   M.npc({id:'vecino_vp', x:11, y:16, tipo:'vecino', nombre:'Don Ernesto', ropa:'#7E5434', pelo:'#E9E2D3', suelo:':',
-    frases:['Villa Piedra, tierra de cardones y piedra dura.', 'Tosca, la líder, usa criaturas de tipo Piedra.', 'Los ataques de Agua y de Planta le hacen mucho daño. Y el Rayo no le hace casi nada.']});
+    frases:['Villa Piedra, tierra de cardones y piedra dura.', 'Graciela, la líder, usa criaturas de tipo Piedra.', 'Los ataques de Agua y de Planta le hacen mucho daño. Y el Rayo no le hace casi nada.']});
   M.npc(entrenador('cacho', 24, 6, 'Minero', 'Cacho', [['fosilito',10],['cuarcito',11]], 150,
     ['Encontré estos fósiles cavando. ¡Y pelean!'], ['Me voy a seguir cavando.'], '#F2B63D'));
   M.npc(entrenador('ramiro', 4, 8, 'Gaucho', 'Ramiro', [['nandusito',11],['peludito',11],['pampero',12]], 170,
     ['¡Epa, forastero! A ver esas criaturas.'], ['¡Qué pingo bravo el tuyo!'], '#7E5434'));
   M.npc(entrenador('ana', 13, 6, 'Escaladora', 'Ana', [['morrito',10],['condorcito',10]], 140,
-    ['¡Desde acá arriba te vi venir! A ver qué tan fuerte sos.'], ['Bien ahí. Tosca te va a costar, pero podés.'], '#E2574C'));
+    ['¡Desde acá arriba te vi venir! A ver qué tan fuerte sos.'], ['Bien ahí. Graciela te va a costar, pero podés.'], '#E2574C'));
   M.zonas = [['villapiedra', 1, 12, 28, 24], ['serrania', 1, 1, 28, 11]];
   M.zonaBase = 'serrania';
   return M;
@@ -234,17 +234,17 @@ function mapaCamalote(){
   M.camino(14, 1, 14, 2);
   M.salida(14, 0, 'tormenta', 16, 26);
   M.npc({id:'guardia_camalote', x:14, y:2, tipo:'guardia', nombre:'Guardia Nelly', requiere:'camalote', ropa:'#2F4A7A', pelo:'#7E5434',
-    frases:['Más allá está Cerro Tormenta. Cae cada rayo que da miedo.', 'Solo pasa quien tenga la Medalla Camalote de la Capitana Iara.'],
+    frases:['Más allá está Cerro Tormenta. Cae cada rayo que da miedo.', 'Solo pasa quien tenga la Medalla Camalote de la Capitana Vero.'],
     abierto:['Con esa medalla vas a aguantar la tormenta. ¡Pasá!']});
   M.npc({id:'vecino_cam', x:21, y:16, tipo:'vecino', nombre:'Marinero Coco', ropa:'#FFFFFF', pelo:'#22304A', suelo:':',
-    frases:['La Capitana Iara pelea con criaturas de Agua.', 'Lo que mejor les pega es el Rayo y la Planta. Con Fuego, ni lo intentes.']});
+    frases:['La Capitana Vero pelea con criaturas de Agua.', 'Lo que mejor les pega es el Rayo y la Planta. Con Fuego, ni lo intentes.']});
   M.npc(entrenador('lu', 22, 5, 'Surfista', 'Lu', [['ranacua',14],['tortuguin',15]], 230,
     ['¡Qué olas hoy! Ideal para una pelea.'], ['Me revolcó la ola.'], '#FF7FA3'));
   M.npc(entrenador('toto', 4, 24, 'Electricista', 'Toto', [['enchufin',14],['pilita',15]], 230,
     ['Ojo que mis bichos dan patada.'], ['Se me saltaron los tapones.'], '#F2B63D'));
   M.npc(entrenador('lalo', 6, 6, 'Pescador', 'Lalo', [['bagrecito',13],['carpincho',13]], 200,
     ['¡Picó uno! Ah, no, sos vos. Bueno, peleemos igual.'], ['Hoy no pica nada...'], '#5E7E9E'));
-  M.npc(entrenador('uma', 19, 24, 'Marinera', 'Uma', [['hornero',14],['pejerrin',14]], 220,
+  M.npc(entrenador('uma', 19, 24, 'Marinera', 'Cami', [['hornero',14],['pejerrin',14]], 220,
     ['¡Todos a bordo! Primero tenés que pasar por mí.'], ['¡Hombre al agua! Bah, criatura al agua.'], '#E2574C'));
   M.zonas = [['camalote', 1, 11, 24, 22], ['costa', 1, 1, 34, 26]];
   M.zonaBase = 'costa';
@@ -266,7 +266,7 @@ function mapaTormenta(){
   M.edificio(7, 13, 5, 'centro', 'centro');
   M.edificio(20, 13, 5, 'market', 'market');
   M.edificio(13, 17, 7, 'gimnasio', {lider:'fulgencio'}, {color:'#4656A0', tipoGym:'rayo'});
-  casaConInterior(M, 7, 18, '#5A6B9C', {nombre: 'Casa del Meteorólogo', npc: {nombre: 'Don Anselmo', ropa: '#4656A0', pelo: '#E9E2D3', regalo: true,
+  casaConInterior(M, 7, 18, '#5A6B9C', {nombre: 'Casa del Meteorólogo', npc: {nombre: 'Don Alberto', ropa: '#4656A0', pelo: '#E9E2D3', regalo: true,
     frases: ['Estudio las tormentas de este cerro hace cuarenta años.', 'Cuando truena fuerte, allá arriba se ve un ave enorme... Huracanto, le dicen.', 'Tomá, que lo vas a necesitar.']}});
   M.rect(13, 19, 15, 19, ':'); M.rect(17, 19, 19, 19, ':');
   M.borde('T');
@@ -276,15 +276,15 @@ function mapaTormenta(){
   M.camino(16, 1, 16, 2);
   M.salida(16, 0, 'fogon', 16, 24);
   M.npc({id:'guardia_tormenta', x:16, y:2, tipo:'guardia', nombre:'Guardia Tito', requiere:'relampago', ropa:'#2F4A7A', pelo:'#C9C9C9',
-    frases:['El camino a Monte Fogón quema, literalmente.', 'Volvé cuando tengas la Medalla Relámpago de Fulgencio.'],
+    frases:['El camino a Monte Fogón quema, literalmente.', 'Volvé cuando tengas la Medalla Relámpago de Gustavo.'],
     abierto:['¡Una Medalla Relámpago! Pasá, y llevá agua que allá hace calor.']});
-  M.npc({id:'vecino_tor', x:12, y:20, tipo:'vecino', nombre:'Abuela Rayén', ropa:'#7A4FC9', pelo:'#E9E2D3', suelo:':',
-    frases:['Fulgencio usa criaturas de Rayo. Son rápidas como la luz.', 'Las de Piedra casi no sienten la electricidad. Pensalo.']});
+  M.npc({id:'vecino_tor', x:12, y:20, tipo:'vecino', nombre:'Abuela Norma', ropa:'#7A4FC9', pelo:'#E9E2D3', suelo:':',
+    frases:['Gustavo usa criaturas de Rayo. Son rápidas como la luz.', 'Las de Piedra casi no sienten la electricidad. Pensalo.']});
   M.npc(entrenador('nieves', 26, 23, 'Esquiadora', 'Nieves', [['escarchin',17],['pinguinito',18]], 320,
     ['¡Qué frío! Calentemos con una pelea.'], ['Me congelé del todo.'], '#BFE9FF'));
   M.npc(entrenador('rafa', 5, 23, 'Guardaparques', 'Rafa', [['huemulito',18],['picaflor',18]], 320,
     ['Cuido a las criaturas del cerro. Y peleo con ellas.'], ['Cuidalas bien, eh.'], '#4F9A3F'));
-  M.npc(entrenador('nubia', 8, 7, 'Meteoróloga', 'Nubia', [['nubarron',17],['chispon',17]], 300,
+  M.npc(entrenador('nubia', 8, 7, 'Meteoróloga', 'Flor', [['nubarron',17],['chispon',17]], 300,
     ['Mi pronóstico: tormenta fuerte sobre tu equipo.'], ['Le erré al pronóstico.'], '#8A93B8'));
   M.npc(entrenador('rayito', 24, 8, 'Pibe', 'Rayito', [['pilon',18],['condorcito',18]], 320,
     ['¡Bzzz! ¡Te voy a dejar con los pelos parados!'], ['Me quedé sin chispa...'], '#FFD23F'));
@@ -314,12 +314,12 @@ function mapaFogon(){
   M.salida(16, 25, 'tormenta', 16, 1);
   M.camino(27, 1, 27, 6);
   M.salida(27, 0, 'supremo', 15, 28);
-  M.npc({id:'guardia_supremo', x:27, y:1, tipo:'guardia', nombre:'Guardiana Elvira', requiere:'todas', ropa:'#C9A227', pelo:'#E9E2D3',
+  M.npc({id:'guardia_supremo', x:27, y:1, tipo:'guardia', nombre:'Guardiana Susana', requiere:'todas', ropa:'#C9A227', pelo:'#E9E2D3',
     frases:['Este sendero lleva a la Cumbre Suprema, donde está el Cuartel Supremo.', 'Solo pueden subir quienes tengan las cuatro medallas de Sorlandia.'],
     abierto:['¡Las cuatro medallas! Subí: en la cumbre te espera el Cuartel Supremo.', 'Allá vas a pelear contra los cuatro mejores entrenadores y el Campeón, uno tras otro.']});
   M.m[3][16] = 'A'; M.altares['16,3'] = 'intiraya';
   M.npc({id:'vecino_fog', x:12, y:21, tipo:'vecino', nombre:'Doña Pocha', ropa:'#F2B63D', pelo:'#3B2A22', suelo:':',
-    frases:['Don Rulo es el líder más fuerte de todos.', 'Sus criaturas de Fuego no aguantan el Agua ni la Piedra.']});
+    frases:['Don Rubén es el líder más fuerte de todos.', 'Sus criaturas de Fuego no aguantan el Agua ni la Piedra.']});
   M.npc(entrenador('juan', 27, 9, 'Bombero', 'Juan', [['ranacua',22],['fogonero',23]], 420,
     ['¡Apago incendios y también criaturas!'], ['Me tiraste el balde encima.'], '#E2302E'));
   M.npc(entrenador('ema', 4, 5, 'Vulcanóloga', 'Ema', [['cuarzon',23],['fosilon',24],['ajipicante',24]], 450,
@@ -350,7 +350,7 @@ function mapaSupremo(){
   M.salpicar(3, 5, 26, 12, .05, 'f', [':']);
   M.borde('T');
   M.salida(15, 29, 'fogon', 27, 1);
-  M.npc({id:'vecino_sup', x:12, y:9, tipo:'vecino', nombre:'Cronista Pía', ropa:'#7A4FC9', pelo:'#2A2420', suelo:':',
+  M.npc({id:'vecino_sup', x:12, y:9, tipo:'vecino', nombre:'Cronista Romina', ropa:'#7A4FC9', pelo:'#2A2420', suelo:':',
     frases:['Bienvenido a la Cumbre Suprema. Muy pocos llegan hasta acá.', 'En el Cuartel se pelea contra cinco entrenadores seguidos, sin curarse en el medio.', 'Si salís a curarte o perdés, tenés que empezar de nuevo. Llevá jarabes.']});
   M.npc(entrenador('veterano1', 9, 17, 'Veterano', 'Osvaldo', [['ranacua',26],['pampero',26],['chispon',27]], 600,
     ['Hace veinte años que intento llegar al Cuartel. Practiquemos.'], ['Vos sí que vas a llegar.'], '#7E5434'));
