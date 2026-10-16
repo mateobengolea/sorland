@@ -43,7 +43,9 @@ function pintarMundo(){
   MW = {canvas, ctx: canvas.getContext('2d'), pos: {x: S.mundo.x, y: S.mundo.y}, desde: null, hacia: null, t: 0,
         dir: 1, teclas: new Set(), raf: 0, zona: null, img: new Image(), ultimo: performance.now(), pasos: 0,
         ocupado: false, dlg: null, alerta: null};
-  MW.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgCriatura(S.especie, {humor:'feliz'}));
+  MW.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgEntrenador(S.entrenador));
+  MW.seg = {x: S.mundo.x, y: Math.min(M.h - 2, S.mundo.y + 1)}; MW.segDesde = {...MW.seg};
+  if(!transitable(M, MW.seg.x, MW.seg.y)){ MW.seg = {...MW.pos}; MW.segDesde = {...MW.pos}; }
   ajustarLienzo();
   window.addEventListener('resize', ajustarLienzo);
   document.querySelectorAll('.dpad button').forEach(b => {
@@ -127,10 +129,11 @@ function cuadro(ahora){
       const [dx, dy] = DIRS[d];
       if(dx) MW.dir = dx;
       const nx = MW.pos.x + dx, ny = MW.pos.y + dy;
-      if(transitable(M, nx, ny)){ MW.desde = {...MW.pos}; MW.hacia = {x: nx, y: ny}; MW.t = 0; }
+      if(transitable(M, nx, ny)){ MW.desde = {...MW.pos}; MW.hacia = {x: nx, y: ny}; MW.t = 0; MW.segDesde = {...MW.seg}; MW.seg = {...MW.pos}; }
       else {
         const n = npcEn(M, nx, ny);
         if(n){ MW.teclas.clear(); hablarCon(n); }
+        else if(M.altares[nx + ',' + ny]){ MW.teclas.clear(); visitarAltar(M.altares[nx + ',' + ny]); }
         else if(typeof jugadorEn === 'function'){ const j = jugadorEn(nx, ny); if(j){ MW.teclas.clear(); abrirInteraccion(j); } }
       }
     }
@@ -152,12 +155,27 @@ function alLlegar(){
     salirDelMundo(); guardar(); pintarMundo();
     return true;
   }
+  // Objetos en el piso
+  const it = itemEn(M, x, y);
+  if(it){
+    S.recogidos[it.id] = true;
+    const txt = darPremio(premioAleatorio());
+    guardar();
+    MW.teclas.clear();
+    dialogo('¡Encontraste algo!', [`En el piso había ${txt}.`]);
+    return false;
+  }
   // Puertas
   if(c === 'D'){
     const acc = M.puertas[x + ',' + y];
     MW.teclas.clear();
     // Al entrar por una puerta volvés al casillero de abajo para no quedar adentro.
     const afuera = {x, y: y + 1};
+    if(acc && acc.interior){
+      S.mundo = {mapa: acc.interior, x: 5, y: 7};
+      salirDelMundo(); guardar(); pintarMundo();
+      return true;
+    }
     if(acc === 'casa'){
       S.mundo = {mapa: M.id, ...afuera};
       salirDelMundo(); guardar(); pintarJuego();
@@ -165,14 +183,14 @@ function alLlegar(){
       return true;
     }
     MW.pos = afuera; S.mundo = {mapa: M.id, ...afuera};
-    if(acc === 'posada'){
+    if(acc === 'centro'){
       curarEquipo();
       S.respawn = {mapa: M.id, ...afuera};
       guardar();
-      dialogo('Posadera', ['¡Bienvenido a la posada! Descansen un ratito...', 'Listo: tu equipo está como nuevo. Si te va mal en una pelea, volvés acá.']);
+      dialogo('Enfermera Clara', ['¡Bienvenido al Centro de Rehabilitación! Dejame a tus criaturas un ratito...', 'Listo: tu equipo está como nuevo. Si te va mal en una pelea, volvés a este centro.']);
       return false;
     }
-    if(acc === 'almacen'){ pestana.tienda = 'aventura'; abrirHoja('tienda'); return false; }
+    if(acc === 'market'){ pestana.tienda = 'aventura'; abrirHoja('tienda'); return false; }
     if(acc && acc.lider){ desafiarLider(LIDERES[acc.lider], M); return false; }
     return false;
   }
@@ -190,7 +208,7 @@ function alLlegar(){
   if(c === ','){
     const z = zonaEn(M, x, y);
     if(ZONAS[z] && ZONAS[z].aparecen.length && Math.random() < .13){
-      if(!hayLuchadorEnPie()){ avisar('Tu equipo está agotado. Descansá en una posada o en tu casa.'); return false; }
+      if(!hayLuchadorEnPie()){ avisar('Tu equipo está agotado. Andá a un Centro de Rehabilitación o a tu casa.'); return false; }
       MW.teclas.clear();
       const salvaje = crearSalvaje(z);
       salirDelMundo(); guardar();
@@ -203,7 +221,16 @@ function alLlegar(){
 
 async function hablarCon(n){
   if(!MW || MW.ocupado) return;
-  if(n.tipo === 'vecino'){ await dialogo(n.nombre, n.frases); return; }
+  if(n.tipo === 'vecino'){
+    if(n.regalo && !S.regalos[n.id]){
+      await dialogo(n.nombre, n.frases);
+      S.regalos[n.id] = true;
+      const txt = darPremio(premioAleatorio(true)); guardar();
+      await dialogo('¡Regalo!', [`${n.nombre} te dio ${txt}.`]);
+      return;
+    }
+    await dialogo(n.nombre, n.regalo ? [n.frases[0], '¡Volvé cuando quieras!'] : n.frases); return;
+  }
   if(n.tipo === 'guardia'){ await dialogo(n.nombre, guardiaAbierto(n) ? n.abierto : n.frases); return; }
   if(n.tipo === 'entrenador'){
     if(S.vencidos[n.id]){ await dialogo(`${n.titulo} ${n.nombre}`, n.despues); return; }
@@ -214,7 +241,7 @@ async function hablarCon(n){
 }
 async function desafiarLider(L, M){
   if(S.medallas[L.medalla]){ await dialogo(`${L.titulo} ${L.nombre}`, [L.yaGano]); return; }
-  if(!hayLuchadorEnPie()){ await dialogo(`${L.titulo} ${L.nombre}`, ['Tu equipo está agotado. Pasá por la posada y volvé.']); return; }
+  if(!hayLuchadorEnPie()){ await dialogo(`${L.titulo} ${L.nombre}`, ['Tu equipo está agotado. Pasá por el Centro de Rehabilitación y volvé.']); return; }
   await dialogo(`${L.titulo} ${L.nombre}`, L.antes);
   lanzarPeleaEntrenador({...L, lider: true}, M.zonas[0][0]);
 }
@@ -226,6 +253,43 @@ function lanzarPeleaEntrenador(n, zona){
   });
   salirDelMundo(); guardar();
   empezarCombate(rivales, zona, n);
+}
+
+/* ---------------- Premios y altares ---------------- */
+function premioAleatorio(generoso){
+  const r = Math.random() * (generoso ? .85 : 1) + (generoso ? .15 : 0);
+  if(r < .32) return {obj: 'capsula', n: 3};
+  if(r < .55) return {obj: 'jarabe', n: 2};
+  if(r < .7) return {obj: 'supercapsula', n: 2};
+  if(r < .82) return {obj: 'jarabemax', n: 1};
+  if(r < .89) return {obj: 'ultracapsula', n: 1};
+  if(r < .94) return {obj: 'jarabetotal', n: 1};
+  if(r < .97) return {mueble: PELUCHES[Math.floor(Math.random() * PELUCHES.length)]};
+  return {monedas: 150 + Math.floor(Math.random() * 250)};
+}
+function darPremio(p){
+  if(p.obj){
+    S.inv.objetos[p.obj] = (S.inv.objetos[p.obj] || 0) + p.n;
+    const o = POR_ID[p.obj], plural = {capsula: 'cápsulas', supercapsula: 'súper cápsulas', jarabe: 'jarabes', jarabemax: 'jarabes grandes'};
+    return p.n > 1 ? `${p.n} ${plural[p.obj] || o.nom}` : `${/jarabe/.test(p.obj) ? 'un' : 'una'} ${o.nom}`;
+  }
+  if(p.mueble){ const id = 'peluche_' + p.mueble; S.inv.muebles[id] = (S.inv.muebles[id] || 0) + 1; return `un ${POR_ID[id].nom} para tu casa`; }
+  ganar(p.monedas); return `${p.monedas} monedas`;
+}
+async function visitarAltar(id){
+  const L = ESPECIES[id], estado = S.legendarios[id];
+  if(estado && estado.capturada){ await dialogo('Altar antiguo', ['El altar está en silencio. Ya no hay nada acá.']); return; }
+  if(cantMedallas() < 4){ await dialogo('Altar antiguo', ['Un altar de piedra muy viejo. Se siente una energía rara...', 'Hay una inscripción: «Solo quien tenga las cuatro medallas será escuchado».']); return; }
+  if(estado && estado.proxima > Date.now()){
+    const h = Math.ceil((estado.proxima - Date.now()) / 3600000);
+    await dialogo('Altar antiguo', ['El altar está frío. Lo que vivía acá se fue por un tiempo.', `Volvé en unas ${h} hora${h > 1 ? 's' : ''}.`]); return;
+  }
+  if(!hayLuchadorEnPie()){ await dialogo('Altar antiguo', ['Algo se mueve detrás del altar... pero tu equipo está agotado. Mejor volvé descansado.']); return; }
+  await dialogo('Altar antiguo', ['Apoyás las cuatro medallas sobre la piedra...', 'El aire tiembla. ¡Algo enorme se acerca!']);
+  const stats = statsPorNivel(L.base, 40);
+  const rival = {esp: id, nombre: L.nombre, nivel: 40, stats, hp: vidaMax(stats, 40), tipo: L.tipo, mult: 1, shiny: Math.random() < PROB_SHINY};
+  salirDelMundo(); guardar();
+  empezarCombate([rival], zonaEn(mapaActual(), S.mundo.x, S.mundo.y), null);
 }
 
 function mostrarZona(forzar){
@@ -250,6 +314,9 @@ function colorSuelo(M, c, x, y){
     case 's': return t.tierra;
     case 'v': return t.pasto;
     case '!': return '#E2492E';
+    case 'W': return '#C9B08E';
+    case 'p': case 'm': case 'x': return (x + y) % 2 ? '#E2C29A' : '#DDBB91';
+    case 'A': return M.base === 's' ? t.tierra : M.id === 'camalote' ? '#5AB4E8' : t.pasto;
     case '#': case 'T': {
       if(M.id === 'ceibo') return zonaEn(M, x, y) === 'sierras' ? t.tierra : t.pasto;
       return M.base === 's' ? t.tierra : t.pasto;
@@ -279,15 +346,22 @@ function dibujar(ahora){
     if(c === ':') adoquin(ctx, sx, sy, x, y);
     if(c === '!') lava(ctx, sx, sy, x, y, ahora);
     if(c === '=' && hashXY(x, y) < .5){ ctx.fillStyle = 'rgba(160,120,60,.18)'; ctx.fillRect(sx + 6, sy + 10, 4, 3); }
-    if(M.salidas[x + ',' + y]) flecha(ctx, sx, sy, x, y, M, ahora);
+    if(c === 'W') pared(ctx, sx, sy, x, y, M);
+    if(c === 'x'){ ctx.fillStyle = '#B5452B'; ctx.fillRect(sx + 4, sy + 6, TS - 8, TS - 12); }
+    if(M.salidas[x + ',' + y] && c !== 'x') flecha(ctx, sx, sy, x, y, M, ahora);
   }
+  for(const mb of M.muebles) if(mb.tipo === 'alfombra'){ ctx.fillStyle = '#E2574C'; ctx.fillRect(mb.x * TS - camX - 12, mb.y * TS - camY + 4, TS * 2, TS - 8); ctx.strokeStyle = '#FFD23F'; ctx.lineWidth = 2; ctx.strokeRect(mb.x * TS - camX - 8, mb.y * TS - camY + 8, TS * 2 - 8, TS - 16); }
+  for(const it of M.items) if(!S.recogidos[it.id]) brilloItem(ctx, it.x * TS - camX, it.y * TS - camY, ahora);
   const otros = typeof jugadoresVisibles === 'function' ? jugadoresVisibles() : [];
   for(let y = y0; y <= y1; y++){
     for(let x = x0; x <= x1; x++){
       const c = M.m[y][x], sx = Math.round(x * TS - camX), sy = Math.round(y * TS - camY);
       if(c === '#') roca(ctx, sx, sy, x, y, M);
       if(c === 'R' || c === 'H' || c === 'D') edificioTile(ctx, sx, sy, x, y, c, M);
+      if(c === 'A') altar(ctx, sx, sy, x, y, ahora, M);
     }
+    for(const mb of M.muebles) if(mb.y === y && mb.tipo !== 'alfombra') muebleInterior(ctx, mb.x * TS - camX, mb.y * TS - camY, mb.tipo);
+    if(MW.seg && y === Math.floor(segY() + .5)) seguidor(ctx, ahora, camX, camY);
     for(let x = x0; x <= x1; x++) if(M.m[y][x] === 'T') arbol(ctx, Math.round(x * TS - camX), Math.round(y * TS - camY), x, y, M);
     for(const n of M.npcs) if(n.y === y && !(n.tipo === 'guardia' && guardiaAbierto(n))) persona(ctx, (n.x + .5) * TS - camX, (n.y + 1) * TS - camY, n, ahora);
     for(const o of otros) if(Math.floor(o.py + .5) === y) otroJugador(ctx, (o.px + .5) * TS - camX, (o.py + 1) * TS - camY, o, ahora);
@@ -394,7 +468,7 @@ function roca(ctx, sx, sy, x, y, M){
   ctx.beginPath(); ctx.moveTo(sx + 4, sy + 26); ctx.lineTo(sx + 8, sy + 10); ctx.lineTo(sx + 18, sy + 4); ctx.lineTo(sx + 28, sy + 14); ctx.lineTo(sx + 28, sy + 26); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.moveTo(sx + 10, sy + 12); ctx.lineTo(sx + 17, sy + 8); ctx.stroke();
 }
-const COLOR_EDIF = {mia:'#E2574C', posada:'#FF7FA3', almacen:'#3B82D6'};
+const COLOR_EDIF = {mia:'#E2574C', centro:'#FF7FA3', market:'#3B82D6'};
 function edificioDe(M, x, y){ return M.edificios.find(e => x >= e.x && x < e.x + e.ancho && (y === e.y || y === e.y + 1)); }
 function edificioTile(ctx, sx, sy, x, y, c, M){
   const e = edificioDe(M, x, y) || {tipo:'casa', color:'#6BAF5B', x, ancho:1, y};
@@ -423,7 +497,7 @@ function edificioTile(ctx, sx, sy, x, y, c, M){
   }
 }
 function cartelEdificio(ctx, e, camX, camY){
-  const textos = {posada:'POSADA', almacen:'ALMACÉN', gimnasio:'GIMNASIO'};
+  const textos = {centro:'CENTRO', market:'MARKET', gimnasio:'GIMNASIO', mia:'TU CASA'};
   const t = textos[e.tipo]; if(!t) return;
   const cx = (e.x + e.ancho / 2) * TS - camX, cy = e.y * TS - camY + 18;
   if(cx < -80 || cx > MW.vw + 80 || cy < -40 || cy > MW.vh + 40) return;
@@ -458,14 +532,69 @@ function etiqueta(ctx, texto, cx, y, fondo){
   ctx.fillStyle = '#fff'; ctx.fillText(texto, cx, y + 11);
 }
 function jugador(ctx, cx, piso, t){
-  const moviendo = !!MW.hacia, salto = moviendo ? Math.abs(Math.sin(MW.t * Math.PI)) * 4 : Math.sin(t / 400) * 1;
-  const tam = 44;
-  ctx.fillStyle = 'rgba(34,48,74,.2)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 13, 4, 0, 0, 7); ctx.fill();
+  const moviendo = !!MW.hacia, salto = moviendo ? Math.abs(Math.sin(MW.t * Math.PI)) * 3 : 0;
+  const alto = 46, ancho = alto * .72;
+  ctx.fillStyle = 'rgba(34,48,74,.2)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
   ctx.save();
   ctx.translate(cx, piso - salto);
   if(MW.dir < 0) ctx.scale(-1, 1);
-  if(MW.img.complete) ctx.drawImage(MW.img, -tam / 2, -tam + 2, tam, tam);
+  if(MW.img.complete) ctx.drawImage(MW.img, -ancho / 2, -alto + 1, ancho, alto);
   ctx.restore();
-  etiqueta(ctx, apodo || S.nombre, cx, piso - tam - 16 - salto);
-  if(typeof ON !== 'undefined' && ON.miBurbuja && ON.miBurbuja.hasta > t) burbuja(ctx, ON.miBurbuja.txt, cx, piso - tam - 22 - salto);
+  etiqueta(ctx, apodo || 'Vos', cx, piso - alto - 14 - salto);
+  if(typeof ON !== 'undefined' && ON.miBurbuja && ON.miBurbuja.hasta > t) burbuja(ctx, ON.miBurbuja.txt, cx, piso - alto - 20 - salto);
+}
+// La criatura que va primero en el equipo te sigue un casillero atrás.
+function segX(){ return MW.hacia ? MW.segDesde.x + (MW.seg.x - MW.segDesde.x) * MW.t : MW.seg.x; }
+function segY(){ return MW.hacia ? MW.segDesde.y + (MW.seg.y - MW.segDesde.y) * MW.t : MW.seg.y; }
+function seguidor(ctx, t, camX, camY){
+  const c = S.equipo[0]; if(!c) return;
+  if(!MW.imgLider || MW.imgLiderEsp !== c.esp + c.shiny){
+    MW.imgLider = new Image(); MW.imgLiderEsp = c.esp + c.shiny;
+    MW.imgLider.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgEspecie(c.esp, {humor: 'feliz', shiny: c.shiny}));
+  }
+  const x = segX(), y = segY();
+  if(x === MW.pos.x && y === MW.pos.y && !MW.hacia) return;
+  const cx = (x + .5) * TS - camX, piso = (y + 1) * TS - camY, tam = 36;
+  const salto = MW.hacia ? Math.abs(Math.sin(MW.t * Math.PI)) * 3 : Math.abs(Math.sin(t / 380)) * 1.5;
+  ctx.save(); ctx.translate(cx, piso - salto);
+  if(MW.dir < 0) ctx.scale(-1, 1);
+  if(MW.imgLider.complete) ctx.drawImage(MW.imgLider, -tam / 2, -tam + 2, tam, tam);
+  ctx.restore();
+}
+function brilloItem(ctx, sx, sy, t){
+  const p = (Math.sin(t / 250 + sx) + 1) / 2;
+  ctx.save(); ctx.translate(sx + 16, sy + 18);
+  ctx.fillStyle = '#F2545B'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, 0, 6, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = `rgba(255,236,120,${.5 + p * .5})`;
+  ctx.beginPath(); ctx.moveTo(8, -12); ctx.lineTo(10, -8); ctx.lineTo(14, -6); ctx.lineTo(10, -4); ctx.lineTo(8, 0); ctx.lineTo(6, -4); ctx.lineTo(2, -6); ctx.lineTo(6, -8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function altar(ctx, sx, sy, x, y, t, M){
+  const id = M.altares[x + ',' + y], capt = S.legendarios[id] && S.legendarios[id].capturada;
+  ctx.fillStyle = 'rgba(34,48,74,.2)'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 28, 14, 4, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#B8B2A6'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
+  ctx.fillRect(sx + 4, sy + 14, 24, 14); ctx.strokeRect(sx + 4, sy + 14, 24, 14);
+  ctx.fillRect(sx + 8, sy + 2, 16, 12); ctx.strokeRect(sx + 8, sy + 2, 16, 12);
+  if(!capt && cantMedallas() >= 4){
+    const p = (Math.sin(t / 300) + 1) / 2;
+    ctx.fillStyle = `rgba(255,220,90,${.35 + p * .5})`; ctx.beginPath(); ctx.arc(sx + 16, sy + 8, 5 + p * 3, 0, 7); ctx.fill();
+  }
+}
+function pared(ctx, sx, sy, x, y, M){
+  if(y <= 1){
+    ctx.fillStyle = y === 0 ? '#B89A78' : '#D9C3A0'; ctx.fillRect(sx, sy, TS + 1, TS + 1);
+    if(y === 1){ ctx.fillStyle = '#8A6A4A'; ctx.fillRect(sx, sy + TS - 5, TS + 1, 5); }
+    if(y === 0 && x % 3 === 1 && x > 0 && x < M.w - 1){ ctx.fillStyle = '#9FD9F2'; ctx.fillRect(sx + 6, sy + 8, 20, 18); ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2; ctx.strokeRect(sx + 6, sy + 8, 20, 18); }
+  } else { ctx.fillStyle = '#5A4232'; ctx.fillRect(sx, sy, TS + 1, TS + 1); }
+}
+function muebleInterior(ctx, sx, sy, tipo){
+  ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
+  const rr = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 4) : ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke(); };
+  if(tipo === 'cama'){ rr(sx + 2, sy - 6, 28, 36, '#F4E8D2'); rr(sx + 4, sy + 8, 24, 20, '#3B82D6'); rr(sx + 6, sy - 2, 20, 8, '#fff'); }
+  else if(tipo === 'estante'){ rr(sx + 3, sy - 14, 26, 42, '#8A5A35'); ctx.fillStyle = '#E2574C'; ctx.fillRect(sx + 7, sy - 8, 5, 10); ctx.fillStyle = '#4CC27A'; ctx.fillRect(sx + 14, sy - 8, 5, 10); ctx.fillStyle = '#FFD23F'; ctx.fillRect(sx + 9, sy + 8, 14, 8); }
+  else if(tipo === 'tele'){ rr(sx + 4, sy + 12, 24, 16, '#8A5A35'); rr(sx + 2, sy - 6, 28, 18, '#22304A'); ctx.fillStyle = '#9FD9F2'; ctx.fillRect(sx + 5, sy - 3, 22, 12); }
+  else if(tipo === 'planta'){ rr(sx + 9, sy + 14, 14, 14, '#C97B4A'); ctx.fillStyle = '#4FAE56'; ctx.beginPath(); ctx.arc(sx + 16, sy + 8, 11, 0, 7); ctx.fill(); ctx.stroke(); }
+  else if(tipo === 'mesa'){ rr(sx + 2, sy + 4, 28, 18, '#B5835A'); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx + 16, sy + 10, 4, 0, 7); ctx.fill(); }
+  else if(tipo === 'sillon'){ rr(sx + 2, sy + 2, 28, 26, '#7A4FC9'); rr(sx + 6, sy + 12, 20, 12, '#9C7CD4'); }
 }

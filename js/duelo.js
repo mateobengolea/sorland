@@ -11,14 +11,15 @@ function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = M
 function enviarMapa(payload){ if(ON.canal) ON.canal.send({type: 'broadcast', event: 'duelo', payload: {...payload, de: usuarioId, apodo}}); }
 
 function equipoDuelo(){
-  return equipoLuchadores().map(l => ({esp: l.esp, nombre: String(l.nombre).slice(0, 16), nivel: l.nivel, stats: {...l.stats}, tipo: l.tipo}));
+  return equipoLuchadores().map(l => ({esp: l.esp, nombre: String(l.nombre).slice(0, 16), nivel: l.nivel, stats: {...l.stats}, tipo: l.tipo, shiny: !!l.shiny}));
 }
 function armarLado(equipo){
   const lista = (equipo || []).slice(0, 6).map(c => {
     const nivel = Math.max(1, Math.min(100, c.nivel | 0));
     const stats = {vida: Math.min(999, c.stats.vida | 0), fuerza: Math.min(999, c.stats.fuerza | 0), velocidad: Math.min(999, c.stats.velocidad | 0)};
     const max = vidaMax(stats, nivel);
-    return {esp: c.esp, nombre: c.nombre, nivel, stats, tipo: tipoDe(c.esp), hp: max, max, modFuerza: 1};
+    if(!ESPECIES[c.esp]) c.esp = 'carosor';
+    return {esp: c.esp, nombre: c.nombre, nivel, stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, hp: max, max, modFuerza: 1};
   });
   return {lista, i: 0};
 }
@@ -28,7 +29,7 @@ function pedirDuelo(o){
   if(DU){ avisar('Ya estás en un duelo'); return; }
   if(ON.pedido){ avisar('Esperá la respuesta de tu otro pedido'); return; }
   ON.pedido = {para: o.id, apodo: o.apodo};
-  enviarMapa({tipo: 'pedido', para: o.id, nivel: S.nivel});
+  enviarMapa({tipo: 'pedido', para: o.id, nivel: nivelEntrenador()});
   avisar(`Le pediste un duelo a ${o.apodo}. Esperando respuesta...`);
   setTimeout(() => { if(ON.pedido && ON.pedido.para === o.id){ ON.pedido = null; avisar(`${o.apodo} no respondió`); } }, 25000);
 }
@@ -131,8 +132,8 @@ function pintarDuelo(){
   dibujarBichosDuelo();
 }
 function dibujarBichosDuelo(){
-  $('#b-rival').innerHTML = svgEspecie(actDu(DU.otro).esp, {humor: 'bien'});
-  $('#b-propio').innerHTML = svgEspecie(actDu(DU.lado).esp, {humor: 'bien'});
+  $('#b-rival').innerHTML = svgEspecie(actDu(DU.otro).esp, {humor: 'bien', shiny: actDu(DU.otro).shiny});
+  $('#b-propio').innerHTML = svgEspecie(actDu(DU.lado).esp, {humor: 'bien', shiny: actDu(DU.lado).shiny});
   fichasDuelo();
 }
 function fichasDuelo(){

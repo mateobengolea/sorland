@@ -296,3 +296,43 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .acciones-jugador{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .acciones-jugador .btn{padding:10px;border:2px solid var(--tinta);border-radius:12px;font-weight:800}
 .pedido-txt{font-size:1.05rem;margin:0 0 4px}
+
+/* ======================= Entrenador ======================= */
+.top{gap:10px}
+.top-avatar{width:40px;height:52px;flex:none;margin:-4px 0}
+.top-avatar svg{width:100%;height:100%}
+.medallas-top{display:flex;align-items:center;gap:2px;margin-top:2px}
+.medallas-top small{font-weight:800;color:var(--tinta-suave);margin-left:4px;font-size:.75rem}
+.creador{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:14px;align-items:center}
+.cr-vista{background:linear-gradient(#DFF1FA,#BFE4F3);border:2.5px solid var(--tinta);border-radius:16px;padding:8px;display:grid;place-items:center}
+.cr-vista svg{width:100%;max-width:130px;height:auto}
+.cr-controles{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cr-fila .rotulo-chico{display:block;margin:0 0 3px}
+.cr-opciones{display:flex;flex-wrap:wrap;gap:6px}
+.cr-opciones button{min-width:34px;height:34px;padding:0 10px;border:2.5px solid var(--tinta);border-radius:99px;background:#fff;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;gap:6px}
+.cr-opciones button[aria-pressed="true"]{background:var(--sol);box-shadow:0 0 0 3px var(--papel),0 0 0 5px var(--tinta)}
+.punto{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid var(--tinta)}
+@media (max-width:420px){.creador{grid-template-columns:1fr}.cr-vista svg{max-width:110px}}
+.ent-casa{position:absolute;left:36%;bottom:18px;width:96px;height:134px;transform:translateX(-50%);z-index:4}
+.ent-casa svg{width:100%;height:100%}
+.escenario .bichito{left:62%;width:150px;height:150px}
+.mueble-svg{display:block}
+.mueble-svg svg{width:100%;height:100%;overflow:visible}
+.muestra-fondo{display:block;width:100%;height:42px;border:2px solid var(--tinta);border-radius:8px;position:relative;overflow:hidden}
+.muestra-fondo span{position:absolute;inset:62% 0 0 0;border-top:2px solid var(--tinta)}
+
+/* ======================= Álbum, shiny y evolución ======================= */
+.grilla-album{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+.item.album.chico{padding:8px;gap:3px}
+.item.album.chico h3{font-size:.92rem}
+.item.album.chico p{font-size:.72rem}
+.item.album .num{font-weight:800;font-size:.72rem;color:var(--tinta-suave);font-variant-numeric:tabular-nums}
+.item.album.legendaria{background:linear-gradient(#FFF7D6,#fff);border-color:#B8860B}
+.item.criatura.es-shiny{background:linear-gradient(135deg,#FFF7D6,#fff 60%)}
+.cr-evo{font-weight:700;color:var(--tinta-suave)}
+.destello{animation:destello 1.2s ease-out}
+@keyframes destello{0%,40%,80%{filter:brightness(2.2) drop-shadow(0 0 10px #FFE45C)}20%,60%,100%{filter:none}}
+.evoluciona{animation:evoluciona 1.8s ease-in-out}
+@keyframes evoluciona{0%{filter:none}20%,40%,60%,80%{filter:brightness(4) saturate(0)}30%,50%,70%{filter:brightness(1.6)}100%{filter:none}}
+.bicho-combate.propio.evoluciona{animation:evoluciona 1.8s ease-in-out}
+.nav{grid-template-columns:repeat(3,1fr)}

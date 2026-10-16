@@ -3,23 +3,19 @@
    Equipo, combate por turnos, captura y álbum.
    ===================================================================== */
 
-const MAX_EQUIPO = 5; // capturadas que acompañan al inicial (6 en total)
+const MAX_EQUIPO = 6;
 
 /* ---------------- Equipo ---------------- */
-function inicialComoLuchador(){
-  const st = {vida: Math.floor(S.stats.vida), fuerza: Math.floor(S.stats.fuerza), velocidad: Math.floor(S.stats.velocidad)};
-  const max = vidaMax(st, S.nivel);
-  const hp = S.hpIni == null ? max : Math.min(S.hpIni, max);
-  return {ref: 'ini', esp: S.especie, nombre: S.nombre, nivel: S.nivel, stats: st, tipo: ESPECIES_COMBATE[S.especie].tipo, hp, max};
-}
-function capturadaComoLuchador(c){
+function comoLuchador(c){
   const max = vidaMax(c.stats, c.nivel);
-  return {ref: c, esp: c.esp, nombre: c.nombre, nivel: c.nivel, stats: c.stats, tipo: tipoDe(c.esp), hp: c.hp == null ? max : Math.min(c.hp, max), max};
+  return {ref: c, esp: c.esp, nombre: c.nombre, nivel: c.nivel, stats: c.stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, hp: c.hp == null ? max : Math.min(c.hp, max), max};
 }
-function equipoLuchadores(){ return [inicialComoLuchador(), ...S.equipo.map(capturadaComoLuchador)]; }
+const capturadaComoLuchador = comoLuchador;
+function equipoLuchadores(){ return S.equipo.map(comoLuchador); }
 function hayLuchadorEnPie(){ return equipoLuchadores().some(l => l.hp > 0); }
-function guardarHp(l){ const v = l.hp >= l.max ? null : l.hp; if(l.ref === 'ini') S.hpIni = v; else l.ref.hp = v; }
-function curarEquipo(){ S.hpIni = null; S.equipo.forEach(c => c.hp = null); S.reserva.forEach(c => c.hp = null); }
+function guardarHp(l){ l.ref.hp = l.hp >= l.max ? null : l.hp; }
+function curarEquipo(){ S.equipo.forEach(c => c.hp = null); S.reserva.forEach(c => c.hp = null); }
+const brillo = l => l.shiny ? ' ✦' : '';
 
 /* ---------------- Combate ---------------- */
 let B = null;
@@ -33,8 +29,7 @@ function empezarCombate(rivales, zona, ent){
   const salvaje = rivales[0];
   const lista = equipoLuchadores();
   const i = lista.findIndex(l => l.hp > 0);
-  lista[0].penal = (S.nec.hambre < 20 || S.nec.energia < 15) ? .8 : 1;
-  B = {salvaje, rivales, ri: 0, ent: ent || null, zona, lista, i, ocupado: true, forzado: false, fin: false, participaron: new Set([i])};
+  B = {salvaje, rivales, ri: 0, ent: ent || null, zona, lista, i, ocupado: true, forzado: false, fin: false, legendaria: ESPECIES[salvaje.esp].legendaria ? salvaje.esp : null};
   S.album.vistos[salvaje.esp] = true;
   pintarCombate();
   (async () => {
@@ -42,11 +37,12 @@ function empezarCombate(rivales, zona, ent){
       await mensaje(`¡${ent.titulo} ${ent.nombre} te desafía!`, 1100);
       await mensaje(`${ent.nombre} sacó a ${salvaje.nombre}.`);
     } else {
-      await mensaje(`¡Apareció un ${salvaje.nombre} salvaje!`);
-      if(salvaje.esp === 'yaguarayo') await mensaje('¡Es rarísimo verlo por acá!');
+      if(B.legendaria) await mensaje(`¡${salvaje.nombre} apareció delante tuyo!`, 1600);
+      else await mensaje(`¡Apareció un ${salvaje.nombre} salvaje!`);
+      if(salvaje.shiny){ animar('b-rival', 'destello', 1200); await mensaje(`¡Brilla! ¡Es un ${salvaje.nombre} shiny, de otro color!`, 1700); }
+      else if(ESPECIES[salvaje.esp].captura <= .18 && !B.legendaria) await mensaje('¡Es rarísimo verlo por acá!');
     }
     await mensaje(`¡Dale, ${activo().nombre}!`);
-    if(B.i === 0 && lista[0].penal < 1) await mensaje(`${S.nombre} tiene ${S.nec.hambre < 20 ? 'hambre' : 'sueño'} y va a pelear peor.`);
     B.ocupado = false; menu('principal');
   })();
 }
@@ -67,14 +63,14 @@ function pintarCombate(){
       <div class="menu-combate" id="menu-combate"></div>
     </section>`;
   if(B.ent) $('.banda-ent b').textContent = B.ent.nombre;
-  $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien'});
+  $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
   pintarPropio();
   fichas();
 }
 const nomRival = () => B.ent ? `${B.salvaje.nombre} de ${B.ent.nombre}` : `${B.salvaje.nombre} salvaje`;
 function pintarPropio(){
   const l = activo();
-  $('#b-propio').innerHTML = svgEspecie(l.esp, {humor: 'bien'});
+  $('#b-propio').innerHTML = svgEspecie(l.esp, {humor: 'bien', shiny: l.shiny});
 }
 function fichaHTML(l, propio){
   const pct = Math.max(0, l.hp / l.max * 100);
@@ -86,8 +82,8 @@ function fichaHTML(l, propio){
 }
 function fichas(){
   if(!$('#f-rival')) return;
-  $('#f-rival').innerHTML = fichaHTML(B.salvaje, false); $('#f-rival b').textContent = B.salvaje.nombre;
-  $('#f-propio').innerHTML = fichaHTML(activo(), true); $('#f-propio b').textContent = activo().nombre;
+  $('#f-rival').innerHTML = fichaHTML(B.salvaje, false); $('#f-rival b').textContent = B.salvaje.nombre + brillo(B.salvaje);
+  $('#f-propio').innerHTML = fichaHTML(activo(), true); $('#f-propio b').textContent = activo().nombre + brillo(activo());
   const cr = $('#cuenta-rivales');
   if(cr) cr.innerHTML = B.rivales.map(r => `<i class="pip ${r.hp > 0 ? '' : 'caido'}"></i>`).join('');
 }
@@ -241,7 +237,7 @@ async function ganarCombate(){
     B.ri++; B.salvaje = B.rivales[B.ri];
     S.album.vistos[B.salvaje.esp] = true;
     await mensaje(`${B.ent.nombre} sacó a ${B.salvaje.nombre}.`);
-    $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien'});
+    $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
     animar('b-rival', 'sale', 400);
     fichas();
     B.fin = false; B.ocupado = false; menu('principal');
@@ -261,12 +257,14 @@ async function ganarCombate(){
       await mensaje(`¡Conseguiste la ${m.nom}!`, 2400);
       if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las cuatro medallas! ¡Sos campeón de Sorlandia!', 2400);
     }
+  } else if(B.legendaria){
+    S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
+    await mensaje(`${el.nombre} se desvaneció en el aire... Quizás vuelva mañana.`, 1900);
   } else {
     const mon = el.nivel * 6;
     ganar(mon); $('#mon') && ($('#mon').textContent = S.monedas);
     await mensaje(`Ganaste ${mon} monedas.`);
   }
-  S.nec.animo = clamp(S.nec.animo + 4);
   terminarCombate();
 }
 function mostrarMedalla(m){
@@ -279,25 +277,30 @@ function mostrarMedalla(m){
 async function darXP(l, xp){
   await mensaje(`${l.nombre} ganó ${xp} de experiencia.`, 800);
   const movsAntes = poderesDe(l.esp, l.nivel);
-  if(l.ref === 'ini'){
-    const antes = S.nivel;
-    sumarXP(xp);
-    if(S.nivel > antes){
-      l.nivel = S.nivel;
-      await mensaje(`¡${l.nombre} subió a nivel ${S.nivel}!`);
-      const st = inicialComoLuchador(); l.hp = Math.min(st.max, l.hp + (st.max - l.max)); l.max = st.max;
-    }
-  } else {
-    const c = l.ref; c.xp = (c.xp || 0) + xp;
-    let subio = false;
-    while(c.xp >= xpPara(c.nivel)){ c.xp -= xpPara(c.nivel); c.nivel++; c.stats.vida += 2; c.stats.fuerza += 1; c.stats.velocidad += 1; subio = true; }
-    if(subio){
-      const nuevoMax = vidaMax(c.stats, c.nivel);
-      l.hp = Math.min(nuevoMax, l.hp + (nuevoMax - l.max)); l.max = nuevoMax; l.nivel = c.nivel;
-      await mensaje(`¡${l.nombre} subió a nivel ${c.nivel}!`);
-    }
+  const c = l.ref; c.xp = (c.xp || 0) + xp;
+  let subio = false;
+  while(c.xp >= xpPara(c.nivel)){ c.xp -= xpPara(c.nivel); c.nivel++; c.stats.vida += 2; c.stats.fuerza += 1; c.stats.velocidad += 1; subio = true; }
+  if(subio){
+    const nuevoMax = vidaMax(c.stats, c.nivel);
+    l.hp = Math.min(nuevoMax, l.hp + (nuevoMax - l.max)); l.max = nuevoMax; l.nivel = c.nivel;
+    await mensaje(`¡${l.nombre} subió a nivel ${c.nivel}!`);
   }
   for(const m of poderesDe(l.esp, l.nivel)) if(!movsAntes.includes(m)) await mensaje(`¡${l.nombre} aprendió ${MOVS[m].nom}!`);
+  if(evolucionPendiente(c)) await animarEvolucion(l);
+}
+async function animarEvolucion(l){
+  const c = l.ref, antes = c.nombre;
+  await mensaje(`¿Eh? ¡${antes} está evolucionando!`, 1300);
+  animar('b-propio', 'evoluciona', 1800);
+  await espera(900);
+  const nueva = evolucionar(c);
+  Object.assign(l, comoLuchador(c), {hp: l.hp});
+  l.max = vidaMax(c.stats, c.nivel); l.hp = Math.min(l.max, l.hp + 10);
+  S.album.vistos[c.esp] = true; S.album.capt[c.esp] = (S.album.capt[c.esp] || 0) + 1;
+  if(c.shiny) S.album.shiny[c.esp] = true;
+  pintarPropio(); fichas();
+  await espera(900);
+  await mensaje(`¡${antes} evolucionó en ${nueva.nombre}!`, 1700);
 }
 
 async function propioCaido(){
@@ -309,11 +312,12 @@ async function propioCaido(){
   const perdida = Math.floor(S.monedas * .1);
   S.monedas -= perdida;
   const posada = S.respawn && MAPAS[S.respawn.mapa];
-  await mensaje(`Tu equipo quedó agotado. Volvés corriendo ${posada ? 'a la posada' : 'a casa'}${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1700);
+  if(B.legendaria) S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
+  await mensaje(`Tu equipo quedó agotado. Volvés corriendo ${posada ? 'al Centro de Rehabilitación' : 'a casa'}${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1700);
   B.lista.forEach(guardarHp);
   curarEquipo();
   B = null;
-  if(posada){ S.mundo = {...S.respawn}; guardar(); pintarMundo(); avisar('Tu equipo descansó en la posada.'); }
+  if(posada){ S.mundo = {...S.respawn}; guardar(); pintarMundo(); avisar('Tu equipo se recuperó en el Centro de Rehabilitación.'); }
   else { S.mundo = {...SALIDA_CASA}; guardar(); pintarJuego(); }
 }
 
@@ -323,26 +327,32 @@ async function tirarCapsula(o){
   await mensaje(`Tiraste una ${o.nom}...`, 600);
   const rival = $('#b-rival'), guardado = rival.innerHTML;
   rival.innerHTML = `<div class="capsula-tirada">${iconoObjeto(o, 90)}</div>`;
-  const prob = Math.max(.05, Math.min(.95, SALVAJES[el.esp].captura * (1.3 - el.hp / el.max) * o.captura));
+  const minimo = B.legendaria ? .005 : .05;
+  const prob = Math.max(minimo, Math.min(.95, ESPECIES[el.esp].captura * (1.3 - el.hp / el.max) * o.captura));
   const exito = Math.random() < prob;
   const sacudidas = exito ? 3 : Math.floor(Math.random() * 3);
   for(let k = 0; k < sacudidas; k++){ await espera(250); animar('b-rival', 'tiembla', 520); await espera(600); }
   if(exito){
     B.fin = true;
     await mensaje(`¡Atrapaste a ${el.nombre}!`, 1300);
-    const nueva = {uid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), esp: el.esp, nombre: el.nombre,
-                   nivel: el.nivel, xp: 0, stats: {...el.stats}, hp: el.hp};
+    const nueva = nuevaCriatura(el.esp, el.nivel, {stats: {...el.stats}, hp: el.hp, shiny: !!el.shiny});
     const primera = !S.album.capt[el.esp];
     S.album.capt[el.esp] = (S.album.capt[el.esp] || 0) + 1;
+    if(el.shiny) S.album.shiny[el.esp] = true;
+    if(B.legendaria){ S.legendarios[B.legendaria] = {capturada: true}; await mensaje(`¡Increíble! ${el.nombre} es tuyo. Muy pocos entrenadores lo lograron.`, 2200); }
     if(S.equipo.length < MAX_EQUIPO){ S.equipo.push(nueva); await mensaje(`${el.nombre} se sumó a tu equipo.`); }
     else { S.reserva.push(nueva); await mensaje(`Tu equipo está lleno: ${el.nombre} se fue a vivir a tu casa.`); }
     if(primera) await mensaje(`¡${el.nombre} es nuevo en tu álbum!`);
-    sumarXP(5);
     terminarCombate();
     return true;
   }
   rival.innerHTML = guardado;
   animar('b-rival', 'sale', 400);
+  if(B.legendaria && Math.random() < .25){
+    await mensaje(`${el.nombre} se libró de la cápsula... y se desvaneció.`, 1800);
+    S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
+    B.fin = true; terminarCombate(); return true;
+  }
   await mensaje(sacudidas === 0 ? `¡${el.nombre} se escapó enseguida!` : sacudidas === 1 ? '¡Uy, casi!' : '¡Le faltó tan poquito!');
   return false;
 }
@@ -350,33 +360,30 @@ async function tirarCapsula(o){
 function terminarCombate(){
   if(!B) return;
   B.lista.forEach(guardarHp);
-  S.nec.energia = clamp(S.nec.energia - 4);
-  S.nec.hambre = clamp(S.nec.hambre - 3);
+  if(B.legendaria && !S.legendarios[B.legendaria]) S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
   B = null;
   guardar();
   setTimeout(() => pintarMundo(), 300);
 }
 
-/* ---------------- Hoja de equipo, casa y álbum ---------------- */
+/* ---------------- Hoja de criaturas: equipo, casa, álbum y medallas ---------------- */
 function abrirEquipo(tab){
   if(tab) pestana.equipo = tab;
   hojaActual = 'equipo';
-  let velo = $('#velo');
-  if(!velo){
-    velo = document.createElement('div'); velo.id = 'velo'; velo.className = 'velo';
-    velo.onclick = e => { if(e.target === velo) cerrarHoja(); };
-    document.body.appendChild(velo);
-  }
+  nuevoVelo();
   pintarEquipo();
 }
+function barraVida(pct){ return `<div class="barra"><i style="width:${pct}%;background:${pct > 50 ? 'var(--verde)' : pct > 20 ? 'var(--ambar)' : 'var(--rojo)'}"></i></div>`; }
 function tarjetaCriatura(l, acciones){
-  const pct = l.hp / l.max * 100;
-  return `<div class="item criatura">
-    <div class="cr-cab"><span class="cr-mini">${svgEspecie(l.esp, {humor: l.hp > 0 ? 'feliz' : 'mal'})}</span>
-      <span class="cr-txt"><h3 class="cr-nom"></h3><small>Nv ${l.nivel} <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span></small></span></div>
-    <div class="barra"><i style="width:${pct}%;background:${pct > 50 ? 'var(--verde)' : pct > 20 ? 'var(--ambar)' : 'var(--rojo)'}"></i></div>
+  const sp = ESPECIES[l.esp], pct = l.hp / l.max * 100;
+  const evo = sp.evol ? `Evoluciona en nivel ${sp.evol.nivel}` : sp.de ? 'Última evolución' : 'No evoluciona';
+  return `<div class="item criatura ${l.shiny ? 'es-shiny' : ''}">
+    <div class="cr-cab"><span class="cr-mini">${svgEspecie(l.esp, {humor: l.hp > 0 ? 'feliz' : 'mal', shiny: l.shiny})}</span>
+      <span class="cr-txt"><h3 class="cr-nom"></h3><small>${l.nombre !== sp.nombre ? sp.nombre + ' · ' : ''}Nv ${l.nivel} <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span></small></span></div>
+    ${barraVida(pct)}
     <p>Vida ${l.hp}/${l.max} · Fuerza ${l.stats.fuerza} · Velocidad ${l.stats.velocidad}</p>
     <p><b>Poderes:</b> ${poderesDe(l.esp, l.nivel).map(m => MOVS[m].nom).join(', ')}</p>
+    <p class="cr-evo">${evo}${l.shiny ? ' · ✦ Shiny' : ''}</p>
     ${acciones}</div>`;
 }
 function pintarEquipo(){
@@ -385,40 +392,41 @@ function pintarEquipo(){
   const tabs = [['equipo', 'Equipo'], ['casa', 'En casa'], ['album', 'Álbum'], ['medallas', 'Medallas']];
   let cuerpo = '';
   const jarabe = OBJETOS.filter(o => o.cura).find(o => S.inv.objetos[o.id] > 0);
+  const nombres = [];
   if(t === 'equipo'){
     const lista = equipoLuchadores();
-    cuerpo = lista.map((l, i) => tarjetaCriatura(l,
+    cuerpo = lista.map((l, i) => { nombres.push(l.nombre + brillo(l)); return tarjetaCriatura(l,
       `${l.hp < l.max && jarabe ? `<button class="btn" data-jarabe="${i}">Darle ${jarabe.nom}</button>` : ''}
-       ${i > 0 ? `<button class="btn btn-2" data-acasa="${i - 1}">Mandar a casa</button>` : '<span class="etiqueta" style="margin-top:4px">Tu compañero</span>'}`)).join('');
-    cuerpo += `<p class="vacio" style="grid-column:1/-1;padding:6px">Tu equipo: ${lista.length} de ${MAX_EQUIPO + 1}. Entrar a tu casa cura a todos.</p>`;
+       ${i > 0 ? `<button class="btn btn-2" data-primero="${i}">Que pelee primero</button>` : '<span class="etiqueta" style="margin-top:4px">Pelea primero</span>'}
+       ${lista.length > 1 ? `<button class="btn btn-2" data-acasa="${i}">Mandar a casa</button>` : ''}`); }).join('');
+    cuerpo += `<p class="vacio" style="grid-column:1/-1;padding:6px">Tu equipo: ${lista.length} de ${MAX_EQUIPO}. Tu casa y los Centros de Rehabilitación curan a todos.</p>`;
   } else if(t === 'casa'){
-    cuerpo = S.reserva.length ? S.reserva.map((c, i) => tarjetaCriatura(capturadaComoLuchador(c),
-      `<button class="btn" data-alequipo="${i}" ${S.equipo.length >= MAX_EQUIPO ? 'disabled' : ''}>${S.equipo.length >= MAX_EQUIPO ? 'Equipo lleno' : 'Sumar al equipo'}</button>`)).join('')
+    cuerpo = S.reserva.length ? S.reserva.map((c, i) => { nombres.push(c.nombre + (c.shiny ? ' ✦' : '')); return tarjetaCriatura(comoLuchador(c),
+      `<button class="btn" data-alequipo="${i}" ${S.equipo.length >= MAX_EQUIPO ? 'disabled' : ''}>${S.equipo.length >= MAX_EQUIPO ? 'Equipo lleno' : 'Sumar al equipo'}</button>`); }).join('')
       : '<div class="vacio">Acá viven las criaturas que no entran en tu equipo.</div>';
   } else if(t === 'medallas'){
-    const n = MEDALLAS.filter(m => S.medallas[m.id]).length;
-    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === 4 ? '¡Campeón de Sorlandia!' : `Medallas: ${n} de 4`}</p>` + MEDALLAS.map(m => {
+    const n = cantMedallas();
+    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === 4 ? '¡Campeón de Sorlandia! Ahora las leyendas te esperan.' : `Medallas: ${n} de 4`}</p>` + MEDALLAS.map(m => {
       const L = Object.values(LIDERES).find(l => l.medalla === m.id), tiene = S.medallas[m.id];
       return `<div class="item album"><span class="cr-album" style="display:grid;place-items:center">${svgMedalla(m, 96, !tiene)}</span>
         <h3>${m.nom}</h3><span class="chip-tipo" style="background:${TIPOS[m.tipo].color}">${TIPOS[m.tipo].nom}</span>
         <p>${tiene ? `Se la ganaste a ${L.nombre} en ${m.ciudad}.` : `La da ${L.nombre}, líder de ${m.ciudad}.`}</p></div>`;
     }).join('');
   } else {
-    const ids = Object.keys(SALVAJES), atrapadas = ids.filter(e => S.album.capt[e]).length;
-    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">Atrapadas: ${atrapadas} de ${ids.length}</p>` + ids.map(e => {
-      const sp = SALVAJES[e], capt = S.album.capt[e], visto = S.album.vistos[e];
-      if(!visto) return `<div class="item album"><span class="cr-album" style="filter:brightness(0);opacity:.12">${svgEspecie(e)}</span><h3>???</h3><p>Todavía no la viste.</p></div>`;
-      return `<div class="item album"><span class="cr-album" ${capt ? '' : 'style="filter:brightness(0);opacity:.3"'}>${svgEspecie(e, {humor: 'feliz'})}</span>
+    const atrapadas = NORMALES.filter(e => S.album.capt[e]).length, vistas = NORMALES.filter(e => S.album.vistos[e]).length;
+    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">Atrapadas ${atrapadas} de ${NORMALES.length} · Vistas ${vistas} · Legendarias ${LEGENDARIAS.filter(e => S.album.capt[e]).length} de 3</p>` + ORDEN_ALBUM.map((e, i) => {
+      const sp = ESPECIES[e], capt = S.album.capt[e], visto = S.album.vistos[e];
+      const num = sp.legendaria ? '★' : '#' + String(i + 1).padStart(3, '0');
+      if(!visto) return `<div class="item album chico"><span class="num">${num}</span><span class="cr-album" style="filter:brightness(0);opacity:.1">${svgEspecie(e)}</span><h3>???</h3></div>`;
+      return `<div class="item album chico ${sp.legendaria ? 'legendaria' : ''}"><span class="num">${num}${S.album.shiny[e] ? ' ✦' : ''}</span><span class="cr-album" ${capt ? '' : 'style="filter:brightness(0);opacity:.3"'}>${svgEspecie(e, {humor: 'feliz'})}</span>
         <h3>${sp.nombre}</h3><span class="chip-tipo" style="background:${TIPOS[sp.tipo].color}">${TIPOS[sp.tipo].nom}</span>
-        <p>${capt ? sp.desc : 'La viste, pero todavía no la atrapaste.'}</p>
-        ${capt ? `<p><b>Poderes:</b> ${[...new Set(sp.aprende.map(([, m]) => MOVS[m].nom))].join(', ')}</p>` : ''}</div>`;
+        ${capt ? `<p>${sp.desc}</p>` : '<p>La viste, pero todavía no la atrapaste.</p>'}</div>`;
     }).join('');
   }
-  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Equipo"><div class="hoja-cab"><h2>Criaturas</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Criaturas"><div class="hoja-cab"><h2>Criaturas</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <div class="pestanas" role="tablist">${tabs.map(([k, n]) => `<button role="tab" data-tab="${k}" aria-selected="${t === k}">${n}</button>`).join('')}</div>
-    <div class="grilla">${cuerpo}</div></div>`;
-  if(t === 'equipo') v.querySelectorAll('.cr-nom').forEach((h, i) => h.textContent = equipoLuchadores()[i].nombre);
-  if(t === 'casa') v.querySelectorAll('.cr-nom').forEach((h, i) => h.textContent = S.reserva[i].nombre);
+    <div class="grilla ${t === 'album' ? 'grilla-album' : ''}">${cuerpo}</div></div>`;
+  v.querySelectorAll('.cr-nom').forEach((h, i) => h.textContent = nombres[i] || '');
   v.querySelector('.cerrar').onclick = cerrarHoja;
   v.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { pestana.equipo = b.dataset.tab; pintarEquipo(); });
   v.querySelectorAll('[data-jarabe]').forEach(b => b.onclick = () => {
@@ -426,8 +434,15 @@ function pintarEquipo(){
     S.inv.objetos[jarabe.id]--; l.hp = Math.min(l.max, l.hp + jarabe.cura); guardarHp(l);
     guardar(); avisar(`${l.nombre} recuperó vida`); pintarEquipo();
   });
+  v.querySelectorAll('[data-primero]').forEach(b => b.onclick = () => {
+    const [c] = S.equipo.splice(+b.dataset.primero, 1); S.equipo.unshift(c); guardar(); pintarEquipo();
+    if(vista === 'casa') pintarJuego(), abrirEquipo('equipo');
+    if(MW) MW.imgLider = null;
+  });
   v.querySelectorAll('[data-acasa]').forEach(b => b.onclick = () => {
+    if(S.equipo.length <= 1) return;
     const [c] = S.equipo.splice(+b.dataset.acasa, 1); S.reserva.push(c); guardar(); pintarEquipo();
+    if(MW) MW.imgLider = null;
   });
   v.querySelectorAll('[data-alequipo]').forEach(b => b.onclick = () => {
     if(S.equipo.length >= MAX_EQUIPO) return;

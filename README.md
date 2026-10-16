@@ -6,26 +6,16 @@ Juego web de mascotas: elegís a **Carosor** (fuego), **Matesor** (planta) o **R
 
 - `index.html` — la página.
 - `css/estilos.css` — el diseño.
-- `js/juego.js` — toda la lógica del juego.
 - `js/config.js` — conexión a Supabase (URL y clave pública).
-- `supabase/` — estructura de la base de datos (partidas y perfiles).
+- `js/estado.js` — estado compartido y utilidades.
+- `js/criaturas.js` — tipos, poderes, las 104 especies (101 normales + 3 legendarias), zonas, objetos y reglas de combate.
+- `js/dibujos.js` — dibujos de criaturas (a mano y generadas por forma + rasgos), shiny, entrenador, peluches y vitrina.
+- `js/cuenta.js` — cuentas y guardado.
+- `js/combate.js` — equipo, combate, captura, evoluciones, álbum y medallas.
+- `js/mapas.js` — regiones, casas con interior, centros, markets, entrenadores, líderes, objetos y altares.
+- `js/mundo.js` — cámara, movimiento, diálogos y encuentros.
+- `js/online.js` y `js/duelo.js` — jugadores en vivo y duelos.
+- `js/juego.js` — creación del entrenador, la casa, el Market y el arranque.
+- `supabase/` — estructura de la base de datos.
 
-Se publica con **GitHub Pages** desde la rama `main`. Las cuentas y las partidas viven en **Supabase**: cada jugador se registra con mail, contraseña y un apodo único, y solo puede leer y modificar su propia partida.
-
-## Hoja de ruta
-
-1. ✅ Base: elegir inicial, cuidar, tienda, casa, niveles.
-2. ✅ Cuentas con mail, contraseña y apodo.
-3. ✅ Mundo para recorrer (pueblo, pradera, bosque, río, sierras), combate por turnos, cápsulas, jarabes, equipo y álbum.
-4. ✅ Cuatro regiones nuevas (Villa Piedra, Puerto Camalote, Cerro Tormenta, Monte Fogón), entrenadores, cuatro líderes con medallas, posadas y almacenes.
-5. ✅ Online: ver a otros jugadores en el mapa, frases y mensajes cortos, duelos entre jugadores.
-6. Evoluciones, más especies, intercambios.
-
-## Archivos del juego
-
-- `js/criaturas.js` — tipos, poderes, especies salvajes, zonas, objetos y dibujos.
-- `js/mapas.js` — las regiones, edificios, personajes, líderes y salidas.
-- `js/mundo.js` — la cámara, el movimiento, los diálogos y los encuentros.
-- `js/combate.js` — equipo, combate, captura, álbum y medallas.
-- `js/online.js` — jugadores en vivo en el mapa y mensajes.
-- `js/duelo.js` — duelos entre jugadores (los dos navegadores resuelven cada turno con la misma semilla).
+Se publica con **GitHub Pages** desde la rama `main`. Las cuentas y partidas viven en **Supabase**.

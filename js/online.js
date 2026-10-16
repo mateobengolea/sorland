@@ -18,8 +18,15 @@ function limpiarTexto(t){
 const onlineListo = () => !!(db && usuarioId && apodo);
 
 function miPresencia(){
-  return {id: usuarioId, apodo, esp: S.especie, nivel: S.nivel, medallas: MEDALLAS.filter(m => S.medallas[m.id]).length,
+  return {id: usuarioId, apodo, esp: S.equipo[0] ? S.equipo[0].esp : 'carosor', shiny: !!(S.equipo[0] && S.equipo[0].shiny), ent: S.entrenador,
+          nivel: nivelEntrenador(), medallas: cantMedallas(),
           x: S.mundo.x, y: S.mundo.y, dir: MW ? MW.dir : 1, t: Date.now()};
+}
+function nivelEntrenador(){ return S.equipo.reduce((m, c) => Math.max(m, c.nivel), 1); }
+function imagenEntrenador(ent){
+  const k = 'e' + JSON.stringify(ent || {});
+  if(!ON.imgs[k]){ const i = new Image(); i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgEntrenador(ent)); ON.imgs[k] = i; }
+  return ON.imgs[k];
 }
 function imagenDe(esp){
   if(!ON.imgs[esp]){ const i = new Image(); i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgCriatura(esp, {humor:'feliz'})); ON.imgs[esp] = i; }
@@ -48,7 +55,7 @@ function alEntrarAlMapa(){
         if(!p || p.id === usuarioId) continue;
         vistos.add(p.id);
         const o = ON.otros.get(p.id);
-        if(o){ Object.assign(o, {apodo: p.apodo, esp: p.esp, nivel: p.nivel, medallas: p.medallas}); if(!o.movido){ o.x = p.x; o.y = p.y; } }
+        if(o){ Object.assign(o, {apodo: p.apodo, esp: p.esp, shiny: p.shiny, ent: p.ent, nivel: p.nivel, medallas: p.medallas}); if(!o.movido){ o.x = p.x; o.y = p.y; } }
         else ON.otros.set(p.id, {...p, px: p.x, py: p.y});
       }
       for(const k of [...ON.otros.keys()]) if(!vistos.has(k)) ON.otros.delete(k);
@@ -98,16 +105,15 @@ function jugadoresVisibles(){
   return lista;
 }
 function otroJugador(ctx, cx, piso, o, t){
-  const tam = 42, img = imagenDe(o.esp);
+  const alto = 46, ancho = alto * .72, img = imagenEntrenador(o.ent);
   const anda = Math.abs(o.x - o.px) + Math.abs(o.y - o.py) > .05;
   const salto = anda ? Math.abs(Math.sin(t / 90)) * 3 : 0;
-  ctx.fillStyle = 'rgba(34,48,74,.2)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 12, 4, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(34,48,74,.2)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
   ctx.save(); ctx.translate(cx, piso - salto); if(o.dir < 0) ctx.scale(-1, 1);
-  ctx.globalAlpha = .95;
-  if(img.complete) ctx.drawImage(img, -tam / 2, -tam + 2, tam, tam);
+  if(img.complete) ctx.drawImage(img, -ancho / 2, -alto + 1, ancho, alto);
   ctx.restore();
-  etiqueta(ctx, o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - tam - 16 - salto, 'rgba(122,79,201,.9)');
-  if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - tam - 22 - salto);
+  etiqueta(ctx, o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - alto - 14 - salto, 'rgba(122,79,201,.9)');
+  if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - alto - 20 - salto);
 }
 function burbuja(ctx, txt, cx, abajo){
   ctx.font = '700 12px Nunito, sans-serif'; ctx.textAlign = 'center';
@@ -140,7 +146,7 @@ function abrirInteraccion(o){
   const sil = ON.silenciados.has(o.id);
   velo.innerHTML = `<div class="hoja" role="dialog" aria-label="Jugador">
     <div class="hoja-cab"><h2 id="j-nom"></h2><button class="cerrar" aria-label="Cerrar">×</button></div>
-    <div class="ficha-jugador"><span class="cr-mini" style="width:84px;height:84px">${svgCriatura(o.esp, {humor:'feliz'})}</span>
+    <div class="ficha-jugador"><span class="cr-mini" style="width:60px;height:84px">${svgEntrenador(o.ent)}</span><span class="cr-mini" style="width:70px;height:70px">${ESPECIES[o.esp] ? svgEspecie(o.esp, {humor:'feliz', shiny: o.shiny}) : ''}</span>
       <div><p><b>Nivel ${o.nivel}</b> · anda con ${ESPECIES[o.esp] ? ESPECIES[o.esp].nombre : ''}</p>
       <p class="medallas-mini">${MEDALLAS.map((m, i) => svgMedalla(m, 26, i >= o.medallas)).join('')}</p></div></div>
     <p class="rotulo-chico">Decile algo</p>
