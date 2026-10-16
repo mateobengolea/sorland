@@ -263,3 +263,23 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
   .ficha-luch{min-width:0;max-width:52%}
   .nav button{font-size:.82rem;padding:9px 2px}
 }
+
+/* ======================= Diálogos, entrenadores y medallas ======================= */
+.dialogo{position:absolute;left:10px;right:10px;bottom:10px;z-index:5;background:var(--papel);border:2.5px solid var(--tinta);border-radius:14px;padding:10px 14px 8px;box-shadow:0 4px 0 var(--sombra);cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.dialogo b{font-family:var(--font-display);font-size:1.05rem;color:var(--rosa);-webkit-text-stroke:.3px var(--tinta)}
+.dialogo p{margin:0;font-weight:700;line-height:1.4;min-height:2.8em}
+.dialogo small{align-self:flex-end;font-weight:800;color:var(--tinta-suave);font-size:.72rem;animation:titila 1.2s ease-in-out infinite}
+@keyframes titila{50%{opacity:.35}}
+.banda-ent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--tinta);color:#fff;border-radius:12px;padding:6px 12px;font-weight:700;font-size:.9rem}
+.banda-ent b{font-family:var(--font-display);font-size:1.05rem}
+.banda-ent span{display:flex;gap:4px;margin-left:auto}
+.pip{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--sol);border:2px solid #fff}
+.pip.caido{background:#6E7884}
+.arena-cumbres{background:linear-gradient(#9AA6D6 0 55%,#5E9A72 55%)}
+.arena-volcan{background:linear-gradient(#F2A27A 0 55%,#8F7B6A 55%)}
+.arena-ciudad{background:linear-gradient(#E8E2F5 0 55%,#D9D0C1 55%)}
+.medalla-premio{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,253,248,.85);animation:medalla .8s cubic-bezier(.2,1.6,.4,1)}
+.medalla-premio svg{filter:drop-shadow(0 6px 0 rgba(34,48,74,.25));animation:gira 2.4s ease-in-out infinite}
+.medalla-premio b{font-family:var(--font-display);font-size:1.4rem}
+@keyframes medalla{from{transform:scale(.3);opacity:0}}
+@keyframes gira{50%{transform:rotate(-8deg) scale(1.05)}}

@@ -25,19 +25,26 @@ function curarEquipo(){ S.hpIni = null; S.equipo.forEach(c => c.hp = null); S.re
 let B = null;
 const espera = ms => new Promise(r => setTimeout(r, ms));
 
-function empezarCombate(salvaje, zona){
+const ARENAS = {pradera:'pradera', bosque:'bosque', rio:'rio', costa:'rio', sierras:'sierras', serrania:'sierras', cumbres:'cumbres', volcan:'volcan'};
+function empezarCombate(rivales, zona, ent){
   vista = 'combate';
   cerrarHoja();
-  salvaje.max = salvaje.hp;
+  rivales.forEach(r => { r.max = r.hp; });
+  const salvaje = rivales[0];
   const lista = equipoLuchadores();
   const i = lista.findIndex(l => l.hp > 0);
   lista[0].penal = (S.nec.hambre < 20 || S.nec.energia < 15) ? .8 : 1;
-  B = {salvaje, zona, lista, i, ocupado: true, forzado: false, fin: false};
+  B = {salvaje, rivales, ri: 0, ent: ent || null, zona, lista, i, ocupado: true, forzado: false, fin: false, participaron: new Set([i])};
   S.album.vistos[salvaje.esp] = true;
   pintarCombate();
   (async () => {
-    await mensaje(`¡Apareció un ${salvaje.nombre} salvaje!`);
-    if(salvaje.esp === 'yaguarayo') await mensaje('¡Es rarísimo verlo por acá!');
+    if(ent){
+      await mensaje(`¡${ent.titulo} ${ent.nombre} te desafía!`, 1100);
+      await mensaje(`${ent.nombre} sacó a ${salvaje.nombre}.`);
+    } else {
+      await mensaje(`¡Apareció un ${salvaje.nombre} salvaje!`);
+      if(salvaje.esp === 'yaguarayo') await mensaje('¡Es rarísimo verlo por acá!');
+    }
     await mensaje(`¡Dale, ${activo().nombre}!`);
     if(B.i === 0 && lista[0].penal < 1) await mensaje(`${S.nombre} tiene ${S.nec.hambre < 20 ? 'hambre' : 'sueño'} y va a pelear peor.`);
     B.ocupado = false; menu('principal');
@@ -49,7 +56,8 @@ function pintarCombate(){
   const z = B.zona;
   $('#app').innerHTML = `
     <section class="combate">
-      <div class="arena arena-${z}">
+      ${B.ent ? `<div class="banda-ent">${B.ent.lider ? 'Gimnasio · ' : ''}${B.ent.titulo} <b></b> · <span id="cuenta-rivales"></span></div>` : ''}
+      <div class="arena arena-${ARENAS[z] || 'ciudad'}">
         <div class="ficha-luch rival" id="f-rival"></div>
         <div class="bicho-combate rival" id="b-rival"></div>
         <div class="bicho-combate propio" id="b-propio"></div>
@@ -58,10 +66,12 @@ function pintarCombate(){
       <div class="panel texto-combate" id="t-combate" aria-live="polite"></div>
       <div class="menu-combate" id="menu-combate"></div>
     </section>`;
+  if(B.ent) $('.banda-ent b').textContent = B.ent.nombre;
   $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien'});
   pintarPropio();
   fichas();
 }
+const nomRival = () => B.ent ? `${B.salvaje.nombre} de ${B.ent.nombre}` : `${B.salvaje.nombre} salvaje`;
 function pintarPropio(){
   const l = activo();
   $('#b-propio').innerHTML = svgEspecie(l.esp, {humor: 'bien'});
@@ -78,6 +88,8 @@ function fichas(){
   if(!$('#f-rival')) return;
   $('#f-rival').innerHTML = fichaHTML(B.salvaje, false); $('#f-rival b').textContent = B.salvaje.nombre;
   $('#f-propio').innerHTML = fichaHTML(activo(), true); $('#f-propio b').textContent = activo().nombre;
+  const cr = $('#cuenta-rivales');
+  if(cr) cr.innerHTML = B.rivales.map(r => `<i class="pip ${r.hp > 0 ? '' : 'caido'}"></i>`).join('');
 }
 async function mensaje(t, ms = 950){
   const el = $('#t-combate'); if(!el) return;
@@ -142,10 +154,12 @@ async function turno(acc){
   try {
     if(acc.tipo === 'cambio'){
       const vuelve = yo.nombre;
-      B.i = acc.i; pintarPropio(); fichas();
+      B.i = acc.i; B.participaron.add(acc.i); pintarPropio(); fichas();
       if(B.forzado){ B.forzado = false; await mensaje(`¡Dale, ${activo().nombre}!`); return; }
       await mensaje(`¡Volvé, ${vuelve}! ¡Dale, ${activo().nombre}!`);
       if(await turnoRival()) return;
+    } else if(acc.tipo === 'huir' && B.ent){
+      await mensaje('¡No podés escaparte de una pelea entre entrenadores!', 1100); return;
     } else if(acc.tipo === 'huir'){
       const prob = Math.max(.25, Math.min(.95, .55 + (yo.stats.velocidad - el.stats.velocidad) * .05));
       if(Math.random() < prob){ await mensaje('¡Escaparon sin problemas!'); return terminarCombate(); }
@@ -153,6 +167,7 @@ async function turno(acc){
       if(await turnoRival()) return;
     } else if(acc.tipo === 'objeto'){
       const o = OBJETOS.find(x => x.id === acc.obj);
+      if(o.captura && B.ent){ await mensaje('¡No se le tira una cápsula a la criatura de otro entrenador!', 1200); return; }
       if(o.captura){ if(await tirarCapsula(o)) return; }
       else {
         if(yo.hp >= yo.max){ await mensaje(`${yo.nombre} ya tiene la vida llena.`, 800); return; }
@@ -184,19 +199,23 @@ async function turnoRival(){
   const movs = poderesDe(el.esp, el.nivel);
   let id = movs[Math.floor(Math.random() * movs.length)];
   if(MOVS[id].efecto && Math.random() < .5) id = movs.find(m => !MOVS[m].efecto) || id;
+  if(B.ent && Math.random() < (B.ent.lider ? .75 : .55)){
+    const valor = m => MOVS[m].poder * (MOVS[m].tipo === el.tipo ? 1.25 : 1) * efectividad(MOVS[m].tipo, yo.tipo) * MOVS[m].prec / 100;
+    id = movs.reduce((a, b) => valor(b) > valor(a) ? b : a);
+  }
   await atacar(el, yo, MOVS[id], false);
   if(yo.hp <= 0){ await propioCaido(); return true; }
   return false;
 }
 
 async function atacar(a, d, mov, esPropio){
-  const quien = esPropio ? a.nombre : `${a.nombre} salvaje`;
+  const quien = esPropio ? a.nombre : nomRival();
   animar(esPropio ? 'b-propio' : 'b-rival', esPropio ? 'embiste-propio' : 'embiste-rival', 400);
   await mensaje(`${quien} usó ${mov.nom}.`, 700);
   if(Math.random() * 100 >= mov.prec){ await mensaje('¡Pero falló!'); return; }
   if(mov.efecto === 'bajaFuerza'){
     d.modFuerza = Math.max(.5, (d.modFuerza || 1) * .75);
-    await mensaje(`Le bajó la fuerza a ${esPropio ? d.nombre + ' salvaje' : d.nombre}.`);
+    await mensaje(`Le bajó la fuerza a ${esPropio ? nomRival() : d.nombre}.`);
     return;
   }
   const {danio, ef, critico} = calcularDanio(a, d, mov);
@@ -213,13 +232,48 @@ async function ganarCombate(){
   const el = B.salvaje, yo = activo();
   B.fin = true;
   animar('b-rival', 'desmayo', 900);
-  await mensaje(`${el.nombre} salvaje se debilitó.`);
-  const xp = Math.round(el.nivel * 9 + 6), mon = el.nivel * 6;
+  await mensaje(`${nomRival()} se debilitó.`);
+  fichas();
+  const xp = Math.round((el.nivel * 12 + 8) * (B.ent ? 1.5 : 1));
   await darXP(yo, xp);
-  ganar(mon); $('#mon') && ($('#mon').textContent = S.monedas);
-  await mensaje(`Ganaste ${mon} monedas.`);
+  // ¿El entrenador tiene otra criatura?
+  if(B.ent && B.ri < B.rivales.length - 1){
+    B.ri++; B.salvaje = B.rivales[B.ri];
+    S.album.vistos[B.salvaje.esp] = true;
+    await mensaje(`${B.ent.nombre} sacó a ${B.salvaje.nombre}.`);
+    $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien'});
+    animar('b-rival', 'sale', 400);
+    fichas();
+    B.fin = false; B.ocupado = false; menu('principal');
+    return;
+  }
+  if(B.ent){
+    const e = B.ent;
+    S.vencidos[e.id] = true;
+    ganar(e.premio); $('#mon') && ($('#mon').textContent = S.monedas);
+    await mensaje(`¡Le ganaste a ${e.titulo} ${e.nombre}!`, 1100);
+    for(const l of e.despues) await mensaje(`${e.nombre}: «${l}»`, 1700);
+    await mensaje(`Ganaste ${e.premio} monedas.`);
+    if(e.medalla && !S.medallas[e.medalla]){
+      S.medallas[e.medalla] = Date.now();
+      const m = MEDALLAS.find(x => x.id === e.medalla);
+      mostrarMedalla(m);
+      await mensaje(`¡Conseguiste la ${m.nom}!`, 2400);
+      if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las cuatro medallas! ¡Sos campeón de Sorlandia!', 2400);
+    }
+  } else {
+    const mon = el.nivel * 6;
+    ganar(mon); $('#mon') && ($('#mon').textContent = S.monedas);
+    await mensaje(`Ganaste ${mon} monedas.`);
+  }
   S.nec.animo = clamp(S.nec.animo + 4);
   terminarCombate();
+}
+function mostrarMedalla(m){
+  const d = document.createElement('div');
+  d.className = 'medalla-premio';
+  d.innerHTML = `${svgMedalla(m, 140)}<b>${m.nom}</b>`;
+  const arena = document.querySelector('.arena'); if(arena) arena.appendChild(d);
 }
 
 async function darXP(l, xp){
@@ -254,11 +308,13 @@ async function propioCaido(){
   B.fin = true;
   const perdida = Math.floor(S.monedas * .1);
   S.monedas -= perdida;
-  await mensaje(`Tu equipo quedó agotado. Volvés corriendo a casa${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1600);
+  const posada = S.respawn && MAPAS[S.respawn.mapa];
+  await mensaje(`Tu equipo quedó agotado. Volvés corriendo ${posada ? 'a la posada' : 'a casa'}${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1700);
   B.lista.forEach(guardarHp);
   curarEquipo();
-  S.mundo = {...SALIDA_CASA};
-  B = null; guardar(); pintarJuego();
+  B = null;
+  if(posada){ S.mundo = {...S.respawn}; guardar(); pintarMundo(); avisar('Tu equipo descansó en la posada.'); }
+  else { S.mundo = {...SALIDA_CASA}; guardar(); pintarJuego(); }
 }
 
 async function tirarCapsula(o){
@@ -326,7 +382,7 @@ function tarjetaCriatura(l, acciones){
 function pintarEquipo(){
   const v = $('#velo'); if(!v) return;
   const t = pestana.equipo || 'equipo';
-  const tabs = [['equipo', 'Equipo'], ['casa', 'En casa'], ['album', 'Álbum']];
+  const tabs = [['equipo', 'Equipo'], ['casa', 'En casa'], ['album', 'Álbum'], ['medallas', 'Medallas']];
   let cuerpo = '';
   const jarabe = OBJETOS.filter(o => o.cura).find(o => S.inv.objetos[o.id] > 0);
   if(t === 'equipo'){
@@ -339,6 +395,14 @@ function pintarEquipo(){
     cuerpo = S.reserva.length ? S.reserva.map((c, i) => tarjetaCriatura(capturadaComoLuchador(c),
       `<button class="btn" data-alequipo="${i}" ${S.equipo.length >= MAX_EQUIPO ? 'disabled' : ''}>${S.equipo.length >= MAX_EQUIPO ? 'Equipo lleno' : 'Sumar al equipo'}</button>`)).join('')
       : '<div class="vacio">Acá viven las criaturas que no entran en tu equipo.</div>';
+  } else if(t === 'medallas'){
+    const n = MEDALLAS.filter(m => S.medallas[m.id]).length;
+    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === 4 ? '¡Campeón de Sorlandia!' : `Medallas: ${n} de 4`}</p>` + MEDALLAS.map(m => {
+      const L = Object.values(LIDERES).find(l => l.medalla === m.id), tiene = S.medallas[m.id];
+      return `<div class="item album"><span class="cr-album" style="display:grid;place-items:center">${svgMedalla(m, 96, !tiene)}</span>
+        <h3>${m.nom}</h3><span class="chip-tipo" style="background:${TIPOS[m.tipo].color}">${TIPOS[m.tipo].nom}</span>
+        <p>${tiene ? `Se la ganaste a ${L.nombre} en ${m.ciudad}.` : `La da ${L.nombre}, líder de ${m.ciudad}.`}</p></div>`;
+    }).join('');
   } else {
     const ids = Object.keys(SALVAJES), atrapadas = ids.filter(e => S.album.capt[e]).length;
     cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">Atrapadas: ${atrapadas} de ${ids.length}</p>` + ids.map(e => {

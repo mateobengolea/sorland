@@ -98,6 +98,10 @@ function migrar(p){
   if(!p.album) p.album = {vistos:{}, capt:{}};
   if(p.hpIni === undefined) p.hpIni = null;
   if(!p.mundo) p.mundo = null;
+  if(p.mundo && !p.mundo.mapa) p.mundo.mapa = 'ceibo';
+  if(!p.vencidos) p.vencidos = {};
+  if(!p.medallas) p.medallas = {};
+  if(p.respawn === undefined) p.respawn = null;
   p.v = 2;
   return p;
 }

@@ -81,6 +81,24 @@ const SALVAJES = {
   yaguarayo:{nombre:'Yaguarayo', tipo:'rayo', base:{vida:20,fuerza:9,velocidad:9}, captura:.18,
     aprende:[[1,'chispazo'],[1,'mordisco'],[8,'trueno']],
     desc:'Muy raro. Dicen que sus manchas brillan antes de una tormenta.'},
+  morrito:{nombre:'Morrito', tipo:'piedra', base:{vida:22,fuerza:7,velocidad:3}, captura:.4,
+    aprende:[[1,'embestida'],[1,'pedrada'],[6,'grunido'],[11,'derrumbe']],
+    desc:'Una piedra con musgo que un día se despertó. Duerme parado y ronca como un trueno.'},
+  cardoncito:{nombre:'Cardoncito', tipo:'planta', base:{vida:20,fuerza:6,velocidad:4}, captura:.45,
+    aprende:[[1,'hojita'],[5,'grunido'],[9,'latigo']],
+    desc:'Cardón chiquito de los cerros. Tiene espinas, pero si lo abrazás despacito no pinchan.'},
+  condorcito:{nombre:'Condorcito', tipo:'viento', base:{vida:18,fuerza:7,velocidad:8}, captura:.35,
+    aprende:[[1,'rafaga'],[1,'rasgunio'],[10,'remolino'],[14,'mordisco']],
+    desc:'Pichón de cóndor con collar de plumas blancas. Todavía no sabe planear, pero se tira igual.'},
+  bagrecito:{nombre:'Bagrecito', tipo:'agua', base:{vida:21,fuerza:6,velocidad:5}, captura:.45,
+    aprende:[[1,'chorrito'],[1,'embestida'],[9,'mordisco'],[12,'ola']],
+    desc:'Bagre bigotudo del puerto. Con los bigotes siente quién se acerca, aunque el agua esté turbia.'},
+  nubarron:{nombre:'Nubarrón', tipo:'rayo', base:{vida:19,fuerza:8,velocidad:7}, captura:.35,
+    aprende:[[1,'chispazo'],[1,'rafaga'],[13,'trueno']],
+    desc:'Nube de tormenta con mal genio. Cuando se enoja, llueve solo encima de él.'},
+  zorrolumbre:{nombre:'Zorrolumbre', tipo:'fuego', base:{vida:19,fuerza:9,velocidad:8}, captura:.3,
+    aprende:[[1,'brasa'],[1,'mordisco'],[15,'llamarada']],
+    desc:'Zorro colorado con la cola prendida fuego. Pícaro: te roba la merienda y se va riendo.'},
 };
 
 /* ---------------- Zonas del mundo ---------------- */
@@ -89,8 +107,41 @@ const ZONAS = {
   pradera:{nom:'Pradera', niveles:[1,3], aparecen:[['pampito',55],['hornerito',32],['chispulo',13]]},
   bosque:{nom:'Bosque de Ceibos', niveles:[3,6], aparecen:[['ceibin',45],['chispulo',35],['pampito',15],['yaguarayo',5]]},
   rio:{nom:'Orillas del Río', niveles:[3,6], aparecen:[['carpinchito',60],['hornerito',20],['ceibin',20]]},
-  sierras:{nom:'Sierras', niveles:[5,8], aparecen:[['tatupiedra',60],['brasita',30],['pampito',10]]},
+  sierras:{nom:'Sierras', niveles:[4,7], aparecen:[['tatupiedra',55],['brasita',25],['cardoncito',20]]},
+  villapiedra:{nom:'Villa Piedra', niveles:[1,1], aparecen:[]},
+  serrania:{nom:'Serranía Alta', niveles:[6,9], aparecen:[['morrito',35],['cardoncito',30],['tatupiedra',20],['condorcito',15]]},
+  camalote:{nom:'Puerto Camalote', niveles:[1,1], aparecen:[]},
+  costa:{nom:'Costa del Puerto', niveles:[9,12], aparecen:[['bagrecito',45],['carpinchito',25],['hornerito',15],['ceibin',15]]},
+  tormenta:{nom:'Cerro Tormenta', niveles:[1,1], aparecen:[]},
+  cumbres:{nom:'Cumbres', niveles:[13,16], aparecen:[['nubarron',40],['condorcito',30],['chispulo',25],['yaguarayo',5]]},
+  fogon:{nom:'Monte Fogón', niveles:[1,1], aparecen:[]},
+  volcan:{nom:'Laderas del Volcán', niveles:[17,20], aparecen:[['zorrolumbre',35],['brasita',30],['morrito',25],['tatupiedra',10]]},
 };
+
+/* ---------------- Medallas ---------------- */
+const MEDALLAS = [
+  {id:'penasco', nom:'Medalla Peñasco', tipo:'piedra', ciudad:'Villa Piedra', color:'#9AA3AE', color2:'#6E7884'},
+  {id:'camalote', nom:'Medalla Camalote', tipo:'agua', ciudad:'Puerto Camalote', color:'#5AB4E8', color2:'#7C5CC4'},
+  {id:'relampago', nom:'Medalla Relámpago', tipo:'rayo', ciudad:'Cerro Tormenta', color:'#FFD23F', color2:'#4656A0'},
+  {id:'brasa', nom:'Medalla Brasa', tipo:'fuego', ciudad:'Monte Fogón', color:'#F47A45', color2:'#FFD23F'},
+];
+function svgMedalla(m, tam = 64, apagada = false){
+  const T = '#22304A';
+  const formas = {
+    penasco:`<polygon points="40,6 70,23 70,57 40,74 10,57 10,23" fill="${m.color}" stroke="${T}" stroke-width="4"/>
+             <path d="M18 54 L32 30 L40 42 L48 26 L62 54Z" fill="${m.color2}" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
+             <path d="M45 33 L48 26 L52 33Z" fill="#fff"/>`,
+    camalote:`<path d="M40 6 C56 26 66 38 66 50 A26 26 0 0 1 14 50 C14 38 24 26 40 6Z" fill="${m.color}" stroke="${T}" stroke-width="4"/>
+              <circle cx="40" cy="50" r="9" fill="${m.color2}" stroke="${T}" stroke-width="3"/>
+              <g fill="#C9B6F2" stroke="${T}" stroke-width="2.5"><ellipse cx="40" cy="36" rx="5" ry="8"/><ellipse cx="28" cy="52" rx="8" ry="5"/><ellipse cx="52" cy="52" rx="8" ry="5"/></g>
+              <circle cx="40" cy="50" r="4" fill="#FFD23F"/>`,
+    relampago:`<polygon points="40,4 49,28 74,28 54,44 62,70 40,54 18,70 26,44 6,28 31,28" fill="${m.color2}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
+               <path d="M44 16 L32 42 L41 42 L35 62 L52 34 L43 34 L49 16Z" fill="${m.color}" stroke="${T}" stroke-width="2.5" stroke-linejoin="round"/>`,
+    brasa:`<path d="M40 74 C20 74 12 58 16 44 C20 32 30 30 30 16 C42 24 44 34 42 40 C48 36 50 28 50 22 C64 34 68 48 64 58 C60 68 52 74 40 74Z" fill="${m.color}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
+           <path d="M40 66 C31 66 27 58 30 51 C32 46 37 44 38 38 C46 44 50 52 48 58 C46 63 44 66 40 66Z" fill="${m.color2}"/>`,
+  };
+  return `<svg viewBox="0 0 80 80" width="${tam}" height="${tam}" aria-hidden="true" style="${apagada ? 'filter:grayscale(1);opacity:.25' : ''}">${formas[m.id]}</svg>`;
+}
 
 /* ---------------- Objetos de aventura ---------------- */
 const OBJETOS = [
@@ -141,7 +192,7 @@ function calcularDanio(atacante, defensor, mov){
   const azar = .85 + Math.random() * .15;
   const critico = Math.random() < .06 ? 1.5 : 1;
   const base = (mov.poder * (2 + atacante.nivel * .25) * atk / def) / 10 + 2;
-  const salvaje = atacante.salvaje ? .62 : 1;
+  const salvaje = atacante.salvaje ? .62 : (atacante.mult || 1);
   return { danio: Math.max(1, Math.round(base * stab * ef * azar * critico * salvaje)), ef, critico: critico > 1 };
 }
 function crearSalvaje(zonaId){
@@ -295,3 +346,72 @@ function svgEspecie(esp, o = {}){
   const humor = o.humor === 'mal' ? {enojo:true} : {};
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${SOMBRA}<g class="cuerpo">${DIBUJOS[esp]({...humor, ...o})}</g></svg>`;
 }
+
+/* ---------------- Especies de las regiones nuevas ---------------- */
+Object.assign(DIBUJOS, {
+  morrito: o => `
+    <ellipse cx="72" cy="180" rx="16" ry="9" fill="#7E8793" ${sw3}/><ellipse cx="128" cy="180" rx="16" ry="9" fill="#7E8793" ${sw3}/>
+    <ellipse cx="44" cy="132" rx="14" ry="18" fill="#9AA3AE" ${sw3}/><ellipse cx="156" cy="132" rx="14" ry="18" fill="#9AA3AE" ${sw3}/>
+    <path d="M40 150 C30 96 60 46 104 46 C150 46 172 96 160 150 C152 178 52 180 40 150Z" fill="#A9B1BC" ${sw}/>
+    <path d="M62 66 C80 50 116 46 138 62 C124 70 110 60 96 70 C84 76 72 70 62 66Z" fill="#79B95F" ${sw3}/>
+    <path d="M128 120 l10 10 l-4 10 M70 140 l-10 6" fill="none" stroke="#6E7884" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="80" cy="150" rx="8" ry="5" fill="#C3C9D1"/>
+    ${carita(100, 104, o)}`,
+
+  cardoncito: o => `
+    <ellipse cx="82" cy="182" rx="14" ry="8" fill="#3F8A4A" ${sw3}/><ellipse cx="118" cy="182" rx="14" ry="8" fill="#3F8A4A" ${sw3}/>
+    <path d="M60 130 h-18 a8 8 0 0 1 -8 -8 v-30 a10 10 0 0 1 20 0 v20 h8" fill="#5BAE5B" ${sw3} stroke-linejoin="round"/>
+    <path d="M140 116 h18 a8 8 0 0 0 8 -8 v-24 a10 10 0 0 0 -20 0 v14 h-8" fill="#5BAE5B" ${sw3} stroke-linejoin="round"/>
+    <rect x="58" y="44" width="84" height="140" rx="42" fill="#5BAE5B" ${sw}/>
+    <path d="M80 56 v118 M100 46 v132 M120 56 v118" stroke="#3F8A4A" stroke-width="3" opacity=".7"/>
+    <g fill="#F4F0D0">${[[72,70],[128,74],[70,150],[130,150],[110,160],[90,58]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.4"/>`).join('')}</g>
+    <g fill="#FF7FA3" ${sw3}><ellipse cx="100" cy="34" rx="7" ry="11"/><ellipse cx="90" cy="40" rx="9" ry="6" transform="rotate(-20 90 40)"/><ellipse cx="110" cy="40" rx="9" ry="6" transform="rotate(20 110 40)"/></g>
+    <circle cx="100" cy="40" r="4" fill="#FFE45C"/>
+    ${carita(100, 98, o)}`,
+
+  condorcito: o => `
+    <path d="M86 178 v10 M80 188 h12 M114 178 v10 M108 188 h12" stroke="#C9A47E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M52 110 C20 112 14 150 30 168 C40 150 52 140 60 138Z" fill="#2E323C" ${sw3} stroke-linejoin="round"/>
+    <path d="M148 110 C180 112 186 150 170 168 C160 150 148 140 140 138Z" fill="#2E323C" ${sw3} stroke-linejoin="round"/>
+    <ellipse cx="100" cy="138" rx="50" ry="46" fill="#3B3F4A" ${sw}/>
+    <ellipse cx="100" cy="150" rx="26" ry="26" fill="#5A5F6B"/>
+    <path d="M58 104 C70 90 80 100 88 92 C94 102 106 102 112 92 C120 100 130 90 142 104 C130 118 70 118 58 104Z" fill="#FFFFFF" ${sw3} stroke-linejoin="round"/>
+    <ellipse cx="100" cy="70" rx="38" ry="34" fill="#D9A497" ${sw}/>
+    <path d="M90 38 Q100 24 110 38" fill="#B5786C" ${sw3}/>
+    ${carita(100, 66, {...o, sinBoca:true, esc:.85})}
+    <path d="M92 84 Q100 80 108 84 Q110 98 100 102 Q104 92 92 88Z" fill="#E8D7A8" ${sw3} stroke-linejoin="round"/>`,
+
+  bagrecito: o => `
+    <path d="M150 128 L188 104 L182 136 L190 164 L150 146Z" fill="#5E7E9E" ${sw3} stroke-linejoin="round"/>
+    <path d="M86 86 L100 54 L118 88Z" fill="#5E7E9E" ${sw3} stroke-linejoin="round"/>
+    <ellipse cx="96" cy="132" rx="62" ry="46" fill="#7FA0C0" ${sw}/>
+    <ellipse cx="96" cy="152" rx="40" ry="22" fill="#DCE8F2"/>
+    <ellipse cx="60" cy="160" rx="14" ry="8" fill="#5E7E9E" ${sw3} transform="rotate(25 60 160)"/>
+    <ellipse cx="134" cy="160" rx="14" ry="8" fill="#5E7E9E" ${sw3} transform="rotate(-25 134 160)"/>
+    <path d="M76 132 Q40 130 30 160 M78 138 Q52 146 50 172 M116 132 Q152 130 160 156" fill="none" stroke="${TINTA}" stroke-width="3.5" stroke-linecap="round"/>
+    ${carita(96, 112, {...o, sinBoca:true})}
+    <path d="M78 134 Q96 146 114 134" fill="none" stroke="${TINTA}" stroke-width="4" stroke-linecap="round"/>`,
+
+  nubarron: o => `
+    <g class="lluvia" stroke="#5AB4E8" stroke-width="3.5" stroke-linecap="round"><path d="M60 158 l-4 12 M86 166 l-4 12 M140 160 l-4 12"/></g>
+    <path d="M112 140 L98 168 L110 168 L100 192 L124 160 L112 160 L120 140Z" fill="#FFE45C" ${sw3} stroke-linejoin="round"/>
+    <path d="M44 140 C22 140 18 108 42 104 C40 78 70 66 86 80 C94 54 136 54 142 84 C170 80 184 110 164 128 C176 144 160 156 146 146 C130 160 64 160 44 140Z" fill="#8A93B8" ${sw}/>
+    <path d="M58 132 C74 142 130 144 146 132" fill="none" stroke="#6D769C" stroke-width="3"/>
+    ${carita(100, 104, {...o, enojo: o.enojo || !o.humor || o.humor === 'bien'})}
+    <path d="M72 88 L90 96 M128 88 L110 96" stroke="${TINTA}" stroke-width="3.5" stroke-linecap="round"/>`,
+
+  zorrolumbre: o => `
+    <g class="llama-salvaje" style="transform-origin:150px 150px">
+      <path d="M140 160 C176 172 196 134 182 104 C176 120 166 116 168 96 C150 108 150 126 146 132 C142 124 138 120 132 118 C130 138 128 150 140 160Z" fill="#FF9F2E" ${sw3} stroke-linejoin="round"/>
+      <path d="M146 152 C168 156 180 136 174 120 C168 130 162 128 162 118 C154 128 154 138 146 152Z" fill="#FFE36B"/>
+    </g>
+    <ellipse cx="76" cy="180" rx="14" ry="8" fill="#3B2A22" ${sw3}/><ellipse cx="122" cy="180" rx="14" ry="8" fill="#3B2A22" ${sw3}/>
+    <ellipse cx="100" cy="144" rx="42" ry="36" fill="#E8743B" ${sw}/>
+    <ellipse cx="100" cy="154" rx="24" ry="22" fill="#FFF3E2"/>
+    <path d="M58 70 L54 22 L88 52Z" fill="#E8743B" ${sw3} stroke-linejoin="round"/><path d="M62 60 L60 34 L78 52Z" fill="#3B2A22"/>
+    <path d="M142 70 L146 22 L112 52Z" fill="#E8743B" ${sw3} stroke-linejoin="round"/><path d="M138 60 L140 34 L122 52Z" fill="#3B2A22"/>
+    <path d="M52 86 C52 52 148 52 148 86 C148 110 124 124 100 124 C76 124 52 110 52 86Z" fill="#E8743B" ${sw}/>
+    <path d="M60 96 C70 120 90 122 100 112 C110 122 130 120 140 96 C126 104 112 102 100 108 C88 102 74 104 60 96Z" fill="#FFF3E2"/>
+    <ellipse cx="100" cy="110" rx="6" ry="4" fill="${TINTA}"/>
+    ${carita(100, 84, {...o, sinBoca:true, sinMejillas:true})}`,
+});

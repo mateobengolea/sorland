@@ -17,11 +17,13 @@ Se publica con **GitHub Pages** desde la rama `main`. Las cuentas y las partidas
 1. ✅ Base: elegir inicial, cuidar, tienda, casa, niveles.
 2. ✅ Cuentas con mail, contraseña y apodo.
 3. ✅ Mundo para recorrer (pueblo, pradera, bosque, río, sierras), combate por turnos, cápsulas, jarabes, equipo y álbum.
-4. Online: ver a otros jugadores en el mapa, frases y chat, duelos.
-5. Evoluciones, más especies, intercambios.
+4. ✅ Cuatro regiones nuevas (Villa Piedra, Puerto Camalote, Cerro Tormenta, Monte Fogón), entrenadores, cuatro líderes con medallas, posadas y almacenes.
+5. Online: ver a otros jugadores en el mapa, frases y chat, duelos.
+6. Evoluciones, más especies, intercambios.
 
 ## Archivos del juego
 
 - `js/criaturas.js` — tipos, poderes, especies salvajes, zonas, objetos y dibujos.
-- `js/mundo.js` — el mapa, la cámara y el movimiento.
+- `js/mapas.js` — las regiones, edificios, personajes, líderes y salidas.
+- `js/mundo.js` — la cámara, el movimiento, los diálogos y los encuentros.
 - `js/combate.js` — equipo, combate, captura y álbum.
