@@ -15,6 +15,13 @@ Se publica con **GitHub Pages** desde la rama `main`. Las cuentas y las partidas
 ## Hoja de ruta
 
 1. ✅ Base: elegir inicial, cuidar, tienda, casa, niveles.
-2. Combate por turnos contra criaturas salvajes.
-3. Huevos, más especies y evoluciones.
-4. Amigos: visitas, regalos y duelos.
+2. ✅ Cuentas con mail, contraseña y apodo.
+3. ✅ Mundo para recorrer (pueblo, pradera, bosque, río, sierras), combate por turnos, cápsulas, jarabes, equipo y álbum.
+4. Online: ver a otros jugadores en el mapa, frases y chat, duelos.
+5. Evoluciones, más especies, intercambios.
+
+## Archivos del juego
+
+- `js/criaturas.js` — tipos, poderes, especies salvajes, zonas, objetos y dibujos.
+- `js/mundo.js` — el mapa, la cámara y el movimiento.
+- `js/combate.js` — equipo, combate, captura y álbum.

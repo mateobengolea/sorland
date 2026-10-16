@@ -164,3 +164,102 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 }
 .enlace{background:none;border:none;padding:0;font-weight:800;color:var(--tinta);text-decoration:underline;text-underline-offset:2px}
 #cuenta{line-height:1.5}
+
+/* ======================= Navegación de la casa ======================= */
+.nav{grid-template-columns:repeat(4,1fr)}
+.nav button{font-size:.95rem}
+.explorar{padding:12px;border:2.5px solid var(--tinta);border-radius:16px;background:var(--verde);color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.3rem;box-shadow:0 4px 0 var(--sombra);-webkit-text-stroke:.6px var(--tinta)}
+.explorar:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sombra)}
+
+/* ======================= Mundo ======================= */
+.mundo{position:relative;border:2.5px solid var(--tinta);border-radius:18px;overflow:hidden;box-shadow:0 4px 0 var(--sombra);background:#3E8E4B;touch-action:none;user-select:none;-webkit-user-select:none}
+.mundo canvas{display:block;width:100%}
+.cartel-zona{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--papel);border:2.5px solid var(--tinta);border-radius:99px;padding:3px 16px;font-family:var(--font-display);font-weight:800;font-size:1.05rem;white-space:nowrap;opacity:0;pointer-events:none}
+.cartel-zona.ver{animation:cartel 2.6s ease-out forwards}
+@keyframes cartel{0%{opacity:0;transform:translate(-50%,-8px)}12%,75%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.mundo-botones{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px}
+.mundo-botones button{background:var(--papel);border:2.5px solid var(--tinta);border-radius:12px;padding:4px 10px;font-weight:800;font-size:.85rem;box-shadow:0 3px 0 var(--sombra)}
+.dpad{position:absolute;left:12px;bottom:12px;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:2px;opacity:.92}
+.dpad button{width:44px;height:44px;padding:0;border:2.5px solid var(--tinta);border-radius:12px;background:var(--papel);font-size:1rem;color:var(--tinta);box-shadow:0 3px 0 var(--sombra);touch-action:none}
+.dpad button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sombra);background:var(--sol)}
+.dpad [data-d=up]{grid-column:2;grid-row:1}.dpad [data-d=left]{grid-column:1;grid-row:2}
+.dpad [data-d=down]{grid-column:2;grid-row:3}.dpad [data-d=right]{grid-column:3;grid-row:2}
+@media (hover:hover) and (pointer:fine){.dpad{opacity:.55}}
+
+/* ======================= Combate ======================= */
+.combate{display:flex;flex-direction:column;gap:10px}
+.arena{position:relative;height:300px;border:2.5px solid var(--tinta);border-radius:18px;overflow:hidden;box-shadow:0 4px 0 var(--sombra);background:linear-gradient(#BFE6FA 0 55%,#8DD17C 55%)}
+.arena-bosque{background:linear-gradient(#A9D9B5 0 55%,#5FA866 55%)}
+.arena-rio{background:linear-gradient(#BFE6FA 0 50%,#7CC6EC 50% 62%,#9ED68C 62%)}
+.arena-sierras{background:linear-gradient(#F5D9B0 0 55%,#DFC48E 55%)}
+.arena::before,.arena::after{content:"";position:absolute;border-radius:50%;background:rgba(34,48,74,.14)}
+.arena::before{width:150px;height:26px;right:24px;top:124px}
+.arena::after{width:170px;height:28px;left:20px;bottom:18px}
+.bicho-combate{position:absolute;width:140px;height:140px;z-index:2}
+.bicho-combate svg{width:100%;height:100%;overflow:visible}
+.bicho-combate.rival{right:30px;top:12px}
+.bicho-combate.propio{left:26px;bottom:20px;width:160px;height:160px;transform:scaleX(-1)}
+.ficha-luch{position:absolute;z-index:3;background:var(--papel);border:2.5px solid var(--tinta);border-radius:14px;padding:6px 10px;min-width:150px;max-width:46%;box-shadow:0 3px 0 var(--sombra);display:flex;flex-direction:column;gap:3px}
+.ficha-luch.rival{left:10px;top:14px}
+.ficha-luch.propio{right:10px;bottom:18px}
+.fl-cab{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-display);font-size:1rem;line-height:1.1}
+.fl-cab b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fl-cab span{font-weight:800;font-size:.85rem;white-space:nowrap}
+.fl-barra{height:10px}
+.fl-num{text-align:right;font-weight:800;font-size:.8rem;font-variant-numeric:tabular-nums}
+.chip-tipo{display:inline-block;align-self:flex-start;font-size:.66rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:0 7px;border-radius:99px;border:2px solid var(--tinta);color:var(--tinta);line-height:1.5}
+.texto-combate{padding:12px 14px;min-height:56px;font-weight:800;font-size:1.02rem;display:flex;align-items:center}
+.menu-combate{display:grid;gap:8px}
+.menu-combate.grilla-2{grid-template-columns:1fr 1fr}
+.menu-combate.lista{grid-template-columns:1fr}
+.menu-combate button{padding:10px 8px;border:2.5px solid var(--tinta);border-radius:14px;background:var(--papel);font-weight:800;font-size:1rem;box-shadow:0 4px 0 var(--sombra);text-align:left;display:flex;flex-direction:column;gap:1px;min-width:0}
+.menu-combate button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sombra)}
+.menu-combate button:disabled{opacity:.5;cursor:not-allowed}
+.menu-combate small{font-weight:700;font-size:.75rem;color:var(--tinta-suave)}
+.mc-pelear{background:var(--rosa)!important;color:#fff;font-family:var(--font-display);font-size:1.2rem!important}
+.mc-mov{background:linear-gradient(90deg,var(--tipo) 0 8px,var(--papel) 8px)!important;padding-left:16px!important}
+.mc-volver{grid-column:1/-1;text-align:center!important;align-items:center;background:#E8EEF5!important}
+.mc-obj{flex-direction:row!important;align-items:center;gap:8px!important}
+.mc-obj span{display:flex;flex-direction:column}
+.mc-vacio{grid-column:1/-1;margin:0;text-align:center;font-weight:700;color:var(--tinta-suave)}
+.mc-eq{flex-direction:row!important;align-items:center;gap:10px!important}
+.mc-mini{width:46px;height:46px;flex:none}.mc-mini svg{width:100%;height:100%}
+.mc-eq-txt{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.mc-eq-txt .barra{height:8px}
+.embiste-propio{animation:embP .4s ease-in-out}
+.embiste-rival{animation:embR .4s ease-in-out}
+@keyframes embP{50%{transform:scaleX(-1) translate(-34px,-10px)}}
+@keyframes embR{50%{transform:translate(-30px,12px)}}
+.golpeado{animation:golpe .5s steps(2) }
+@keyframes golpe{0%,40%,80%{opacity:.2}20%,60%,100%{opacity:1}}
+.bicho-combate.propio.golpeado{animation:golpe .5s steps(2)}
+.desmayo{animation:desmayo .9s ease-in forwards}
+@keyframes desmayo{to{transform:translateY(60px);opacity:0}}
+.bicho-combate.propio.desmayo{animation:desmayoP .9s ease-in forwards}
+@keyframes desmayoP{to{transform:scaleX(-1) translateY(60px);opacity:0}}
+.capsula-tirada{width:100%;height:100%;display:grid;place-items:center}
+.tiembla .capsula-tirada{animation:tiembla .52s ease-in-out}
+@keyframes tiembla{20%{transform:rotate(-18deg)}50%{transform:rotate(14deg)}80%{transform:rotate(-6deg)}}
+.sale{animation:sale .4s ease-out}
+@keyframes sale{from{transform:scale(.4);opacity:0}}
+.brillo{animation:brillo 1.6s ease-in-out infinite}
+@keyframes brillo{50%{opacity:.2}}
+.llama-salvaje{transform-origin:100px 60px;animation:llama .5s ease-in-out infinite alternate}
+
+/* ======================= Criaturas y álbum ======================= */
+.item.criatura,.item.album{gap:6px}
+.cr-cab{display:flex;gap:8px;align-items:center;width:100%;min-width:0}
+.cr-mini{width:56px;height:56px;flex:none}.cr-mini svg{width:100%;height:100%;overflow:visible}
+.cr-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cr-txt h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item.criatura .barra{width:100%;height:9px}
+.cr-album{width:100%;max-width:120px;align-self:center;aspect-ratio:1}.cr-album svg{width:100%;height:100%}
+.btn-2{background:#E8EEF5!important}
+
+@media (max-width:420px){
+  .arena{height:270px}
+  .bicho-combate.rival{width:118px;height:118px;right:16px}
+  .bicho-combate.propio{width:136px;height:136px;left:12px}
+  .ficha-luch{min-width:0;max-width:52%}
+  .nav button{font-size:.82rem;padding:9px 2px}
+}

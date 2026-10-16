@@ -1,4 +1,3 @@
-(() => {
 'use strict';
 
 /* ======================= Datos del juego ======================= */
@@ -8,10 +7,10 @@ const ESPECIES = {
     base:{vida:20,fuerza:7,velocidad:5}},
   matesor:{nombre:'Matesor',tipo:'planta',tipoNom:'Planta',
     desc:'Tiene un brote de yerba en la cabeza. Tranquilo, compañero, aguanta de todo y nunca dice que no a un mate.',
-    base:{vida:24,fuerza:5,velocidad:5}},
+    base:{vida:24,fuerza:6,velocidad:5}},
   rufisor:{nombre:'Rufisor',tipo:'agua',tipoNom:'Agua',
     desc:'Escurridizo y juguetón, con aletas en la cresta. Corre más rápido que nadie y vive pidiendo baño.',
-    base:{vida:20,fuerza:5,velocidad:7}},
+    base:{vida:20,fuerza:6,velocidad:7}},
 };
 
 const COMIDAS = [
@@ -54,7 +53,7 @@ const FONDOS = [
   {id:'estrellas',nom:'Noche estrellada',precio:300,nivel:5,pared:'radial-gradient(circle at 30px 20px,#FFF6B0 2px,transparent 3px) 0 0/70px 60px,radial-gradient(circle at 10px 45px,#fff 1.5px,transparent 2.5px) 0 0/50px 70px,#2C3A73',piso:'repeating-linear-gradient(90deg,#4A3E6E 0 46px,#3D3260 46px 48px)',desc:'Siempre de noche.'},
 ];
 const POR_ID = {};
-[...COMIDAS,...MUEBLES,...ACCESORIOS,...FONDOS].forEach(x => POR_ID[x.id] = x);
+[...COMIDAS,...MUEBLES,...ACCESORIOS,...FONDOS,...OBJETOS].forEach(x => POR_ID[x.id] = x);
 
 const NEC = [
   {k:'hambre',nom:'Panza'},
@@ -69,6 +68,7 @@ const DECAE = {hambre:7,limpieza:4,animo:5,energia:3};
 const CLAVE = 'sorlandia-partida-v1';
 let S = null;            // estado del juego
 let modo = null;         // null | 'banio' | 'jugar' | 'decorar'
+let vista = 'cargando';  // eleccion | casa | mundo | combate
 let usuarioId = null, db = null;
 
 const hoy = () => { const d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
@@ -78,7 +78,7 @@ const xpPara = n => 40 + n*25;
 function nuevaPartida(especie, nombre){
   const e = ESPECIES[especie];
   const fav = COMIDAS.find(c => c.gusta === e.tipo && c.nivel === 1);
-  return {
+  return migrar({
     v:1, especie, nombre: nombre || e.nombre, creada: Date.now(), ultimo: Date.now(), guardado: Date.now(),
     nivel:1, xp:0, monedas:100,
     nec:{hambre:70,limpieza:60,animo:70,energia:80},
@@ -86,7 +86,20 @@ function nuevaPartida(especie, nombre){
     inv:{comida:{croquetas:3,[fav.id]:2}, muebles:{planta:1}, accesorios:[], fondos:['durazno']},
     casa:[{id:'planta',x:86,y:90}], puesto:null, fondo:'durazno',
     durmiendo:false, ultimoBono:null,
-  };
+  });
+}
+// Completa partidas viejas con lo que agregan las versiones nuevas.
+function migrar(p){
+  if(!p) return p;
+  p.inv = p.inv || {};
+  if(!p.inv.objetos) p.inv.objetos = {capsula:5, jarabe:3};
+  if(!p.equipo) p.equipo = [];
+  if(!p.reserva) p.reserva = [];
+  if(!p.album) p.album = {vistos:{}, capt:{}};
+  if(p.hpIni === undefined) p.hpIni = null;
+  if(!p.mundo) p.mundo = null;
+  p.v = 2;
+  return p;
 }
 
 function claveLocal(){ return usuarioId ? CLAVE + ':' + usuarioId : CLAVE; }
@@ -133,6 +146,7 @@ async function entrarAlJuego(){
   const local = leerLocal() || leerLocal(CLAVE); // CLAVE sola = partida jugada antes sin cuenta
   if(remoto && (!local || (remoto.guardado||0) >= (local.guardado||0))) S = remoto;
   else S = local;
+  migrar(S);
   modo = null;
   if(S){
     avanzarTiempo(); pintarJuego(); bonoDiario();
@@ -154,7 +168,8 @@ function conectarNube(){
       setTimeout(entrarAlJuego, 0);
     } else if(!nuevoId){
       usuarioId = null; emailUsuario = null; apodo = null; estadoNube = 'local';
-      S = null; modo = null; cerrarHoja();
+      if(typeof salirDelMundo === 'function') salirDelMundo();
+      S = null; modo = null; B = null; vista = 'acceso'; cerrarHoja();
       setTimeout(() => pintarAcceso('entrar'), 0);
     }
   });
@@ -278,6 +293,8 @@ function pintarApodo(aviso){
 
 async function salir(){
   clearTimeout(timerGuardar);
+  if(typeof salirDelMundo === 'function') salirDelMundo();
+  B = null;
   if(S) await guardarNube();
   if(db) await db.auth.signOut();
 }
@@ -421,6 +438,7 @@ function colorBarra(v){ return v > 60 ? 'var(--verde)' : v > 30 ? 'var(--ambar)'
 /* ======================= Pantalla de elección ======================= */
 let elegido = null;
 function pintarEleccion(){
+  vista = 'eleccion';
   $('#app').innerHTML = `
     <div class="eleccion">
       <div class="titulo"><h1>Sorlandia</h1><p>Elegí a tu primer compañero. Lo vas a cuidar, malcriar y, más adelante, entrenar para pelear.</p></div>
@@ -454,14 +472,20 @@ function pintarEleccion(){
 }
 
 /* ======================= Pantalla principal ======================= */
-function pintarJuego(){
+function cabeceraHTML(){
   const e = ESPECIES[S.especie];
-  $('#app').innerHTML = `
-    <header class="panel top">
+  return `<header class="panel top">
       <div class="quien"><h1 id="nom"></h1><span class="tipo ${e.tipo}">${e.nombre} · ${e.tipoNom}</span></div>
       <div class="nivel"><b id="niv"></b><div class="xpbar" title="Experiencia"><i id="xp"></i></div></div>
       <div class="monedas" title="Monedas"><span class="moneda">$</span><span id="mon"></span></div>
-    </header>
+    </header>`;
+}
+function pintarJuego(){
+  if(typeof salirDelMundo === 'function') salirDelMundo();
+  vista = 'casa'; modo = null;
+  curarEquipo();
+  $('#app').innerHTML = `
+    ${cabeceraHTML()}
     <section class="escenario" id="escenario" aria-label="La casa">
       <div class="pared" id="pared"><div class="ventana"></div></div>
       <div class="piso" id="piso"></div>
@@ -472,7 +496,7 @@ function pintarJuego(){
     </section>
     <section class="panel necesidades">
       ${NEC.map(n => `<div class="nec"><header><span>${n.nom}</span><span id="v-${n.k}"></span></header><div class="barra"><i id="b-${n.k}"></i></div></div>`).join('')}
-      <div class="stats"><span class="rotulo">Para los combates que vienen</span>
+      <div class="stats"><span class="rotulo">Para los combates</span>
         <span class="chip">Vida <b id="s-vida"></b></span><span class="chip">Fuerza <b id="s-fuerza"></b></span><span class="chip">Velocidad <b id="s-velocidad"></b></span></div>
     </section>
     <nav class="acciones">
@@ -482,7 +506,9 @@ function pintarJuego(){
       <button class="accion" id="a-entrenar"><span class="ic">💪</span>Entrenar</button>
       <button class="accion" id="a-dormir"><span class="ic">🌙</span>Dormir</button>
     </nav>
+    <button class="explorar" id="n-explorar">Salir a explorar</button>
     <nav class="nav">
+      <button id="n-equipo">Criaturas</button>
       <button id="n-tienda">Tienda</button>
       <button id="n-mochila">Mochila</button>
       <button id="n-decorar">Decorar</button>
@@ -495,6 +521,12 @@ function pintarJuego(){
   $('#a-jugar').onclick = empezarJuego;
   $('#a-entrenar').onclick = entrenar;
   $('#a-dormir').onclick = dormir;
+  $('#n-explorar').onclick = () => {
+    if(modo) salirModo();
+    if(S.durmiendo){ S.durmiendo = false; avisar(`${S.nombre} se despertó para salir de aventura`); }
+    guardar(); pintarMundo();
+  };
+  $('#n-equipo').onclick = () => abrirEquipo('equipo');
   $('#n-tienda').onclick = () => abrirHoja('tienda');
   $('#n-mochila').onclick = () => abrirHoja('mochila');
   $('#n-decorar').onclick = () => modo === 'decorar' ? salirModo() : empezarDecorar();
@@ -504,12 +536,14 @@ function pintarJuego(){
 
 let claveBicho = '';
 function pintarTodo(){
-  if(!S){ pintarEleccion(); return; }
-  if(!$('#escenario')){ pintarJuego(); return; }
-  $('#nom').textContent = S.nombre;
-  $('#niv').textContent = 'Nivel ' + S.nivel;
-  $('#xp').style.width = (S.xp / xpPara(S.nivel) * 100) + '%';
-  $('#mon').textContent = S.monedas;
+  if(!S) return;
+  if($('#nom')){
+    $('#nom').textContent = S.nombre;
+    $('#niv').textContent = 'Nivel ' + S.nivel;
+    $('#xp').style.width = (S.xp / xpPara(S.nivel) * 100) + '%';
+    $('#mon').textContent = S.monedas;
+  }
+  if(vista !== 'casa' || !$('#escenario')) return;
   NEC.forEach(n => {
     const v = Math.round(S.nec[n.k]);
     $('#v-'+n.k).textContent = v;
@@ -601,6 +635,7 @@ function darComida(id){
   S.stats.vida += fav ? .6 : .3;
   sumarXP(fav ? 6 : 4);
   cerrarHoja();
+  if(vista !== 'casa'){ avisar(`${S.nombre} comió ${c.nom}${fav ? ' ¡su favorita!' : ''}`); guardar(); pintarTodo(); return; }
   const b = $('#bichito'); b.classList.remove('saltando'); void b.offsetWidth; b.classList.add('saltando');
   setTimeout(() => b.classList.remove('saltando'), 1400);
   const r = $('#escenario').getBoundingClientRect();
@@ -778,8 +813,9 @@ function salirModo(){
 }
 
 /* ======================= Hojas: comida, tienda, mochila ======================= */
-let hojaActual = null, pestana = {tienda:'comida', mochila:'comida'};
+let hojaActual = null, pestana = {tienda:'aventura', mochila:'aventura', equipo:'equipo'};
 function abrirHoja(tipo){
+  if(vista === 'combate') return;
   if(modo === 'decorar' && tipo !== 'mochila') salirModo();
   hojaActual = tipo;
   let velo = $('#velo');
@@ -812,9 +848,9 @@ function pintarHoja(){
     cuerpo += `<button class="item" data-ir="tienda" style="justify-content:center;align-items:center;background:var(--cielo)"><span class="em">🛒</span><h3>Comprar más</h3></button>`;
   } else if(hojaActual === 'tienda'){
     titulo = 'Tienda';
-    const tabs = [['comida','Comida'],['muebles','Muebles'],['accesorios','Accesorios'],['fondos','Casa']];
+    const tabs = [['aventura','Aventura'],['comida','Comida'],['muebles','Muebles'],['accesorios','Accesorios'],['fondos','Casa']];
     pest = `<div class="pestanas" role="tablist">${tabs.map(([k,n]) => `<button role="tab" data-tab="${k}" aria-selected="${pestana.tienda===k}">${n}</button>`).join('')}</div>`;
-    const lista = {comida:COMIDAS, muebles:MUEBLES, accesorios:ACCESORIOS, fondos:FONDOS}[pestana.tienda];
+    const lista = {aventura:OBJETOS, comida:COMIDAS, muebles:MUEBLES, accesorios:ACCESORIOS, fondos:FONDOS}[pestana.tienda];
     cuerpo = lista.map(it => {
       const bloq = S.nivel < it.nivel;
       const tiene = (pestana.tienda === 'accesorios' && S.inv.accesorios.includes(it.id)) || (pestana.tienda === 'fondos' && S.inv.fondos.includes(it.id));
@@ -823,18 +859,26 @@ function pintarHoja(){
       if(bloq) btn = `<button class="btn" disabled>Nivel ${it.nivel}</button>`;
       else if(tiene) btn = `<button class="btn" disabled>Ya lo tenés</button>`;
       else btn = `<button class="btn" data-comprar="${it.id}" ${S.monedas < it.precio ? 'disabled' : ''}>${S.monedas < it.precio ? 'No alcanza' : 'Comprar'}</button>`;
-      const muestra = pestana.tienda === 'fondos'
+      const muestra = pestana.tienda === 'aventura'
+        ? `<span class="em" style="${bloq?'filter:grayscale(1);opacity:.5':''}">${iconoObjeto(it, 40)}</span>`
+        : pestana.tienda === 'fondos'
         ? `<span style="display:block;width:100%;height:42px;border:2px solid var(--tinta);border-radius:8px;background:linear-gradient(transparent 62%,transparent 62%),${it.pared};position:relative;overflow:hidden"><span style="position:absolute;inset:62% 0 0 0;background:${it.piso};border-top:2px solid var(--tinta)"></span></span>`
         : `<span class="em" style="${bloq?'filter:grayscale(1);opacity:.5':''}">${it.em}</span>`;
       return `<div class="item ${fav?'favorito':''}">${muestra}<h3>${it.nom}</h3>${fav?'<span class="etiqueta">Favorita</span>':''}<p>${it.desc}</p>
+        ${pestana.tienda === 'aventura' ? `<p class="precio" style="margin:0">Tenés ${S.inv.objetos[it.id] || 0}</p>` : ''}
         <span class="precio"><span class="moneda">$</span>${it.precio}</span>${btn}</div>`;
     }).join('');
   } else {
     titulo = 'Mochila';
-    const tabs = [['comida','Comida'],['muebles','Muebles'],['accesorios','Accesorios'],['fondos','Casa']];
+    const tabs = [['aventura','Aventura'],['comida','Comida'],['muebles','Muebles'],['accesorios','Accesorios'],['fondos','Casa']];
     pest = `<div class="pestanas" role="tablist">${tabs.map(([k,n]) => `<button role="tab" data-tab="${k}" aria-selected="${pestana.mochila===k}">${n}</button>`).join('')}</div>`;
     const t = pestana.mochila;
-    if(t === 'comida'){
+    if(t === 'aventura'){
+      const ids = OBJETOS.filter(o => S.inv.objetos[o.id] > 0);
+      cuerpo = ids.length ? ids.map(o => `<div class="item"><span class="em">${iconoObjeto(o, 40)}</span><h3>${o.nom}</h3><p>${o.desc}</p><p class="precio">Tenés ${S.inv.objetos[o.id]}</p></div>`).join('')
+        + `<p class="vacio" style="grid-column:1/-1;padding:4px">Las cápsulas se usan en combate. Los jarabes, en combate o desde Criaturas.</p>`
+        : '<div class="vacio">No tenés cápsulas ni jarabes. Pasá por la tienda.</div>';
+    } else if(t === 'comida'){
       const ids = Object.keys(S.inv.comida);
       cuerpo = ids.length ? ids.map(id => { const c = POR_ID[id]; return `<div class="item"><span class="em">${c.em}</span><h3>${c.nom}</h3><p class="precio">Tenés ${S.inv.comida[id]}</p><button class="btn" data-dar="${id}" ${S.durmiendo?'disabled':''}>Darle</button></div>`; }).join('') : '<div class="vacio">Sin comida guardada.</div>';
     } else if(t === 'muebles'){
@@ -866,6 +910,7 @@ function comprar(id){
   if(COMIDAS.includes(it)) S.inv.comida[id] = (S.inv.comida[id]||0) + 1;
   else if(MUEBLES.includes(it)) S.inv.muebles[id] = (S.inv.muebles[id]||0) + 1;
   else if(ACCESORIOS.includes(it)) S.inv.accesorios.push(id);
+  else if(OBJETOS.includes(it)) S.inv.objetos[id] = (S.inv.objetos[id]||0) + 1;
   else { S.inv.fondos.push(id); S.fondo = id; }
   sumarXP(2);
   avisar(`Compraste: ${it.nom}`);
@@ -873,6 +918,7 @@ function comprar(id){
 }
 function ponerMueble(id){
   if(!S.inv.muebles[id]) return;
+  if(vista !== 'casa') pintarJuego();
   if(S.casa.length >= 4 + S.nivel*2) return;
   S.inv.muebles[id]--; if(!S.inv.muebles[id]) delete S.inv.muebles[id];
   const it = POR_ID[id];
@@ -899,7 +945,6 @@ document.addEventListener('visibilitychange', () => { if(!document.hidden && S){
 /* ======================= Arranque ======================= */
 if(db){ pintarCargando(); conectarNube(); }
 else {
-  S = leerLocal();
+  S = migrar(leerLocal());
   if(S){ avanzarTiempo(); pintarJuego(); bonoDiario(); } else pintarEleccion();
 }
-})();
