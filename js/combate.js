@@ -153,7 +153,7 @@ async function turno(acc){
   try {
     if(acc.tipo === 'cambio'){
       const vuelve = yo.nombre;
-      B.i = acc.i; B.participaron.add(acc.i); pintarPropio(); fichas();
+      B.i = acc.i; pintarPropio(); fichas(); animar('b-propio', 'entra-propio', 700);
       if(B.forzado){ B.forzado = false; await mensaje(`¡Dale, ${activo().nombre}!`); return; }
       await mensaje(`¡Volvé, ${vuelve}! ¡Dale, ${activo().nombre}!`);
       if(await turnoRival()) return;
