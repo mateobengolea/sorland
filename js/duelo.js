@@ -197,10 +197,9 @@ function pintarDuelo(){
   $('#app').innerHTML = `
     <section class="combate">
       <div class="banda-ent">Duelo contra <b id="du-rival"></b> <span id="cuenta-rivales"></span></div>
-      <div class="arena stadium arena-ciudad con-estadio">
-        <div class="escena cam-tribuna">
+      <div class="arena arena-ciudad con-estadio">
+        <div class="escena">
           ${svgFondoArena('ciudad')}${svgTribuna('#7A4FC9')}${svgCampo('ciudad', true)}
-          <div class="tarima">${svgTarima('ciudad', true)}</div>
           <div class="nube n1"></div><div class="nube n2"></div>
           <div class="plataforma rival"></div><div class="plataforma propio"></div>
           <div class="bicho-combate rival" id="b-rival"></div>
@@ -214,11 +213,11 @@ function pintarDuelo(){
     </section>`;
   $('#du-rival').textContent = DU.rival.apodo;
   dibujarBichosDuelo();
-  arrancarCamara();
+
 }
 function dibujarBichosDuelo(){
-  $('#b-rival').innerHTML = svgLuchador(actDu(DU.otro).esp, actDu(DU.otro).shiny);
-  $('#b-propio').innerHTML = svgLuchador(actDu(DU.lado).esp, actDu(DU.lado).shiny);
+  $('#b-rival').innerHTML = svgEspecie(actDu(DU.otro).esp, {humor: 'bien', shiny: actDu(DU.otro).shiny});
+  $('#b-propio').innerHTML = svgEspecie(actDu(DU.lado).esp, {humor: 'bien', shiny: actDu(DU.lado).shiny, vista: 'lado'});
   fichasDuelo();
 }
 function fichasDuelo(){
@@ -241,7 +240,6 @@ function menuDuelo(tipo){
     m.querySelector('[data-a=equipo]').onclick = () => menuDuelo('equipo');
     m.querySelector('[data-a=rendirse]').onclick = () => menuDuelo('rendirse');
   } else if(tipo === 'pelear'){
-    m.className = 'menu-combate rombo';
     const rival = actDu(DU.otro);
     const movs = movsDe(yo), sinUsos = movs.every(id => ppDe(yo, id) <= 0);
     m.innerHTML = (sinUsos ? ['forcejeo'] : movs).map(id => {
