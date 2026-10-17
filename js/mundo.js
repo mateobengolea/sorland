@@ -216,7 +216,8 @@ function alLlegar(){
   // Pasto alto
   if(c === ','){
     const z = zonaEn(M, x, y);
-    if(ZONAS[z] && ZONAS[z].aparecen.length && Math.random() < .13){
+    if(S.repelente > 0){ S.repelente--; if(!S.repelente) avisar('Se terminó el repelente.'); }
+    else if(ZONAS[z] && ZONAS[z].aparecen.length && Math.random() < .13){
       if(!hayLuchadorEnPie()){ avisar('Tu equipo está agotado. Andá a un Centro de Rehabilitación o a tu casa.'); return false; }
       MW.teclas.clear();
       const salvaje = crearSalvaje(z);
@@ -352,13 +353,13 @@ function darPremio(p){
 async function visitarAltar(id){
   const L = ESPECIES[id], estado = S.legendarios[id];
   if(estado && estado.capturada){ await dialogo('Altar antiguo', ['El altar está en silencio. Ya no hay nada acá.']); return; }
-  if(cantMedallas() < 4){ await dialogo('Altar antiguo', ['Un altar de piedra muy viejo. Se siente una energía rara...', 'Hay una inscripción: «Solo quien tenga las cuatro medallas será escuchado».']); return; }
+  if(cantMedallas() < MEDALLAS.length){ await dialogo('Altar antiguo', ['Un altar de piedra muy viejo. Se siente una energía rara...', 'Hay una inscripción: «Solo quien tenga las ocho medallas será escuchado».']); return; }
   if(estado && estado.proxima > Date.now()){
     const h = Math.ceil((estado.proxima - Date.now()) / 3600000);
     await dialogo('Altar antiguo', ['El altar está frío. Lo que vivía acá se fue por un tiempo.', `Volvé en unas ${h} hora${h > 1 ? 's' : ''}.`]); return;
   }
   if(!hayLuchadorEnPie()){ await dialogo('Altar antiguo', ['Algo se mueve detrás del altar... pero tu equipo está agotado. Mejor volvé descansado.']); return; }
-  await dialogo('Altar antiguo', ['Apoyás las cuatro medallas sobre la piedra...', 'El aire tiembla. ¡Algo enorme se acerca!']);
+  await dialogo('Altar antiguo', ['Apoyás las ocho medallas sobre la piedra...', 'El aire tiembla. ¡Algo enorme se acerca!']);
   const stats = statsPorNivel(L.base, 40);
   const rival = {esp: id, nombre: L.nombre, nivel: 40, stats, hp: vidaMax(stats, 40), tipo: L.tipo, mult: 1, shiny: Math.random() < PROB_SHINY};
   salirDelMundo(); guardar();
@@ -763,7 +764,7 @@ function altar(ctx, sx, sy, x, y, t, M){
   ctx.fillStyle = '#B8B2A6'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
   ctx.fillRect(sx + 4, sy + 14, 24, 14); ctx.strokeRect(sx + 4, sy + 14, 24, 14);
   ctx.fillRect(sx + 8, sy + 2, 16, 12); ctx.strokeRect(sx + 8, sy + 2, 16, 12);
-  if(!capt && cantMedallas() >= 4){
+  if(!capt && cantMedallas() >= MEDALLAS.length){
     const p = (Math.sin(t / 300) + 1) / 2;
     ctx.fillStyle = `rgba(255,220,90,${.35 + p * .5})`; ctx.beginPath(); ctx.arc(sx + 16, sy + 8, 5 + p * 3, 0, 7); ctx.fill();
   }
@@ -793,6 +794,9 @@ function muebleInterior(ctx, sx, sy, tipo, mb = {}, t = 0){
   else if(tipo === 'heladera'){ rr(sx + 2, sy - 14, 28, 42, '#DDF2FF'); ctx.fillStyle = 'rgba(90,180,232,.45)'; ctx.fillRect(sx + 6, sy - 10, 20, 30); ctx.fillStyle = '#E2574C'; ctx.fillRect(sx + 8, sy - 6, 6, 9); ctx.fillStyle = '#FFD23F'; ctx.fillRect(sx + 17, sy - 6, 6, 9); ctx.fillStyle = '#4CC27A'; ctx.fillRect(sx + 8, sy + 8, 15, 6); }
   else if(tipo === 'columna'){ rr(sx + 6, sy - 12, 20, 40, '#F2EEE6'); ctx.fillStyle = mb.col || '#999'; ctx.fillRect(sx + 6, sy - 12, 20, 6); ctx.fillRect(sx + 6, sy + 22, 20, 6); ctx.strokeRect(sx + 6, sy - 12, 20, 40); }
   else if(tipo === 'bobina'){ rr(sx + 8, sy + 16, 16, 12, '#4656A0'); ctx.fillStyle = '#C98A47'; ctx.fillRect(sx + 11, sy - 4, 10, 20); ctx.strokeRect(sx + 11, sy - 4, 10, 20); ctx.fillStyle = '#9AA2AD'; ctx.beginPath(); ctx.arc(sx + 16, sy - 6, 6, 0, 7); ctx.fill(); ctx.stroke(); if(Math.sin(t / 90 + mb.x * 3 + mb.y) > .6){ ctx.strokeStyle = '#FFE36B'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(sx + 16, sy - 12); ctx.lineTo(sx + 10, sy - 18); ctx.lineTo(sx + 18, sy - 20); ctx.lineTo(sx + 12, sy - 28); ctx.stroke(); } }
+  else if(tipo === 'panal'){ ctx.fillStyle = '#E8B23A'; ctx.beginPath(); for(let i = 0; i < 6; i++){ const a = Math.PI / 3 * i + Math.PI / 6; ctx.lineTo(sx + 16 + Math.cos(a) * 14, sy + 14 + Math.sin(a) * 14); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFE98A'; for(const [dx, dy] of [[-5, -3], [5, -3], [0, 6]]){ ctx.beginPath(); ctx.arc(sx + 16 + dx, sy + 14 + dy, 3.5, 0, 7); ctx.fill(); } const b = Math.sin(t / 150 + mb.x * 2 + mb.y) * 4; ctx.fillStyle = '#22304A'; ctx.beginPath(); ctx.ellipse(sx + 26 + b, sy - 2, 3, 2, 0, 0, 7); ctx.fill(); }
+  else if(tipo === 'molino'){ rr(sx + 13, sy - 4, 6, 32, '#E9EEF5'); const a0 = t / 300 + mb.x; ctx.fillStyle = '#9FD4F5'; for(let i = 0; i < 4; i++){ const a = a0 + i * Math.PI / 2; ctx.beginPath(); ctx.moveTo(sx + 16, sy - 4); ctx.lineTo(sx + 16 + Math.cos(a) * 14 - Math.sin(a) * 4, sy - 4 + Math.sin(a) * 14 + Math.cos(a) * 4); ctx.lineTo(sx + 16 + Math.cos(a) * 14, sy - 4 + Math.sin(a) * 14); ctx.closePath(); ctx.fill(); ctx.stroke(); } ctx.fillStyle = '#FFD23F'; ctx.beginPath(); ctx.arc(sx + 16, sy - 4, 3, 0, 7); ctx.fill(); ctx.stroke(); }
+  else if(tipo === 'hielo'){ ctx.fillStyle = 'rgba(191,233,255,.9)'; ctx.beginPath(); ctx.moveTo(sx + 4, sy + 28); ctx.lineTo(sx + 2, sy + 6); ctx.lineTo(sx + 12, sy - 6); ctx.lineTo(sx + 24, sy - 2); ctx.lineTo(sx + 30, sy + 10); ctx.lineTo(sx + 28, sy + 28); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx + 9, sy + 4); ctx.lineTo(sx + 13, sy - 1); ctx.stroke(); }
   else if(tipo === 'antorcha'){ rr(sx + 13, sy + 6, 6, 20, '#8A5A35'); const f = Math.sin(t / 120 + mb.y) * 2; ctx.fillStyle = mb.col || '#FF9F2E'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 1 + f * .3, 6, 9 + f, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFF6B0'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 4, 2.5, 4, 0, 0, 7); ctx.fill(); }
   else if(tipo === 'estandarte'){ rr(sx + 14, sy - 14, 4, 42, '#8A5A35'); ctx.fillStyle = mb.col || '#999'; ctx.beginPath(); ctx.moveTo(sx + 4, sy - 10); ctx.lineTo(sx + 28, sy - 10); ctx.lineTo(sx + 28, sy + 16); ctx.lineTo(sx + 16, sy + 10); ctx.lineTo(sx + 4, sy + 16); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFFDF8'; ctx.beginPath(); ctx.arc(sx + 16, sy + 1, 5, 0, 7); ctx.fill(); }
 }

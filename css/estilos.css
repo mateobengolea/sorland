@@ -425,3 +425,20 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .elegible .orden{position:absolute;top:-8px;left:-6px;width:24px;height:24px;border-radius:50%;background:#FFD23F;border:2px solid var(--tinta);font-weight:800;line-height:20px;text-align:center;font-size:.85rem}
 #ed-listo:disabled{opacity:.55}
 .disco-mov{display:inline-block;width:40px;height:40px;border-radius:50%;border:2.5px solid var(--tinta);background:radial-gradient(circle,#FFFDF8 0 5px,var(--tinta) 5px 7px,var(--tipo) 7px 100%);box-shadow:inset 0 0 0 5px rgba(255,255,255,.35)}
+
+/* ======================= Casa isométrica ======================= */
+.escenario{height:auto;aspect-ratio:400/340;background:radial-gradient(ellipse at 50% 30%,#FFF6E8,#F3E3CF)}
+#cuarto,#cuarto .cuarto{position:absolute;inset:0;width:100%;height:100%;display:block}
+#muebles{position:absolute;inset:0}
+.mueble{position:absolute;font-size:0;line-height:0;filter:drop-shadow(0 2px 0 rgba(34,48,74,.18))}
+.mueble-svg svg{width:100%;height:auto;display:block;overflow:visible}
+.mueble.plano{filter:none}
+.mueble.plano svg{height:100%}
+.mueble.en-pared{filter:drop-shadow(1px 2px 0 rgba(34,48,74,.15))}
+.decorando .mueble{outline:2px dashed rgba(34,48,74,.6);outline-offset:2px}
+.decorando .mueble.moviendo{outline-color:#FFD23F;filter:drop-shadow(0 6px 4px rgba(34,48,74,.35))}
+.escenario .ent-casa{position:absolute;bottom:auto;width:13%;height:auto;aspect-ratio:96/134}
+.escenario .bichito{position:absolute;bottom:auto;width:20%;height:auto;aspect-ratio:1}
+.escenario .bichito svg,.escenario .ent-casa svg{width:100%;height:100%}
+.mueble .quitar{line-height:1;font-size:14px}
+.elegible:disabled{opacity:.45;filter:grayscale(.6)}

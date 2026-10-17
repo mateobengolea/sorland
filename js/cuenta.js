@@ -117,7 +117,7 @@ function pintarAcceso(vista, aviso){
       <button class="grande" type="submit">Guardar contraseña</button>`;
   $('#app').innerHTML = `
     <div class="eleccion">
-      <div class="titulo"><h1>Sorlandia</h1><p>Elegí tu criatura, recorré Sorlandia y ganá las cuatro medallas.</p></div>
+      <div class="titulo"><h1>Sorlandia</h1><p>Elegí tu criatura, recorré Sorlandia y ganá las ocho medallas.</p></div>
       ${bichos}
       <form class="panel ficha" id="form-acceso" novalidate>
         ${tabs ? `<div class="pestanas" role="tablist" style="margin:0">

@@ -70,6 +70,10 @@ const MOVS = {
   torrente: {nom:'Torrente del puerto', tipo:'agua', poder:90, prec:95, lider:true},
   descarga: {nom:'Descarga de tormenta', tipo:'rayo', poder:90, prec:95, lider:true},
   parrilla: {nom:'Fuego de parrilla', tipo:'fuego', poder:90, prec:95, lider:true},
+  selva:    {nom:'Selva misionera', tipo:'planta', poder:90, prec:95, lider:true},
+  tabano:   {nom:'Ataque de tábanos', tipo:'bicho', poder:90, prec:95, lider:true},
+  zonda:    {nom:'Viento zonda', tipo:'viento', poder:90, prec:95, lider:true},
+  helada:   {nom:'Helada patagónica', tipo:'hielo', poder:90, prec:95, lider:true},
 };
 const MOV_TIPO = {
   fuego:['brasa','llamarada','erupcion'], planta:['hojita','latigo','hojarasca'], agua:['chorrito','ola','maremoto'],
@@ -242,9 +246,13 @@ const ZONAS = {
 
 /* ---------------- Medallas ---------------- */
 const MEDALLAS = [
+  {id:'ombu', nom:'Medalla Ombú', tipo:'planta', ciudad:'Pueblo Ceibo', color:'#5DB86A', color2:'#8A5A35'},
   {id:'penasco', nom:'Medalla Peñasco', tipo:'piedra', ciudad:'Villa Piedra', color:'#9AA3AE', color2:'#6E7884'},
+  {id:'panal', nom:'Medalla Panal', tipo:'bicho', ciudad:'Villa Piedra', color:'#FFD23F', color2:'#8A5A35'},
   {id:'camalote', nom:'Medalla Camalote', tipo:'agua', ciudad:'Puerto Camalote', color:'#5AB4E8', color2:'#7C5CC4'},
+  {id:'pampero', nom:'Medalla Pampero', tipo:'viento', ciudad:'Puerto Camalote', color:'#CFEBFA', color2:'#5AB4E8'},
   {id:'relampago', nom:'Medalla Relámpago', tipo:'rayo', ciudad:'Cerro Tormenta', color:'#FFD23F', color2:'#4656A0'},
+  {id:'glaciar', nom:'Medalla Glaciar', tipo:'hielo', ciudad:'Cerro Tormenta', color:'#E4F6FF', color2:'#7FD3F7'},
   {id:'brasa', nom:'Medalla Brasa', tipo:'fuego', ciudad:'Monte Fogón', color:'#F47A45', color2:'#FFD23F'},
 ];
 const cantMedallas = () => S ? MEDALLAS.filter(m => S.medallas[m.id]).length : 0;
@@ -258,8 +266,20 @@ const OBJETOS = [
   {id:'jarabe', nom:'Jarabe', precio:30, medallas:0, cura:25, desc:'Recupera 25 de vida.', colores:['#FF7FA3']},
   {id:'jarabemax', nom:'Jarabe grande', precio:80, medallas:1, cura:70, desc:'Recupera 70 de vida.', colores:['#4CC27A']},
   {id:'jarabetotal', nom:'Jarabe total', precio:180, medallas:2, cura:999, desc:'Recupera toda la vida.', colores:['#7A4FC9']},
+  {id:'revivir', nom:'Revivir', precio:150, medallas:1, revive:.5, icono:'revivir', desc:'Levanta a una criatura debilitada con la mitad de la vida. Sirve en combate.', colores:['#FFD23F', '#FFF3B0']},
+  {id:'revivirmax', nom:'Revivir máximo', precio:400, medallas:3, revive:1, icono:'revivir', desc:'Levanta a una criatura debilitada con toda la vida.', colores:['#FF8FB1', '#FFE1EA']},
+  {id:'repelente', nom:'Repelente de citronela', precio:60, medallas:0, usa:'repelente', pasos:150, icono:'spray', desc:'Por 150 pasos no te salen criaturas salvajes.', colores:['#4CC27A', '#FFD23F']},
+  {id:'silbato', nom:'Silbato de vuelta', precio:90, medallas:0, usa:'silbato', icono:'silbato', desc:'Te lleva al último Centro de Rehabilitación donde te curaste.', colores:['#5AB4E8']},
+  {id:'alfajor', nom:'Alfajor de fuerza', precio:280, medallas:1, usa:'stat', stat:'fuerza', mas:2, icono:'alfajor', desc:'+2 de Fuerza para siempre a la criatura que se lo come.', colores:['#8A5A35']},
+  {id:'matecocido', nom:'Mate cocido veloz', precio:280, medallas:1, usa:'stat', stat:'velocidad', mas:2, icono:'taza', desc:'+2 de Velocidad para siempre.', colores:['#C98A52']},
+  {id:'guiso', nom:'Guiso de lentejas', precio:280, medallas:1, usa:'stat', stat:'vida', mas:4, icono:'guiso', desc:'+4 de Vida para siempre.', colores:['#C2412B']},
+  {id:'caramelo', nom:'Caramelo de dulce de leche', precio:600, medallas:2, usa:'nivel', icono:'caramelo', desc:'Sube un nivel a la criatura que lo come.', colores:['#D9A066', '#FFFDF8']},
 ];
-OBJETOS.forEach(o => o.tipoObj = o.captura ? 'capsula' : 'cura');
+OBJETOS.forEach(o => {
+  o.tipoObj = o.captura ? 'capsula' : 'cura';
+  if(!o.usa) o.usa = o.captura ? 'capsula' : o.revive ? 'revivir' : 'cura';
+  o.enCombate = ['capsula', 'cura', 'revivir'].includes(o.usa);
+});
 
 /* ---------------- Reglas de combate ---------------- */
 // Hasta 4 poderes: los que aprendió por nivel y, si tiene, el que le enseñó un líder.

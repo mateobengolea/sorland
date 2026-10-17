@@ -319,6 +319,15 @@ Object.assign(DIBUJOS, {
 
 function iconoObjeto(o, tam = 40){
   const T = '#22304A';
+  const ic = cuerpo => `<svg viewBox="0 0 60 60" width="${tam}" height="${tam}" aria-hidden="true"><g stroke="${T}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${cuerpo}</g></svg>`;
+  const [c1, c2] = o.colores || ['#ccc', '#fff'];
+  if(o.icono === 'revivir') return ic(`<path d="M30 4 L40 22 L58 26 L44 38 L48 56 L30 46 L12 56 L16 38 L2 26 L20 22Z" fill="${c1}"/><path d="M30 18 V40 M19 29 H41" stroke="#fff" stroke-width="5"/><path d="M30 18 V40 M19 29 H41" stroke="${T}" stroke-width="1.5" fill="none"/>`);
+  if(o.icono === 'spray') return ic(`<rect x="18" y="18" width="24" height="38" rx="5" fill="${c1}"/><rect x="22" y="10" width="14" height="9" rx="2" fill="#E9E2D3"/><path d="M36 13 H44" /><circle cx="50" cy="9" r="2" fill="${c2}" stroke-width="1.5"/><circle cx="52" cy="16" r="2" fill="${c2}" stroke-width="1.5"/><path d="M24 32 C28 26 34 26 36 32 C34 38 28 38 24 32Z" fill="${c2}" stroke-width="2"/>`);
+  if(o.icono === 'silbato') return ic(`<path d="M8 26 H34 C46 26 54 32 54 40 C54 48 46 54 38 54 C30 54 24 48 24 40 V34 H8Z" fill="${c1}"/><circle cx="38" cy="40" r="6" fill="#fff"/><path d="M10 26 C8 16 16 8 24 10" fill="none"/><circle cx="25" cy="10" r="3" fill="#FFD23F" stroke-width="2"/>`);
+  if(o.icono === 'alfajor') return ic(`<ellipse cx="30" cy="40" rx="24" ry="10" fill="#6B4226"/><rect x="6" y="28" width="48" height="12" fill="#6B4226" stroke="none"/><path d="M6 28 V40 M54 28 V40" fill="none"/><path d="M8 34 H52" stroke="#FFFDF8" stroke-width="4"/><ellipse cx="30" cy="28" rx="24" ry="10" fill="#8A5A35"/><path d="M18 26 L22 30 M30 24 L34 28 M40 27 L44 31" stroke="#FFFDF8" stroke-width="2"/>`);
+  if(o.icono === 'taza') return ic(`<path d="M10 22 H44 V40 C44 50 38 56 27 56 C16 56 10 50 10 40Z" fill="#FFFDF8"/><path d="M44 28 C54 28 54 42 44 42" fill="none" stroke-width="4"/><ellipse cx="27" cy="22" rx="17" ry="5" fill="${c1}"/><path d="M20 14 C18 10 22 8 20 4 M30 14 C28 10 32 8 30 4" fill="none" stroke-width="2"/>`);
+  if(o.icono === 'guiso') return ic(`<path d="M4 28 H56 C56 44 46 54 30 54 C14 54 4 44 4 28Z" fill="#E9E2D3"/><ellipse cx="30" cy="28" rx="26" ry="7" fill="${c1}"/><circle cx="20" cy="27" r="2.5" fill="#FFD23F" stroke-width="1.5"/><circle cx="34" cy="26" r="2.5" fill="#4CC27A" stroke-width="1.5"/><circle cx="42" cy="29" r="2" fill="#FFFDF8" stroke-width="1.5"/><path d="M22 18 C20 14 24 12 22 8 M34 18 C32 14 36 12 34 8" fill="none" stroke-width="2"/>`);
+  if(o.icono === 'caramelo') return ic(`<path d="M16 30 L4 20 L6 40Z M44 30 L56 20 L54 40Z" fill="${c2}"/><ellipse cx="30" cy="30" rx="16" ry="12" fill="${c1}"/><path d="M22 26 C26 22 34 22 38 26" stroke="#FFF3B0" stroke-width="3" fill="none"/>`);
   if(o.captura){
     const [a, b] = o.colores;
     return `<svg viewBox="0 0 60 60" width="${tam}" height="${tam}" aria-hidden="true">
@@ -349,6 +358,20 @@ function svgMedalla(m, tam = 64, apagada = false){
               <circle cx="40" cy="50" r="4" fill="#FFD23F"/>`,
     relampago:`<polygon points="40,4 49,28 74,28 54,44 62,70 40,54 18,70 26,44 6,28 31,28" fill="${m.color2}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
                <path d="M44 16 L32 42 L41 42 L35 62 L52 34 L43 34 L49 16Z" fill="${m.color}" stroke="${T}" stroke-width="2.5" stroke-linejoin="round"/>`,
+    ombu:`<circle cx="40" cy="40" r="34" fill="#FFF6D6" stroke="${T}" stroke-width="4"/>
+           <path d="M34 70 L36 46 L44 46 L46 70Z" fill="${m.color2}" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
+           <path d="M40 10 C58 10 68 22 64 34 C70 44 60 54 50 50 C44 56 34 56 30 50 C18 54 10 42 16 34 C12 22 24 10 40 10Z" fill="${m.color}" stroke="${T}" stroke-width="3.5" stroke-linejoin="round"/>
+           <path d="M30 28 C34 24 40 24 44 28" fill="none" stroke="#B8E6A0" stroke-width="3" stroke-linecap="round"/>`,
+    panal:`<polygon points="40,4 71,22 71,58 40,76 9,58 9,22" fill="${m.color}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
+           <g fill="#FFE98A" stroke="${m.color2}" stroke-width="2.5">${[[40,26],[28,40],[52,40],[40,54]].map(([x, y]) => `<polygon points="${x},${y - 9} ${x + 8},${y - 4.5} ${x + 8},${y + 4.5} ${x},${y + 9} ${x - 8},${y + 4.5} ${x - 8},${y - 4.5}"/>`).join('')}</g>
+           <ellipse cx="58" cy="20" rx="6" ry="4" fill="#22304A"/><path d="M55 16 l3 4 l3 -4" fill="#fff" stroke="${T}" stroke-width="1.5"/>`,
+    pampero:`<circle cx="40" cy="40" r="34" fill="${m.color}" stroke="${T}" stroke-width="4"/>
+             <path d="M16 32 C30 22 48 22 54 30 C60 38 48 46 42 38 M14 46 C28 40 48 42 60 48 M22 58 C34 54 48 56 56 62" fill="none" stroke="${m.color2}" stroke-width="5" stroke-linecap="round"/>
+             <path d="M16 32 C30 22 48 22 54 30 C60 38 48 46 42 38 M14 46 C28 40 48 42 60 48 M22 58 C34 54 48 56 56 62" fill="none" stroke="${T}" stroke-width="1.5" stroke-linecap="round"/>`,
+    glaciar:`<polygon points="40,4 50,18 66,14 62,30 76,40 62,50 66,66 50,62 40,76 30,62 14,66 18,50 4,40 18,30 14,14 30,18" fill="${m.color}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
+             <g stroke="${m.color2}" stroke-width="4" stroke-linecap="round"><path d="M40 18 V62 M21 29 L59 51 M21 51 L59 29"/></g>
+             <g stroke="${T}" stroke-width="1.5" stroke-linecap="round"><path d="M40 18 V62 M21 29 L59 51 M21 51 L59 29"/></g>
+             <circle cx="40" cy="40" r="6" fill="#fff" stroke="${T}" stroke-width="2.5"/>`,
     brasa:`<path d="M40 74 C20 74 12 58 16 44 C20 32 30 30 30 16 C42 24 44 34 42 40 C48 36 50 28 50 22 C64 34 68 48 64 58 C60 68 52 74 40 74Z" fill="${m.color}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
            <path d="M40 66 C31 66 27 58 30 51 C32 46 37 44 38 38 C46 44 50 52 48 58 C46 63 44 66 40 66Z" fill="${m.color2}"/>`,
   };
@@ -546,15 +569,47 @@ function svgEspecie(esp, o = {}){
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${SOMBRA}
     <g transform="translate(100 188) scale(${esc}) translate(-100 -188)"><g class="cuerpo"${shiny}>${interiorEspecie(esp, o)}</g></g>${brillos}</svg>`;
 }
-// La Enfermera Carosor: una criatura de fuego con cofia y cruz, que atiende los centros.
+// La Enfermera Carosor: una princesita de diseño propio que atiende los centros.
 function svgEnfermera(){
-  const base = svgEspecie('carosor', {humor: 'feliz'});
-  const cofia = `<g stroke="#22304A" stroke-width="3.5" stroke-linejoin="round">
-      <path d="M66 52 C66 30 134 30 134 52 L128 60 C112 54 88 54 72 60Z" fill="#FFFFFF"/>
-      <rect x="92" y="34" width="16" height="16" rx="3" fill="#FFFFFF" stroke="none"/>
-      <path d="M96 38 h8 v5 h5 v8 h-5 v5 h-8 v-5 h-5 v-8 h5z" fill="#E2574C" stroke-width="2"/></g>
-    <g stroke="#22304A" stroke-width="3"><circle cx="100" cy="150" r="9" fill="#FFFFFF"/><path d="M96 150 h8 M100 146 v8" stroke="#E2574C" stroke-width="3"/></g>`;
-  return base.replace(/<\/svg>$/, cofia + '</svg>');
+  const T = '#22304A', rosa = '#FF9EBB', rosaOsc = '#E9709A', piel = '#FFE6D6', pelo = '#B98CE8', peloOsc = '#9468CF', oro = '#FFC93C';
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${SOMBRA}
+  <g stroke="${T}" stroke-linejoin="round" stroke-linecap="round">
+    <!-- alitas -->
+    <path d="M58 118 C30 100 22 126 40 138 C26 146 40 162 62 146Z" fill="#FFFFFF" stroke-width="3"/>
+    <path d="M142 118 C170 100 178 126 160 138 C174 146 160 162 138 146Z" fill="#FFFFFF" stroke-width="3"/>
+    <!-- pelo largo de atrás -->
+    <path d="M56 78 C44 118 52 146 66 156 C70 136 70 120 72 104Z" fill="${peloOsc}" stroke-width="3.5"/>
+    <path d="M144 78 C156 118 148 146 134 156 C130 136 130 120 128 104Z" fill="${peloOsc}" stroke-width="3.5"/>
+    <!-- vestido acampanado -->
+    <path d="M78 112 C66 140 54 162 50 178 C82 188 118 188 150 178 C146 162 134 140 122 112Z" fill="${rosa}" stroke-width="4"/>
+    <path d="M52 172 Q62 166 72 174 Q82 166 92 174 Q100 166 108 174 Q118 166 128 174 Q138 166 148 172" fill="none" stroke="#FFFFFF" stroke-width="3.5"/>
+    <!-- delantal con cruz -->
+    <path d="M84 118 L116 118 L124 160 C110 166 90 166 76 160Z" fill="#FFFFFF" stroke-width="3"/>
+    <path d="M95 128 h10 v8 h8 v10 h-8 v8 h-10 v-8 h-8 v-10 h8z" fill="#E2574C" stroke-width="2"/>
+    <!-- bracitos con un corazón -->
+    <path d="M78 122 C66 130 64 142 70 148" fill="none" stroke="${T}" stroke-width="9"/><path d="M78 122 C66 130 64 142 70 148" fill="none" stroke="${piel}" stroke-width="4.5"/>
+    <path d="M122 122 C134 128 140 116 146 108" fill="none" stroke="${T}" stroke-width="9"/><path d="M122 122 C134 128 140 116 146 108" fill="none" stroke="${piel}" stroke-width="4.5"/>
+    <path d="M146 104 C142 96 152 92 154 100 C156 92 166 96 162 104 L154 114Z" fill="#FF5C8A" stroke-width="2.5"/>
+    <!-- cabeza -->
+    <ellipse cx="100" cy="80" rx="42" ry="38" fill="${piel}" stroke-width="4"/>
+    <!-- flequillo y mechones -->
+    <path d="M58 82 C54 50 78 36 100 38 C124 36 148 50 142 82 C134 66 122 60 112 62 C108 70 100 72 92 66 C82 72 70 70 58 82Z" fill="${pelo}" stroke-width="3.5"/>
+    <path d="M60 80 C56 96 58 108 62 116" fill="none" stroke="${pelo}" stroke-width="9"/>
+    <path d="M140 80 C144 96 142 108 138 116" fill="none" stroke="${pelo}" stroke-width="9"/>
+    <!-- tiara con gema de cruz -->
+    <path d="M70 46 L74 30 L86 40 L100 22 L114 40 L126 30 L130 46 C112 40 88 40 70 46Z" fill="${oro}" stroke-width="3"/>
+    <circle cx="100" cy="34" r="5.5" fill="#FF5C8A" stroke-width="2"/>
+    <circle cx="74" cy="30" r="3" fill="#8FD3F7" stroke-width="1.8"/><circle cx="126" cy="30" r="3" fill="#8FD3F7" stroke-width="1.8"/>
+    <!-- ojos grandes con pestañas -->
+    <ellipse cx="84" cy="84" rx="8" ry="10" fill="${T}" stroke="none"/><circle cx="87" cy="80" r="3.2" fill="#fff" stroke="none"/><circle cx="82" cy="88" r="1.6" fill="#fff" stroke="none"/>
+    <ellipse cx="116" cy="84" rx="8" ry="10" fill="${T}" stroke="none"/><circle cx="119" cy="80" r="3.2" fill="#fff" stroke="none"/><circle cx="114" cy="88" r="1.6" fill="#fff" stroke="none"/>
+    <path d="M74 78 L70 74 M77 75 L75 70 M126 78 L130 74 M123 75 L125 70" fill="none" stroke-width="2.5"/>
+    <ellipse cx="72" cy="98" rx="7" ry="4.5" fill="${rosaOsc}" opacity=".55" stroke="none"/>
+    <ellipse cx="128" cy="98" rx="7" ry="4.5" fill="${rosaOsc}" opacity=".55" stroke="none"/>
+    <path d="M92 100 Q100 108 108 100" fill="none" stroke-width="3"/>
+  </g>
+  <g fill="#FFE45C" stroke="${T}" stroke-width="1.6"><path d="M38 60 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M166 54 l2.5 6 l6 2.5 l-6 2.5 l-2.5 6 l-2.5 -6 l-6 -2.5 l6 -2.5z"/></g>
+  </svg>`;
 }
 // Compatibilidad: los iniciales se dibujaban con svgCriatura.
 function svgCriatura(esp, o = {}){ return svgEspecie(esp, o); }
@@ -691,13 +746,13 @@ function svgPeluche(esp){
 }
 
 function svgVitrina(medallas){
-  const pos = [[30, 34], [70, 34], [30, 82], [70, 82]];
-  const items = MEDALLAS.map((m, i) => `<g transform="translate(${pos[i][0] - 17} ${pos[i][1] - 17}) scale(.425)" style="${medallas[m.id] ? '' : 'filter:grayscale(1);opacity:.22'}">${svgMedalla(m, 80).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`).join('');
+  const pos = MEDALLAS.map((m, i) => [30 + (i % 2) * 40, 24 + Math.floor(i / 2) * 24]);
+  const items = MEDALLAS.map((m, i) => `<g transform="translate(${pos[i][0] - 11} ${pos[i][1] - 11}) scale(.275)" ${medallas[m.id] ? '' : 'opacity=".18"'}>${svgMedalla(m, 80).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`).join('');
   return `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <ellipse cx="50" cy="126" rx="44" ry="4" fill="rgba(34,48,74,.18)"/>
     <rect x="6" y="6" width="88" height="116" rx="6" fill="#8A5A35" stroke="#22304A" stroke-width="3"/>
     <rect x="12" y="12" width="76" height="98" rx="3" fill="#DFF1FA" stroke="#22304A" stroke-width="2.5"/>
-    <path d="M12 58 H88" stroke="#8A5A35" stroke-width="4"/>
+    <path d="M12 36 H88 M12 60 H88 M12 84 H88" stroke="#8A5A35" stroke-width="3"/>
     ${items}
     <path d="M20 18 L36 18 L18 46Z" fill="#fff" opacity=".45"/>
     <rect x="30" y="112" width="40" height="7" rx="2" fill="#FFD23F" stroke="#22304A" stroke-width="2"/>

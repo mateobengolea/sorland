@@ -80,6 +80,26 @@ const CUARTEL = [
 ];
 
 const LIDERES = {
+  flor:{id:'flor', titulo:'Líder', nombre:'Flor Cita', medalla:'ombu', mov:'selva', tipoGym:'planta', premio:250, ropa:'#4FA03C', pelo:'#E9709A',
+    equipo:[['brotecito',7],['honguito',8],['ceibin',9]],
+    antes:['¡Hola! Soy Flor Cita, la líder de Pueblo Ceibo.', 'Mis criaturas crecen al sol, como los ceibos. ¿Me mostrás cómo peleás?'],
+    despues:['¡Me marchitaste!', 'Te ganaste la Medalla Ombú. Ahora andá a Villa Piedra, al norte del pueblo.'],
+    yaGano:'Ya tenés la Medalla Ombú. Villa Piedra queda al norte.'},
+  saltamontes:{id:'saltamontes', titulo:'Líder', nombre:'Elsa Ltamontes', medalla:'panal', mov:'tabano', tipoGym:'bicho', premio:550, ropa:'#8DBF3A', pelo:'#3B2A22',
+    equipo:[['grillito',12],['abejita',13],['mamboreta',13],['hormigon',14]],
+    antes:['¡Shh! ¿Escuchás el zumbido?', 'Soy Elsa Ltamontes. Los bichos parecen chiquitos, pero pican fuerte.'],
+    despues:['¡Me dejaste patas para arriba!', 'Tomá la Medalla Panal. Seguí hacia Puerto Camalote, al este de Pueblo Ceibo.'],
+    yaGano:'Ya tenés la Medalla Panal. ¡Zumbá para el puerto!'},
+  tornado:{id:'tornado', titulo:'Líder', nombre:'Aitor Nado', medalla:'pampero', mov:'zonda', tipoGym:'viento', premio:850, ropa:'#9FD4F5', pelo:'#FFFFFF',
+    equipo:[['picaflor',16],['barrilete',16],['condoralto',17],['hornero',18]],
+    antes:['¿Sentís esa brisa? Soy yo calentando.', 'Soy Aitor Nado. Mis criaturas vuelan más alto que los barriletes.'],
+    despues:['¡Me dejaste sin aire!', 'La Medalla Pampero es tuya. Al norte del puerto está Cerro Tormenta.'],
+    yaGano:'Ya volaste conmigo. Cerro Tormenta queda al norte del puerto.'},
+  patinaje:{id:'patinaje', titulo:'Líder', nombre:'Paty Naje', medalla:'glaciar', mov:'helada', tipoGym:'hielo', premio:1200, ropa:'#BFE9FF', pelo:'#5A6B8C',
+    equipo:[['escarchin',20],['pinguinazo',21],['huemul',21],['escarchon',22]],
+    antes:['Cuidado, que el piso resbala.', 'Soy Paty Naje. Patino sobre el hielo y congelo a quien se me ponga adelante.'],
+    despues:['¡Me derretiste!', 'Te llevás la Medalla Glaciar. Monte Fogón queda al norte de Cerro Tormenta.'],
+    yaGano:'Ya tenés la Medalla Glaciar. Monte Fogón queda al norte.'},
   tosca:{id:'tosca', titulo:'Líder', nombre:'Estela Gartija', medalla:'penasco', mov:'terremoto', tipoGym:'piedra', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
     equipo:[['fosilito',10],['morrito',11],['tatupiedra',12]],
     antes:['¡Bienvenido al gimnasio de Villa Piedra!', 'Acá entrenamos duro, como las piedras de la sierra.', 'Si querés la Medalla Peñasco, vas a tener que romperme la defensa.'],
@@ -98,7 +118,7 @@ const LIDERES = {
   rulo:{id:'rulo', titulo:'Líder', nombre:'Don Armando Bronca', medalla:'brasa', mov:'parrilla', tipoGym:'fuego', premio:1400, ropa:'#C2412B', pelo:'#3B2A22',
     equipo:[['fogonero',22],['ajipicante',23],['brasero',24],['zorrolumbre',25]],
     antes:['¡Pasá, pasá, que el fuego está a punto!', 'Soy Don Armando Bronca, el último líder de Sorlandia.', 'A ver si tu equipo aguanta el calor de la parrilla.'],
-    despues:['¡Se me apagó el fogón!', 'Te llevás la Medalla Brasa. ¡Con las cuatro medallas sos campeón de Sorlandia!', 'Dicen que con las cuatro medallas, las leyendas de Sorlandia se dejan ver...'],
+    despues:['¡Se me apagó el fogón!', 'Te llevás la Medalla Brasa.', 'Con las ocho medallas se abre el camino a la Cumbre Suprema. Y dicen que las leyendas de Sorlandia se dejan ver...'],
     yaGano:'¡Campeón! Volvé cuando quieras a comer un asadito.'},
 };
 
@@ -163,6 +183,7 @@ function mapaCeibo(){
     ['¡Las sierras son mías! Bueno, de mis bichos.'], ['Para Estela Gartija vas a necesitar ataques de Agua o de Planta, que a la Piedra le pegan fuerte.'], '#A9612F'));
   M.zonas = [['pueblo', 1, 21, 26, 28], ['sierras', 1, 1, 15, 10], ['bosque', 24, 1, 38, 13], ['rio', 24, 14, 38, 28], ['pradera', 1, 1, 23, 20]];
   M.zonaBase = 'pradera';
+  M.edificio(4, 26, 7, 'gimnasio', {lider:'flor'}, {color:'#4FA03C', tipoGym:'planta'});
   return M;
 }
 
@@ -200,6 +221,7 @@ function mapaVillaPiedra(){
     ['¡Desde acá arriba te vi venir! A ver qué tan fuerte sos.'], ['Bien ahí. Estela Gartija te va a costar, pero podés.'], '#E2574C'));
   M.zonas = [['villapiedra', 1, 12, 28, 24], ['serrania', 1, 1, 28, 11]];
   M.zonaBase = 'serrania';
+  M.edificio(18, 21, 7, 'gimnasio', {lider:'saltamontes'}, {color:'#8DBF3A', tipoGym:'bicho'});
   return M;
 }
 
@@ -248,6 +270,7 @@ function mapaCamalote(){
     ['¡Todos a bordo! Primero tenés que pasar por mí.'], ['¡Hombre al agua! Bah, criatura al agua.'], '#E2574C'));
   M.zonas = [['camalote', 1, 11, 24, 22], ['costa', 1, 1, 34, 26]];
   M.zonaBase = 'costa';
+  M.edificio(2, 9, 7, 'gimnasio', {lider:'tornado'}, {color:'#7FC8EE', tipoGym:'viento'});
   return M;
 }
 
@@ -290,6 +313,7 @@ function mapaTormenta(){
     ['¡Bzzz! ¡Te voy a dejar con los pelos parados!'], ['Me quedé sin chispa...'], '#FFD23F'));
   M.zonas = [['tormenta', 1, 12, 30, 20], ['cumbres', 1, 1, 30, 26]];
   M.zonaBase = 'cumbres';
+  M.edificio(2, 21, 5, 'gimnasio', {lider:'patinaje'}, {color:'#BFE9FF', tipoGym:'hielo'});
   return M;
 }
 
@@ -315,8 +339,8 @@ function mapaFogon(){
   M.camino(27, 1, 27, 6);
   M.salida(27, 0, 'supremo', 15, 28);
   M.npc({id:'guardia_supremo', x:27, y:1, tipo:'guardia', nombre:'Guardiana Encarna Vales', requiere:'todas', ropa:'#C9A227', pelo:'#E9E2D3',
-    frases:['Este sendero lleva a la Cumbre Suprema, donde está el Cuartel Supremo.', 'Solo pueden subir quienes tengan las cuatro medallas de Sorlandia.'],
-    abierto:['¡Las cuatro medallas! Subí: en la cumbre te espera el Cuartel Supremo.', 'Allá vas a pelear contra los cuatro mejores entrenadores y el Campeón, uno tras otro.']});
+    frases:['Este sendero lleva a la Cumbre Suprema, donde está el Cuartel Supremo.', 'Solo pueden subir quienes tengan las ocho medallas de Sorlandia.'],
+    abierto:['¡Las ocho medallas! Subí: en la cumbre te espera el Cuartel Supremo.', 'Allá vas a pelear contra los cuatro mejores entrenadores y el Campeón, uno tras otro.']});
   M.m[3][16] = 'A'; M.altares['16,3'] = 'intiraya';
   M.npc({id:'vecino_fog', x:12, y:21, tipo:'vecino', nombre:'Doña Lola Mento', ropa:'#F2B63D', pelo:'#3B2A22', suelo:':',
     frases:['Don Armando Bronca es el líder más fuerte de todos.', 'Sus criaturas de Fuego no aguantan el Agua ni la Piedra.']});
@@ -420,6 +444,18 @@ const SALIDA_CASA = {mapa: 'ceibo', x: 11, y: 24};
 /* ---------------- Centros, markets y gimnasios por dentro ---------------- */
 // Los alumnos de cada gimnasio: hay que ganarles a los tres para poder desafiar al líder.
 const ALUMNOS = {
+  flor: [['Jardinera', 'Margarita Flores', [['brotecito', 5], ['honguito', 5]], 60, ['¿Te gustan las plantas? ¡A las mías les gusta pelear!'], ['Me podaste.']],
+         ['Florista', 'Armando Macetas', [['ceibin', 6], ['cardoncito', 6]], 70, ['Cada maceta tiene una criatura adentro.'], ['Se me volcó la tierra.']],
+         ['Huertera', 'Elsa Pallo', [['honguito', 6], ['jacarandita', 7]], 80, ['De mi huerta salen las criaturas más sanas.'], ['Me ganaste en buena ley. Y en buena huerta.']]],
+  saltamontes: [['Cazamariposas', 'Mary Quita', [['mariposita', 10], ['vaquitita', 10]], 130, ['¡Te atrapé con la red!'], ['Se me escaparon todas.']],
+                ['Grillero', 'Elvio Lín', [['grillito', 11], ['abejita', 11]], 140, ['Mis grillos tocan música… y pelean al ritmo.'], ['Me desafinaste.']],
+                ['Hormiguera', 'Lola Rva', [['hormiguin', 11], ['hormigon', 12]], 150, ['De a poquito, como las hormigas, te voy a ganar.'], ['Se me desarmó el hormiguero.']]],
+  tornado: [['Barrileteador', 'Remo Lino', [['barrilete', 14], ['picaflorcito', 14]], 190, ['¡Mirá cómo vuela mi barrilete!'], ['Se me cortó el hilo.']],
+            ['Paracaidista', 'Elsa Lto', [['condorcito', 15], ['hornerito', 15]], 210, ['Salté de un avión para llegar acá. ¡Peleemos!'], ['Aterricé de cola.']],
+            ['Meteorólogo', 'Rafa Ga', [['bichofeo', 15], ['barrilete', 16]], 230, ['Pronóstico: te va a soplar fuerte.'], ['Le erré al pronóstico.']]],
+  patinaje: [['Esquiador', 'Tomás Frío', [['pinguinito', 18], ['escarchin', 18]], 260, ['¡Bajé la montaña en esquí para pelear con vos!'], ['Me fui de pista.']],
+             ['Patinadora', 'Aurora Boreal', [['huemulito', 19], ['pinguinito', 19]], 280, ['Una pirueta y te congelo.'], ['Me caí de la pirueta.']],
+             ['Andinista', 'Inés Calofrío', [['escarchon', 20], ['huemul', 20]], 310, ['Brrr… ¿tenés frío? Ya vas a tener.'], ['Me agarró la helada a mí.']]],
   tosca: [['Escalador', 'Aquiles Canto', [['cuarcito', 8], ['fosilito', 9]], 110, ['¡Acá se entrena duro como la piedra!'], ['Pasá. La líder te espera arriba.']],
           ['Picapedrera', 'Petra Lapiedra', [['fosilito', 9], ['cuarcito', 9]], 120, ['¿Venís a picar piedra conmigo?'], ['Me hiciste polvo.']],
           ['Geólogo', 'Elmo Lino', [['tatupiedra', 9], ['cuarzon', 10]], 140, ['Estudié todas las rocas de la sierra. ¡Y entrené con ellas!'], ['Sos más duro que el granito.']]],
@@ -433,8 +469,9 @@ const ALUMNOS = {
          ['Asador', 'Mario Llejas', [['fogonero', 21], ['ajipicante', 21]], 340, ['Las mollejas, bien doradas. Y vos, bien quemado.'], ['Me ganaste la vuelta y vuelta.']],
          ['Leñadora', 'Lola Ñita', [['luzmala', 21], ['fogonero', 22], ['ajipicante', 22]], 380, ['Con poquita leña hago un fuegazo.'], ['Me apagaste la brasa.']]],
 };
-const PISO_GYM = {piedra: ['#CFC7B8', '#C2B9A9'], agua: ['#CDEBF7', '#BCE1F2'], rayo: ['#DCE0EE', '#CDD3E6'], fuego: ['#EBCBB2', '#E2BEA2']};
-const BORDE_GYM = {piedra: '#', agua: '~', rayo: 'm', fuego: '!'};
+const PISO_GYM = {piedra: ['#CFC7B8', '#C2B9A9'], agua: ['#CDEBF7', '#BCE1F2'], rayo: ['#DCE0EE', '#CDD3E6'], fuego: ['#EBCBB2', '#E2BEA2'],
+  planta: ['#D6EDC4', '#C9E4B4'], bicho: ['#EFE4B8', '#E6D8A2'], viento: ['#E4F3FB', '#D4EAF6'], hielo: ['#EAF7FF', '#DCF0FB']};
+const BORDE_GYM = {piedra: '#', agua: '~', rayo: 'm', fuego: '!', planta: 'T', bicho: 'panal', viento: 'molino', hielo: 'hielo'};
 function interiorBase(id, nombre, w, h, piso, afuera, semilla){
   const M = nuevoMapa(id, nombre, w, h, semilla, 'p', {pasto: piso[0], pastoAlto: piso[0], brizna: piso[1], tierra: piso[0], arbol: 'normal', fondo: '#3B2A22', interior: true, piso});
   for(let x = 0; x < w; x++){ M.m[0][x] = 'W'; M.m[1][x] = 'W'; M.m[h - 1][x] = 'W'; }
@@ -477,7 +514,9 @@ function mapaGimnasio(id, L, afuera, zonaAfuera){
   // Zonas de los costados con el terreno del tipo (rocas, pileta, bobinas o lava).
   for(let y = 4; y <= 12; y++) for(const x of [1, 2, 3, 9, 10, 11]){
     if((x + y) % 3 === 0) continue;
-    if(borde === 'm') M.mueble('bobina', x, y); else M.m[y][x] = borde;
+    if(borde === 'm') M.mueble('bobina', x, y);
+    else if(borde.length > 1) M.mueble(borde, x, y);
+    else M.m[y][x] = borde;
   }
   // Pasillo central entre columnas: los alumnos esperan al costado.
   const alumnos = ALUMNOS[L.id], lugares = [[5, 11], [7, 8], [5, 5]];

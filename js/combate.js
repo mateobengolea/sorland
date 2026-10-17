@@ -124,12 +124,22 @@ function menu(tipo){
     m.querySelectorAll('[data-m]').forEach(b => b.onclick = () => turno({tipo: 'atacar', mov: b.dataset.m}));
     m.querySelector('[data-v]').onclick = () => menu('principal');
   } else if(tipo === 'mochila'){
-    const objs = OBJETOS.filter(o => S.inv.objetos[o.id] > 0);
+    const objs = OBJETOS.filter(o => S.inv.objetos[o.id] > 0 && o.enCombate);
     m.className = 'menu-combate grilla-2';
     m.innerHTML = (objs.length ? objs.map(o => `<button data-o="${o.id}" class="mc-obj">${iconoObjeto(o, 30)}<span><b>${o.nom}</b><small>Tenés ${S.inv.objetos[o.id]}</small></span></button>`).join('')
-      : `<p class="mc-vacio">No tenés cápsulas ni jarabes. Comprá en la tienda.</p>`) + `<button class="mc-volver" data-v>Volver</button>`;
-    m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => turno({tipo: 'objeto', obj: b.dataset.o}));
+      : `<p class="mc-vacio">No tenés cápsulas, jarabes ni revivir. Comprá en el Market.</p>`) + `<button class="mc-volver" data-v>Volver</button>`;
+    m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
+      const o = OBJETOS.find(x => x.id === b.dataset.o);
+      if(o.revive) menu('revivir:' + o.id); else turno({tipo: 'objeto', obj: o.id});
+    });
     m.querySelector('[data-v]').onclick = () => menu('principal');
+  } else if(tipo.startsWith('revivir:')){
+    const id = tipo.slice(8), caidos = B.lista.map((x, i) => [x, i]).filter(([x]) => x.hp <= 0);
+    m.className = 'menu-combate lista';
+    m.innerHTML = (caidos.length ? caidos.map(([x, i]) => `<button data-r="${i}" class="mc-obj"><span><b></b><small>Debilitada · Nv ${x.nivel}</small></span></button>`).join('')
+      : `<p class="mc-vacio">No hay ninguna criatura debilitada.</p>`) + `<button class="mc-volver" data-v>Volver</button>`;
+    m.querySelectorAll('[data-r]').forEach(b => { b.querySelector('b').textContent = B.lista[+b.dataset.r].nombre; b.onclick = () => turno({tipo: 'objeto', obj: id, dest: +b.dataset.r}); });
+    m.querySelector('[data-v]').onclick = () => menu('mochila');
   } else if(tipo === 'equipo'){
     m.className = 'menu-combate lista';
     m.innerHTML = B.lista.map((x, i) => {
@@ -169,7 +179,13 @@ async function turno(acc){
       const o = OBJETOS.find(x => x.id === acc.obj);
       if(o.captura && B.ent){ await mensaje('¡No se le tira una cápsula a la criatura de otro entrenador!', 1200); return; }
       if(o.captura){ if(await tirarCapsula(o)) return; }
-      else {
+      else if(o.revive){
+        const l = B.lista[acc.dest];
+        if(!l || l.hp > 0) return;
+        S.inv.objetos[o.id]--;
+        l.hp = Math.max(1, Math.round(l.max * o.revive)); guardarHp(l);
+        await mensaje(`¡${l.nombre} se levantó con ${l.hp} de vida!`);
+      } else {
         if(yo.hp >= yo.max){ await mensaje(`${yo.nombre} ya tiene la vida llena.`, 800); return; }
         S.inv.objetos[o.id]--;
         const antes = yo.hp; yo.hp = Math.min(yo.max, yo.hp + o.cura); fichas();
@@ -280,7 +296,7 @@ async function ganarCombate(){
         S.discos[e.mov] = true; S.ensenar = e.mov;
         await mensaje(`${e.nombre} te regaló su movimiento: ${MOVS[e.mov].nom}.`, 2200);
       }
-      if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las cuatro medallas! El camino a la Cumbre Suprema está abierto.', 2400);
+      if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las ocho medallas! El camino a la Cumbre Suprema está abierto.', 2400);
     }
   } else if(B.legendaria){
     S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
@@ -439,7 +455,7 @@ function pintarEquipo(){
       : '<div class="vacio">Acá viven las criaturas que no entran en tu equipo.</div>';
   } else if(t === 'medallas'){
     const n = cantMedallas();
-    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === 4 ? '¡Campeón de Sorlandia! Ahora las leyendas te esperan.' : `Medallas: ${n} de 4`}</p>` + MEDALLAS.map(m => {
+    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === MEDALLAS.length ? '¡Tenés las ocho! Te esperan la Cumbre Suprema y las leyendas.' : `Medallas: ${n} de ${MEDALLAS.length}`}</p>` + MEDALLAS.map(m => {
       const L = Object.values(LIDERES).find(l => l.medalla === m.id), tiene = S.medallas[m.id];
       return `<div class="item album"><span class="cr-album" style="display:grid;place-items:center">${svgMedalla(m, 96, !tiene)}</span>
         <h3>${m.nom}</h3><span class="chip-tipo" style="background:${TIPOS[m.tipo].color}">${TIPOS[m.tipo].nom}</span>

@@ -86,7 +86,7 @@ async function pintarRanking(){
   const filas = (data || []).map((p, i) => `<div class="fila-rank${p.user_id === usuarioId ? ' yo' : ''}">
       <span class="rk-pos ${i < 3 ? 'podio p' + (i + 1) : ''}">${i + 1}</span>
       <span class="cr-mini" style="width:34px;height:46px">${svgEntrenador(p.ent || undefined)}</span>
-      <span class="fo-txt"><b data-apodo="${i}"></b><small>${duelos ? `${p.ganados} ganados · ${p.perdidos} perdidos` : `${'★'.repeat(p.medallas)}${p.campeon ? ' · Campeón' : ''}${p.shiny ? ` · ${p.shiny} ✦` : ''}`}</small></span>
+      <span class="fo-txt"><b data-apodo="${i}"></b><small>${duelos ? `${p.ganados} ganados · ${p.perdidos} perdidos` : `${p.medallas ? '★ ' + p.medallas : 'Sin medallas'}${p.campeon ? ' · Campeón' : ''}${p.shiny ? ` · ${p.shiny} ✦` : ''}`}</small></span>
       <span class="rk-val">${duelos ? chipRango(p.puntos) : `<b>${p.album}</b><small>/${total}</small>`}</span></div>`).join('');
   v.innerHTML = `<div class="hoja" role="dialog" aria-label="Ranking"><div class="hoja-cab"><h2>Ranking</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <div class="pestanas" role="tablist"><button role="tab" data-tab="duelos" aria-selected="${duelos}">Duelos</button><button role="tab" data-tab="album" aria-selected="${!duelos}">Álbum</button></div>

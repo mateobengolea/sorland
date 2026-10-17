@@ -167,7 +167,7 @@ function pintarOnline(){
     <p class="rotulo-chico">${lista.length || 1} jugador${lista.length === 1 ? '' : 'es'} en Sorlandia en este momento.</p>
     <div class="lista-online">${lista.map(p => `<div class="fila-online"><span class="cr-mini" style="width:38px;height:52px">${svgEntrenador(p.ent)}</span>
       <span class="fo-txt"><b></b><small></small></span>
-      <span class="fo-med">${p.puntos != null ? chipRango(p.puntos, false) : ''}${p.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}<br>${'★'.repeat(p.medallas || 0)}</span></div>`).join('')}</div>
+      <span class="fo-med">${p.puntos != null ? chipRango(p.puntos, false) : ''}${p.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}<br>${p.medallas ? '★ ' + p.medallas : ''}</span></div>`).join('')}</div>
     <button class="grande" id="ver-ranking" style="margin-top:10px">Ver ranking</button></div>`;
   v.querySelectorAll('.fila-online').forEach((f, i) => {
     f.querySelector('b').textContent = lista[i].apodo + (lista[i].id === usuarioId ? ' (vos)' : '');
@@ -219,7 +219,7 @@ function otroJugador(ctx, cx, piso, o, t){
   const paso = anda ? (Math.floor(t / 160) % 2 ? 1 : 2) : 0;
   ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
   dibujarEntrenador(ctx, spritesEntrenador(o.ent), cx, piso, o.mira || 'abajo', paso, 48);
-  etiqueta(ctx, (o.campeon ? '♛ ' : '') + o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - 62, o.campeon ? 'rgba(184,134,11,.95)' : 'rgba(122,79,201,.9)');
+  etiqueta(ctx, (o.campeon ? '♛ ' : '') + o.apodo + (o.medallas ? ' ★' + o.medallas : ''), cx, piso - 62, o.campeon ? 'rgba(184,134,11,.95)' : 'rgba(122,79,201,.9)');
   if(o.pelea) cartelPelea(ctx, o.pelea.tipo === 'duelo' ? '⚔ En duelo' : '⚔ En batalla', cx, piso - 84, t);
   else if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - 68);
 }
@@ -267,7 +267,7 @@ function abrirInteraccion(o){
     <div class="hoja-cab"><h2 id="j-nom"></h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <div class="ficha-jugador"><span class="cr-mini" style="width:60px;height:84px">${svgEntrenador(o.ent)}</span><span class="cr-mini" style="width:70px;height:70px">${ESPECIES[o.esp] ? svgEspecie(o.esp, {humor:'feliz', shiny: o.shiny}) : ''}</span>
       <div><p><b>Nivel ${o.nivel}</b> · anda con ${ESPECIES[o.esp] ? ESPECIES[o.esp].nombre : ''}</p>
-      <p class="medallas-mini">${MEDALLAS.map((m, i) => svgMedalla(m, 26, i >= o.medallas)).join('')}</p></div></div>
+      <p class="medallas-mini">${MEDALLAS.map((m, i) => svgMedalla(m, 20, i >= o.medallas)).join('')}</p></div></div>
     <p class="rotulo-chico">Decile algo</p>
     <div class="frases">${FRASES.map(f => `<button data-f="${esc(f)}">${esc(f)}</button>`).join('')}</div>
     <div class="acciones-jugador">
