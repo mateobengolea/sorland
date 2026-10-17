@@ -466,3 +466,30 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .olvidar .mc-nuevo span{position:absolute;top:-9px;right:10px;background:#FFD23F;border:2px solid var(--tinta);border-radius:99px;padding:0 8px;font-size:.7rem;font-weight:800}
 .olvidar .mc-nuevo small{color:var(--tinta-suave);font-weight:700}
 .hoja .menu-combate.olvidar{display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+
+/* ======================= Casa estilo Habbo ======================= */
+.mueble.capa{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:none;filter:none;outline:none!important}
+.mueble.capa > svg{width:100%;height:100%;display:block;overflow:visible}
+.mueble.capa .toca{pointer-events:visiblePainted;cursor:pointer}
+.decorando .mueble.capa .toca{cursor:grab}
+.mueble.capa.elegido .toca{filter:drop-shadow(0 0 2px #FFD23F) drop-shadow(0 0 4px #FFD23F)}
+.mueble.capa.levantado .toca{filter:drop-shadow(0 8px 4px rgba(34,48,74,.35));cursor:grabbing}
+.mueble.capa.en-pared .toca{filter:drop-shadow(1px 2px 0 rgba(34,48,74,.15))}
+.escenario .ent-casa,.escenario .bichito{transition:left .22s linear,top .22s linear;pointer-events:none}
+.escenario .bichito{pointer-events:auto}
+#cuarto svg{cursor:pointer}
+.barra-mueble{position:absolute;z-index:900;transform:translate(-50%,-100%);display:flex;align-items:center;gap:4px;padding:4px 5px 4px 10px;background:#FFFDF8;border:2px solid var(--tinta);border-radius:12px;box-shadow:0 3px 0 rgba(34,48,74,.25);white-space:nowrap;font-size:.75rem}
+.barra-mueble b{margin-right:2px;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+.barra-mueble button{border:2px solid var(--tinta);border-radius:8px;background:var(--sol);font-weight:800;font-size:.72rem;padding:3px 7px;cursor:pointer}
+.barra-mueble button[data-acc=guardar]{background:#E8EEF5}
+.inv-casa{margin-top:-4px;background:#FFFDF8;border:2.5px solid var(--tinta);border-radius:0 0 16px 16px;border-top:none;padding:8px 10px 10px;box-shadow:0 4px 0 var(--sombra)}
+.inv-cab{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.inv-cab small{color:var(--tinta-suave);font-weight:700;font-size:.72rem}
+.inv-lista{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.inv-item{position:relative;flex:0 0 auto;width:56px;height:56px;border:2px solid var(--tinta);border-radius:12px;background:#F3EBDD;padding:4px;cursor:pointer}
+.inv-item span{display:block;width:100%;height:100%}
+.inv-item span svg{width:100%;height:100%}
+.inv-item i{position:absolute;right:-4px;top:-6px;background:var(--sol);border:2px solid var(--tinta);border-radius:99px;font:800 10px/14px Nunito,sans-serif;font-style:normal;padding:0 5px}
+.inv-item:disabled{opacity:.5}
+.inv-vacio{margin:6px 0;font-size:.8rem;color:var(--tinta-suave)}
+#muebles{pointer-events:none}

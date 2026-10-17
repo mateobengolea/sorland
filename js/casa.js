@@ -132,6 +132,11 @@ function svgCuarto(fondoId){
   if(f.suelo === 'tablas') for(let i = 1; i < N * 2; i++){ const t = i / 2; s += `<line x1="${casaIso(t, 0).x}" y1="${casaIso(t, 0).y}" x2="${casaIso(t, N).x}" y2="${casaIso(t, N).y}" stroke="${f.piso[1]}" stroke-width="2"/>`;
     if(i % 2) for(let j = 0; j < N; j++){ const off = (i * 3 + j * 5) % 4 === 0; if(off){ const a = casaIso(t - .5, j + .5), b = casaIso(t, j + .5); s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${f.piso[1]}" stroke-width="1.5"/>`; } } }
   if(f.suelo === 'pasto') for(let i = 0; i < N; i += 2) s += `<polygon points="${p(i, 0)} ${p(i + 1, 0)} ${p(i + 1, N)} ${p(i, N)}" fill="${f.piso[1]}"/>`;
+  // Grilla de baldosas, finita como en Habbo
+  for(let i = 1; i < N; i++){
+    const a1 = casaIso(i, 0), b1 = casaIso(i, N), a2 = casaIso(0, i), b2 = casaIso(N, i);
+    s += `<line x1="${a1.x}" y1="${a1.y}" x2="${b1.x}" y2="${b1.y}" stroke="rgba(34,48,74,.10)" stroke-width="1"/><line x1="${a2.x}" y1="${a2.y}" x2="${b2.x}" y2="${b2.y}" stroke="rgba(34,48,74,.10)" stroke-width="1"/>`;
+  }
   // Contornos
   s += `<polyline points="${p(0, N)} ${p(0, N, hw)} ${p(0, 0, hw)} ${p(N, 0, hw)} ${p(N, 0)}" fill="none" stroke="${TT}" stroke-width="3" stroke-linejoin="round"/>
     <line x1="${casaIso(0, 0).x}" y1="${casaIso(0, 0).y}" x2="${casaIso(0, 0).x}" y2="${casaIso(0, 0).y - hw}" stroke="${TT}" stroke-width="2" opacity=".35"/>
@@ -141,8 +146,80 @@ function svgCuarto(fondoId){
   return s + '</svg>';
 }
 
-/* ---------------- Muebles en el cuarto ---------------- */
-// Formato: piso {id, gx, gy}; pared {id, muro: 'izq'|'der', p, h}.
+/* ---------------- Muebles en 3D isométrico, estilo Habbo ---------------- */
+// Cada mueble de piso ocupa casilleros (fp = [ancho, fondo]) y se puede girar (rot 0/1 = espejado).
+const ISO = {};
+function oscurecer(hex, f){
+  if(!hex.startsWith('#')) return hex;
+  const n = parseInt(hex.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return `rgb(${Math.round(r * f)},${Math.round(g * f)},${Math.round(b * f)})`;
+}
+function kitIso(gx, gy, rot){
+  const P = (u, v, z = 0) => { const q = rot ? casaIso(gx + v, gy + u) : casaIso(gx + u, gy + v); return `${q.x.toFixed(1)},${(q.y - z).toFixed(1)}`; };
+  const caja = (u0, v0, u1, v1, z0, z1, c) => {
+    // Con rot, el eje u pasa a ser el fondo: las caras visibles se recalculan solas.
+    const [x0, x1, y0, y1] = rot ? [v0, v1, u0, u1] : [u0, u1, v0, v1];
+    const Q = (x, y, z) => { const q = casaIso(gx + x, gy + y); return `${q.x.toFixed(1)},${(q.y - z).toFixed(1)}`; };
+    return `<polygon points="${Q(x1, y0, z0)} ${Q(x1, y1, z0)} ${Q(x1, y1, z1)} ${Q(x1, y0, z1)}" fill="${oscurecer(c, .72)}"/>`
+      + `<polygon points="${Q(x0, y1, z0)} ${Q(x1, y1, z0)} ${Q(x1, y1, z1)} ${Q(x0, y1, z1)}" fill="${oscurecer(c, .86)}"/>`
+      + `<polygon points="${Q(x0, y0, z1)} ${Q(x1, y0, z1)} ${Q(x1, y1, z1)} ${Q(x0, y1, z1)}" fill="${c}"/>`;
+  };
+  // Un rectángulo pintado sobre el frente (el plano v = constante, que mira hacia vos).
+  const frente = (v, u0, u1, z0, z1, c, extra = '') => `<polygon points="${P(u0, v, z0)} ${P(u1, v, z0)} ${P(u1, v, z1)} ${P(u0, v, z1)}" fill="${c}" ${extra}/>`;
+  const piso = (u0, v0, u1, v1, z, c, extra = '') => `<polygon points="${P(u0, v0, z)} ${P(u1, v0, z)} ${P(u1, v1, z)} ${P(u0, v1, z)}" fill="${c}" ${extra}/>`;
+  const punto = (u, v, z) => { const [x, y] = P(u, v, z).split(',').map(Number); return {x, y}; };
+  return {caja, frente, piso, punto};
+}
+Object.assign(ISO, {
+  silla: {fp: [1, 1], dib: k => [[.2, .2], [.7, .2], [.2, .7], [.7, .7]].map(([u, v]) => k.caja(u, v, u + .1, v + .1, 0, 15, '#8A5A35')).join('')
+    + k.caja(.15, .15, .85, .85, 15, 19, '#E0A66A') + k.caja(.15, .1, .85, .22, 19, 44, '#C98A52')},
+  mesa: {fp: [1, 1], dib: k => [[.15, .15], [.75, .15], [.15, .75], [.75, .75]].map(([u, v]) => k.caja(u, v, u + .1, v + .1, 0, 17, '#8A5A35')).join('')
+    + k.caja(.05, .05, .95, .95, 17, 21, '#C98A52') + k.caja(.4, .4, .58, .58, 21, 28, '#FFFFFF')},
+  cama: {fp: [1, 2], dib: k => k.caja(0, 0, 1, 2, 0, 12, '#B5835A') + k.caja(.05, .05, .95, 1.95, 12, 20, '#F4E8D2')
+    + k.caja(.05, .75, .95, 1.95, 12, 22, '#3B82D6') + k.piso(.05, 1.05, .95, 1.2, 22.2, '#2F6DB5') + k.caja(.15, .12, .85, .55, 20, 26, '#FFFFFF') + k.caja(0, 0, 1, .12, 12, 42, '#A86F3E')},
+  sillon: {fp: [2, 1], dib: k => k.caja(0, .1, 2, .95, 0, 14, '#7A4FC9') + k.caja(0, .1, 2, .38, 14, 34, '#6A43B5')
+    + k.caja(.25, .38, 1, .95, 14, 19, '#9C7CD4') + k.caja(1, .38, 1.75, .95, 14, 19, '#9C7CD4')
+    + k.caja(0, .1, .25, .95, 14, 25, '#7A4FC9') + k.caja(1.75, .1, 2, .95, 14, 25, '#7A4FC9')},
+  tele: {fp: [1, 1], dib: k => k.caja(.1, .3, .9, .85, 0, 14, '#8A5A35') + k.caja(.12, .35, .88, .62, 14, 42, '#3B4A6B')
+    + k.frente(.62, .2, .8, 18, 38, '#7FD3F7') + k.frente(.62, .2, .5, 18, 24, '#5DB86A') + k.frente(.62, .5, .8, 18, 22, '#5DB86A')},
+  biblioteca: {fp: [1, 1], dib: k => k.caja(.05, .1, .95, .6, 0, 66, '#A86F3E')
+    + [10, 31, 52].map((z, f) => k.frente(.6, .1, .9, z, z + 17, '#6B4426') + ['#E2574C', '#3B82D6', '#FFD23F', '#4CC27A', '#7A4FC9'].map((c, i) => (i + f) % 5 === 4 ? '' : k.frente(.6, .12 + i * .15, .24 + i * .15, z, z + 14 - (i % 2) * 3, c)).join('')).join('')},
+  heladera: {fp: [1, 1], dib: k => k.caja(.1, .15, .9, .8, 0, 60, '#E9F4FB') + k.frente(.8, .1, .9, 40, 41.5, '#9AA2AD')
+    + k.frente(.8, .72, .78, 44, 54, '#9AA2AD') + k.frente(.8, .72, .78, 20, 34, '#9AA2AD') + k.frente(.8, .2, .34, 50, 56, '#E2574C')},
+  acuario: {fp: [1, 1], dib: k => { const c = k.punto(.5, .8, 24);
+    return k.caja(.05, .2, .95, .8, 0, 12, '#3B4A6B') + k.caja(.05, .2, .95, .8, 12, 38, '#9ED8F2').replace(/fill="/g, 'fill-opacity=".55" fill="')
+      + `<path d="M${c.x - 6} ${c.y} c4 -5 12 -5 14 0 c-2 5 -10 5 -14 0 l-5 4 v-8z" fill="#FF9F2E"/><circle cx="${c.x - 8}" cy="${c.y - 8}" r="1.6" fill="#fff"/>`; }},
+  lampara: {fp: [1, 1], dib: k => { const c = k.punto(.5, .5, 50);
+    return k.caja(.35, .35, .65, .65, 0, 4, '#8A5A35') + k.caja(.47, .47, .53, .53, 4, 44, '#8A5A35') + k.caja(.25, .25, .75, .75, 44, 58, '#FFD98A')
+      + `<circle cx="${c.x}" cy="${c.y}" r="26" fill="rgba(255,226,140,.22)" stroke="none"/>`; }},
+  planta: {fp: [1, 1], dib: k => { const c = k.punto(.5, .5, 12);
+    return k.caja(.3, .3, .7, .7, 0, 12, '#D98A52') + `<path d="M${c.x - 6} ${c.y + 1} V${c.y - 30} c0 -9 12 -9 12 0 V${c.y + 1}Z M${c.x - 6} ${c.y - 14} h-7 c-5 0 -5 -10 0 -10 v6 h7 M${c.x + 6} ${c.y - 20} h7 c5 0 5 -10 0 -10 v6 h-7" fill="#5DB86A"/><circle cx="${c.x}" cy="${c.y - 32}" r="3" fill="#FF8FB1"/>`; }},
+  alfombra: {fp: [2, 2], plano: true, dib: k => k.piso(0, 0, 2, 2, .5, '#E2574C') + k.piso(.2, .2, 1.8, 1.8, .7, 'none', 'stroke="#FFD23F" stroke-width="2.5"') + k.piso(.7, .7, 1.3, 1.3, .9, '#FFD23F')},
+  alfombraAzul: {fp: [2, 2], plano: true, dib: k => { const c = k.punto(1, 1, .5); return `<ellipse cx="${c.x}" cy="${c.y}" rx="42" ry="21" fill="#5AB4E8"/><ellipse cx="${c.x}" cy="${c.y}" rx="30" ry="15" fill="none" stroke="#FFFDF8" stroke-width="3"/><ellipse cx="${c.x}" cy="${c.y}" rx="16" ry="8" fill="#8FD3F7"/>`; }},
+});
+const fpDe = (it, m) => { const f = (ISO[it.id] && ISO[it.id].fp) || [1, 1]; return m && m.rot ? [f[1], f[0]] : f; };
+const esPlano = it => !!(it.plano || (ISO[it.id] && ISO[it.id].plano));
+const pct = (v, total) => (v / total * 100) + '%';
+
+// Los que no tienen versión 3D (peluches, copa, trofeo, vitrina, guitarra) se paran en el centro de su casillero.
+function svgFigura(it, cx, piso, ancho){
+  let svg = (DIB_MUEBLE[it.id] ? DIB_MUEBLE[it.id]() : it.svg ? it.svg() : '').replace(/^<svg([^>]*?)\s(width|height)="[^"]*"/, '<svg$1').replace(/^<svg([^>]*?)\s(width|height)="[^"]*"/, '<svg$1');
+  const vb = (svg.match(/viewBox="([^"]+)"/) || [, '0 0 100 100'])[1].split(/\s+/).map(Number);
+  const alto = ancho * vb[3] / vb[2];
+  return svg.replace('<svg', `<svg x="${cx - ancho / 2}" y="${piso - alto}" width="${ancho}" height="${alto}" overflow="visible"`);
+}
+function svgMuebleEnCuarto(it, m){
+  if(it.pared){
+    const base = m.muro === 'izq' ? casaIso(0, m.p) : casaIso(m.p, 0), cy = base.y - m.h * CASA.hw, ancho = it.tamCasa || 56;
+    const k = m.muro === 'izq' ? -.5 : .5;
+    return `<g transform="matrix(1 ${k} 0 1 ${base.x} ${cy})">${svgFigura(it, 0, ancho / 2, ancho)}</g>`;
+  }
+  const [w, d] = fpDe(it, m);
+  if(ISO[it.id]) return `<g stroke="#22304A" stroke-width="1.6" stroke-linejoin="round">${ISO[it.id].dib(kitIso(m.gx, m.gy, m.rot ? 1 : 0))}</g>`;
+  const c = casaIso(m.gx + w / 2, m.gy + d / 2);
+  return `<g transform="${m.rot ? `translate(${2 * c.x} 0) scale(-1 1)` : ''}">${svgFigura(it, c.x, c.y + 6, it.tamCasa || 46)}</g>`;
+}
+// Normaliza muebles de partidas viejas al formato nuevo.
 function normalizarMueble(m, i){
   const it = POR_ID[m.id]; if(!it) return m;
   const N = CASA.N;
@@ -150,39 +227,123 @@ function normalizarMueble(m, i){
     if(!m.muro){ m.muro = (m.x || 50) < 50 ? 'izq' : 'der'; m.p = 1 + ((m.x || 50) % 50) / 50 * (N - 2); m.h = .55; }
     m.p = clamp(m.p, .8, N - .8); m.h = clamp(m.h, .3, .78);
   } else {
-    const ancho = it.plano ? 2 : 1;
     if(m.gx == null){ m.gx = Math.round(clamp((m.x || 50) / 100, 0, 1) * (N - 1)); m.gy = Math.round(clamp(((m.y || 88) - 74) / 25, 0, 1) * (N - 3)) + (i % 2); }
-    m.gx = clamp(Math.round(m.gx), 0, N - ancho); m.gy = clamp(Math.round(m.gy), 0, N - ancho);
+    const [w, d] = fpDe(it, m);
+    m.gx = clamp(Math.round(m.gx), 0, N - w); m.gy = clamp(Math.round(m.gy), 0, N - d);
   }
   delete m.x; delete m.y;
   return m;
 }
-function svgDeMueble(it){
-  if(DIB_MUEBLE[it.id]) return DIB_MUEBLE[it.id]();
-  if(it.svg) return it.svg();
-  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text x="50" y="86" font-size="80" text-anchor="middle">${it.em || '📦'}</text></svg>`;
+// Casilleros que ocupa cada mueble de piso (los planos, como alfombras, no ocupan).
+function ocupados(excepto = -1){
+  const o = new Set();
+  S.casa.forEach((m, i) => { const it = POR_ID[m.id]; if(i === excepto || !it || it.pared || esPlano(it)) return;
+    const [w, d] = fpDe(it, m); for(let x = 0; x < w; x++) for(let y = 0; y < d; y++) o.add((m.gx + x) + ',' + (m.gy + y)); });
+  return o;
 }
-const pct = (v, total) => (v / total * 100) + '%';
-function lugarDeMueble(m, it){
-  if(it.pared){
-    const base = m.muro === 'izq' ? casaIso(0, m.p) : casaIso(m.p, 0);
-    return {x: base.x, y: base.y - m.h * CASA.hw, z: 2, transform: `translate(-50%,-50%) skewY(${m.muro === 'izq' ? -26.57 : 26.57}deg)`};
+function lugarValido(it, m, i){
+  if(it.pared) return true;
+  const [w, d] = fpDe(it, m);
+  if(m.gx < 0 || m.gy < 0 || m.gx + w > CASA.N || m.gy + d > CASA.N) return false;
+  if(esPlano(it)) return true;
+  const o = ocupados(i);
+  for(let x = 0; x < w; x++) for(let y = 0; y < d; y++) if(o.has((m.gx + x) + ',' + (m.gy + y))) return false;
+  return true;
+}
+function profundidad(it, m){
+  if(it.pared) return 20;
+  if(esPlano(it)) return 30;
+  const [w, d] = fpDe(it, m);
+  return 100 + (m.gx + w - 1 + m.gy + d - 1) * 10 + 6;
+}
+
+/* ---------------- Personajes que caminan ---------------- */
+const CASA_AV = {ent: null, bi: null, camino: null, timer: 0, paseo: 0};
+function ubicarAvatar(el, x, y, dir){
+  const c = casaIso(x + .5, y + .5);
+  el.style.left = pct(c.x, CASA.W); el.style.top = pct(c.y + CASA.th * .3, CASA.H);
+  el.style.zIndex = 100 + (x + y) * 10 + 5;
+  el.style.transform = `translate(-50%,-100%)${dir === 'izq' ? ' scaleX(-1)' : ''}`;
+}
+function libreParaAvatar(x, y, otro){
+  return x >= 0 && y >= 0 && x < CASA.N && y < CASA.N && !ocupados().has(x + ',' + y) && !(otro && otro.x === x && otro.y === y);
+}
+function lugarAvatar(pref, otro){
+  if(libreParaAvatar(pref.x, pref.y, otro)) return {...pref};
+  for(let r = 1; r < CASA.N; r++) for(let dx = -r; dx <= r; dx++) for(let dy = -r; dy <= r; dy++)
+    if(libreParaAvatar(pref.x + dx, pref.y + dy, otro)) return {x: pref.x + dx, y: pref.y + dy};
+  return {...pref};
+}
+function caminoA(desde, hasta, otro){
+  const k = p => p.x + ',' + p.y, prev = {[k(desde)]: null}, q = [desde];
+  while(q.length){
+    const p = q.shift(); if(p.x === hasta.x && p.y === hasta.y) break;
+    for(const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){
+      const n = {x: p.x + dx, y: p.y + dy};
+      if(k(n) in prev || !libreParaAvatar(n.x, n.y, otro)) continue;
+      prev[k(n)] = p; q.push(n);
+    }
   }
-  if(it.plano){ const c = casaIso(m.gx + 1, m.gy + 1); return {x: c.x, y: c.y, z: 1, transform: 'translate(-50%,-50%)'}; }
-  const c = casaIso(m.gx + .5, m.gy + .5);
-  return {x: c.x, y: c.y + CASA.th * .32, z: 10 + (m.gx + m.gy) * 3, transform: 'translate(-50%,-100%)'};
+  if(!(k(hasta) in prev)) return null;
+  const r = []; let p = hasta;
+  while(p && !(p.x === desde.x && p.y === desde.y)){ r.unshift(p); p = prev[k(p)]; }
+  return r;
 }
-function ubicar(el, lugar){
-  el.style.left = pct(lugar.x, CASA.W); el.style.top = pct(lugar.y, CASA.H);
-  el.style.zIndex = lugar.z; el.style.transform = lugar.transform;
+function dibujarEnt(dir, paso){
+  const el = $('#ent-casa'); if(!el) return;
+  el.innerHTML = svgEntrenador(S.entrenador, undefined, dir, paso);
 }
+function caminarEnt(destino){
+  if(!CASA_AV.ent) return;
+  const r = caminoA(CASA_AV.ent, destino, CASA_AV.bi);
+  if(!r || !r.length) return;
+  clearTimeout(CASA_AV.timer);
+  let i = 0;
+  const paso = () => {
+    const el = $('#ent-casa'); if(!el || vista !== 'casa') return;
+    if(i >= r.length){ dibujarEnt('abajo', 0); ubicarAvatar(el, CASA_AV.ent.x, CASA_AV.ent.y); return; }
+    const n = r[i++], dx = n.x - CASA_AV.ent.x, dy = n.y - CASA_AV.ent.y;
+    // En isométrico: +x baja a la derecha, +y baja a la izquierda.
+    const dir = dx > 0 || dy > 0 ? 'abajo' : 'arriba', lado = dx > 0 || dy < 0 ? 'der' : 'izq';
+    CASA_AV.ent = n;
+    dibujarEnt(dir, i % 2 ? 1 : 2);
+    ubicarAvatar(el, n.x, n.y, lado);
+    CASA_AV.timer = setTimeout(paso, 230);
+  };
+  paso();
+}
+function pasearCriatura(){
+  clearTimeout(CASA_AV.paseo);
+  CASA_AV.paseo = setTimeout(() => {
+    const el = $('#bichito'); if(!el || vista !== 'casa' || !CASA_AV.bi) return;
+    if(modo !== 'decorar'){
+      const opciones = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({x: CASA_AV.bi.x + dx, y: CASA_AV.bi.y + dy})).filter(p => libreParaAvatar(p.x, p.y, CASA_AV.ent));
+      if(opciones.length){ const n = opciones[Math.floor(Math.random() * opciones.length)], lado = n.x > CASA_AV.bi.x || n.y < CASA_AV.bi.y ? 'der' : 'izq'; CASA_AV.bi = n; ubicarAvatar(el, n.x, n.y, lado); }
+    }
+    pasearCriatura();
+  }, 2500 + Math.random() * 3500);
+}
+
+/* ---------------- Pintar el cuarto ---------------- */
+let selMueble = -1, moviendo = false;
 function pintarCuarto(){
   const c = $('#cuarto'); if(!c) return;
   c.innerHTML = svgCuarto(S.fondo);
-  // Entrenador y criatura en su lugar fijo, delante de todo lo que esté atrás.
+  c.querySelector('svg').addEventListener('click', tocarPiso);
   const ent = $('#ent-casa'), bi = $('#bichito');
-  if(ent) ubicar(ent, {...lugarDeMueble({gx: 4, gy: 6}, {}), z: 10 + 10 * 3 + 1});
-  if(bi) ubicar(bi, {...lugarDeMueble({gx: 6, gy: 5}, {}), z: 10 + 11 * 3 + 1});
+  CASA_AV.ent = lugarAvatar(CASA_AV.ent || {x: 4, y: 6}, null);
+  CASA_AV.bi = lugarAvatar(CASA_AV.bi || {x: 6, y: 5}, CASA_AV.ent);
+  if(ent) ubicarAvatar(ent, CASA_AV.ent.x, CASA_AV.ent.y);
+  if(bi) ubicarAvatar(bi, CASA_AV.bi.x, CASA_AV.bi.y);
+  pasearCriatura();
+}
+function tocarPiso(ev){
+  if(modo === 'decorar'){ if(!ev.target.closest('.mueble')){ selMueble = -1; pintarMuebles(); } return; }
+  const r = $('#escenario').getBoundingClientRect();
+  const g = casaGrilla((ev.clientX - r.left) / r.width * CASA.W, (ev.clientY - r.top) / r.height * CASA.H);
+  const destino = {x: Math.floor(g.gx), y: Math.floor(g.gy)};
+  if(destino.x < 0 || destino.y < 0 || destino.x >= CASA.N || destino.y >= CASA.N) return;
+  caminarEnt(destino);
 }
 function pintarMuebles(){
   const cont = $('#muebles'); if(!cont) return;
@@ -191,58 +352,19 @@ function pintarMuebles(){
     const it = POR_ID[m.id]; if(!it) return;
     normalizarMueble(m, i);
     const d = document.createElement('div');
-    d.className = 'mueble mueble-svg' + (it.pared ? ' en-pared' : '') + (it.plano ? ' plano' : '');
-    d.innerHTML = svgDeMueble(it);
-    const tam = it.plano ? CASA.tw * 2 : (it.tamCasa || 70);
-    d.style.width = pct(tam, CASA.W);
-    if(it.plano) d.style.height = pct(CASA.th * 2, CASA.H);
-    ubicar(d, lugarDeMueble(m, it));
+    d.className = 'mueble capa' + (i === selMueble ? ' elegido' : '') + (it.pared ? ' en-pared' : '');
+    d.innerHTML = `<svg viewBox="0 0 ${CASA.W} ${CASA.H}" xmlns="http://www.w3.org/2000/svg"><g class="toca">${svgMuebleEnCuarto(it, m)}</g></svg>`;
+    d.style.zIndex = profundidad(it, m);
     d.dataset.i = i;
-    if(modo === 'decorar'){
-      const q = document.createElement('button');
-      q.className = 'quitar'; q.textContent = '×'; q.setAttribute('aria-label', 'Guardar ' + it.nom);
-      q.onpointerdown = ev => ev.stopPropagation();
-      q.onclick = ev => { ev.stopPropagation(); S.casa.splice(i, 1); S.inv.muebles[m.id] = (S.inv.muebles[m.id] || 0) + 1; guardar(); pintarMuebles(); };
-      d.appendChild(q);
-      d.onpointerdown = arrastrar;
-    }
+    if(modo === 'decorar') d.querySelector('.toca').addEventListener('pointerdown', ev => agarrar(ev, i));
+    else d.querySelector('.toca').addEventListener('click', ev => { ev.stopPropagation(); tocarPiso(ev); });
     cont.appendChild(d);
   });
   pintarCuarto();
+  pintarSeleccion();
 }
-function arrastrar(ev){
-  const el = ev.currentTarget, i = +el.dataset.i, m = S.casa[i], it = POR_ID[m.id];
-  const r = $('#escenario').getBoundingClientRect();
-  ev.preventDefault();
-  el.setPointerCapture(ev.pointerId);
-  el.classList.add('moviendo');
-  const mover = e => {
-    const x = (e.clientX - r.left) / r.width * CASA.W, y = (e.clientY - r.top) / r.height * CASA.H;
-    if(it.pared){
-      const izq = x < CASA.ox;
-      m.muro = izq ? 'izq' : 'der';
-      m.p = clamp(Math.abs(x - CASA.ox) / (CASA.tw / 2), .8, CASA.N - .8);
-      const base = izq ? casaIso(0, m.p) : casaIso(m.p, 0);
-      m.h = clamp((base.y - y) / CASA.hw, .3, .78);
-    } else {
-      // El dedo tapa el mueble: se calcula el casillero un poco más abajo del puntero.
-      const g = casaGrilla(x, y + (it.plano ? 0 : 14));
-      const ancho = it.plano ? 2 : 1;
-      m.gx = clamp(Math.floor(g.gx - (it.plano ? .5 : 0)), 0, CASA.N - ancho);
-      m.gy = clamp(Math.floor(g.gy - (it.plano ? .5 : 0)), 0, CASA.N - ancho);
-    }
-    ubicar(el, lugarDeMueble(m, it));
-    marcarCasillero(it, m);
-  };
-  const soltar = () => {
-    el.removeEventListener('pointermove', mover); el.removeEventListener('pointerup', soltar); el.removeEventListener('pointercancel', soltar);
-    marcarCasillero(null);
-    guardar(); pintarMuebles();
-  };
-  el.addEventListener('pointermove', mover); el.addEventListener('pointerup', soltar); el.addEventListener('pointercancel', soltar);
-}
-// Mientras arrastrás, se resalta el casillero (o el lugar en la pared).
-function marcarCasillero(it, m){
+// Resalta los casilleros del mueble (verde si entra, rojo si choca).
+function marcaPiso(it, m, ok){
   const svg = document.querySelector('#cuarto svg'); if(!svg) return;
   let g = svg.querySelector('#marca');
   if(!it){ if(g) g.remove(); return; }
@@ -252,13 +374,97 @@ function marcarCasillero(it, m){
     const a = m.muro === 'izq' ? [casaIso(0, m.p - .6), casaIso(0, m.p + .6)] : [casaIso(m.p - .6, 0), casaIso(m.p + .6, 0)];
     pts = [[a[0].x, a[0].y - 4], [a[1].x, a[1].y - 4], [a[1].x, a[1].y - CASA.hw + 4], [a[0].x, a[0].y - CASA.hw + 4]];
   } else {
-    const n = it.plano ? 2 : 1;
-    pts = [casaIso(m.gx, m.gy), casaIso(m.gx + n, m.gy), casaIso(m.gx + n, m.gy + n), casaIso(m.gx, m.gy + n)].map(q => [q.x, q.y]);
+    const [w, d] = fpDe(it, m);
+    pts = [casaIso(m.gx, m.gy), casaIso(m.gx + w, m.gy), casaIso(m.gx + w, m.gy + d), casaIso(m.gx, m.gy + d)].map(q => [q.x, q.y]);
   }
   g.setAttribute('points', pts.map(q => q.join(',')).join(' '));
-  g.setAttribute('fill', 'rgba(255,210,63,.35)'); g.setAttribute('stroke', '#22304A'); g.setAttribute('stroke-width', '2'); g.setAttribute('stroke-dasharray', '5 4');
+  g.setAttribute('fill', ok ? 'rgba(76,194,122,.40)' : 'rgba(226,87,76,.45)'); g.setAttribute('stroke', ok ? '#2E7D4F' : '#B5452B'); g.setAttribute('stroke-width', '2');
 }
-// Busca un lugar libre para un mueble nuevo.
+function agarrar(ev, i){
+  ev.preventDefault(); ev.stopPropagation();
+  const m = S.casa[i], it = POR_ID[m.id], r = $('#escenario').getBoundingClientRect();
+  const antes = {...m}, inicio = {x: ev.clientX, y: ev.clientY};
+  let arrastro = false;
+  selMueble = i;
+  const capa = document.querySelector(`.mueble[data-i="${i}"]`);
+  const mover = e => {
+    if(!arrastro && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) < 6) return;
+    arrastro = true; moviendo = true;
+    const x = (e.clientX - r.left) / r.width * CASA.W, y = (e.clientY - r.top) / r.height * CASA.H;
+    if(it.pared){
+      const izq = x < CASA.ox; m.muro = izq ? 'izq' : 'der';
+      m.p = clamp(Math.abs(x - CASA.ox) / (CASA.tw / 2), .8, CASA.N - .8);
+      const base = izq ? casaIso(0, m.p) : casaIso(m.p, 0); m.h = clamp((base.y - y) / CASA.hw, .3, .78);
+    } else {
+      const [w, d] = fpDe(it, m), g = casaGrilla(x, y + 10);
+      m.gx = clamp(Math.floor(g.gx - (w - 1) / 2), 0, CASA.N - w); m.gy = clamp(Math.floor(g.gy - (d - 1) / 2), 0, CASA.N - d);
+    }
+    if(capa){ capa.querySelector('.toca').innerHTML = svgMuebleEnCuarto(it, m); capa.style.zIndex = profundidad(it, m) + 500; capa.classList.add('levantado'); }
+    marcaPiso(it, m, lugarValido(it, m, i));
+    const bar = $('#barra-mueble'); if(bar) bar.hidden = true;
+  };
+  const soltar = () => {
+    window.removeEventListener('pointermove', mover); window.removeEventListener('pointerup', soltar); window.removeEventListener('pointercancel', soltar);
+    moviendo = false; marcaPiso(null);
+    if(arrastro && !lugarValido(it, m, i)){ Object.assign(m, antes); avisar('Ahí no entra: choca con otro mueble'); }
+    if(arrastro) guardar();
+    pintarMuebles();
+  };
+  window.addEventListener('pointermove', mover); window.addEventListener('pointerup', soltar); window.addEventListener('pointercancel', soltar);
+}
+// Menú del mueble elegido: Girar, Guardar, Listo.
+function pintarSeleccion(){
+  const viejo = $('#barra-mueble'); if(viejo) viejo.remove();
+  if(modo !== 'decorar' || selMueble < 0 || !S.casa[selMueble]) return;
+  const m = S.casa[selMueble], it = POR_ID[m.id];
+  let x, y;
+  if(it.pared){ const b = m.muro === 'izq' ? casaIso(0, m.p) : casaIso(m.p, 0); x = b.x; y = b.y - m.h * CASA.hw - 40; }
+  else { const [w, d] = fpDe(it, m), c = casaIso(m.gx + w / 2, m.gy + d / 2); x = c.x; y = c.y - 70; }
+  const bar = document.createElement('div');
+  bar.id = 'barra-mueble'; bar.className = 'barra-mueble';
+  bar.innerHTML = `<b></b><button data-acc="girar">${it.pared ? '⇄ Otra pared' : '↻ Girar'}</button><button data-acc="guardar">Guardar</button><button data-acc="ok">✓</button>`;
+  bar.querySelector('b').textContent = it.nom;
+  bar.style.left = pct(clamp(x, 70, CASA.W - 70), CASA.W); bar.style.top = pct(clamp(y, 8, CASA.H - 40), CASA.H);
+  bar.onpointerdown = e => e.stopPropagation();
+  bar.querySelector('[data-acc=girar]').onclick = e => {
+    e.stopPropagation();
+    if(it.pared){ m.muro = m.muro === 'izq' ? 'der' : 'izq'; }
+    else {
+      const prueba = {...m, rot: m.rot ? 0 : 1}; const [w, d] = fpDe(it, prueba);
+      prueba.gx = clamp(prueba.gx, 0, CASA.N - w); prueba.gy = clamp(prueba.gy, 0, CASA.N - d);
+      if(!lugarValido(it, prueba, selMueble)){ avisar('No hay lugar para girarlo ahí'); return; }
+      Object.assign(m, prueba);
+    }
+    guardar(); pintarMuebles();
+  };
+  bar.querySelector('[data-acc=guardar]').onclick = e => {
+    e.stopPropagation();
+    S.casa.splice(selMueble, 1); S.inv.muebles[m.id] = (S.inv.muebles[m.id] || 0) + 1; selMueble = -1;
+    guardar(); pintarMuebles(); pintarInventarioCasa();
+  };
+  bar.querySelector('[data-acc=ok]').onclick = e => { e.stopPropagation(); selMueble = -1; pintarMuebles(); };
+  $('#escenario').appendChild(bar);
+}
+// Inventario abajo del cuarto, como el de Habbo: tocás un mueble y aparece en la casa.
+function pintarInventarioCasa(){
+  let inv = $('#inv-casa');
+  if(modo !== 'decorar'){ if(inv) inv.remove(); return; }
+  if(!inv){ inv = document.createElement('div'); inv.id = 'inv-casa'; inv.className = 'inv-casa'; $('#escenario').after(inv); }
+  const ids = Object.keys(S.inv.muebles).filter(id => S.inv.muebles[id] > 0 && POR_ID[id]);
+  const lleno = S.casa.length >= maxMuebles();
+  inv.innerHTML = `<div class="inv-cab"><b>Inventario</b><small>${S.casa.length}/${maxMuebles()} en la casa · tocá para poner, arrastrá para mover</small></div>
+    <div class="inv-lista">${ids.length ? ids.map(id => `<button class="inv-item" data-poner-casa="${id}" ${lleno ? 'disabled' : ''} title="${esc(POR_ID[id].nom)}"><span>${(DIB_MUEBLE[id] ? DIB_MUEBLE[id]() : POR_ID[id].svg ? POR_ID[id].svg() : '')}</span><i>${S.inv.muebles[id]}</i></button>`).join('')
+      : '<p class="inv-vacio">No tenés muebles guardados. Comprá en el Market.</p>'}</div>`;
+  inv.querySelectorAll('[data-poner-casa]').forEach(b => b.onclick = () => {
+    const id = b.dataset.ponerCasa, it = POR_ID[id];
+    if(S.casa.length >= maxMuebles()){ avisar('Tu casa está llena: guardá algo primero'); return; }
+    const lugar = lugarLibre(it); if(!lugar){ avisar('No queda lugar libre en el piso'); return; }
+    S.inv.muebles[id]--; if(!S.inv.muebles[id]) delete S.inv.muebles[id];
+    S.casa.push({id, ...lugar}); selMueble = S.casa.length - 1;
+    guardar(); pintarMuebles(); pintarInventarioCasa();
+  });
+}
+// Busca un lugar libre para un mueble nuevo (lejos de los personajes).
 function lugarLibre(it){
   if(it.pared){
     const usados = S.casa.filter(m => POR_ID[m.id] && POR_ID[m.id].pared);
@@ -266,15 +472,13 @@ function lugarLibre(it){
       if(!usados.some(m => m.muro === muro && Math.abs(m.p - p) < 1.2)) return {muro, p, h: .55};
     return {muro: 'der', p: 4, h: .55};
   }
-  const ocupado = new Set();
-  S.casa.forEach(m => { const x = POR_ID[m.id]; if(x && !x.pared && !x.plano) ocupado.add(m.gx + ',' + m.gy); });
-  ocupado.add('4,6'); ocupado.add('6,5');
-  const ancho = it.plano ? 2 : 1;
-  // Primero casilleros separados (para que no se encimen), después cualquiera libre.
-  const libre = (gx, gy) => [-1, 0, 1].every(dx => [-1, 0, 1].every(dy => !ocupado.has((gx + dx) + ',' + (gy + dy))));
-  for(const paso of [2, 1]) for(let s = 0; s < CASA.N * 2; s++) for(let gx = 0; gx <= CASA.N - ancho; gx++){
-    const gy = s - gx; if(gy < 0 || gy > CASA.N - ancho) continue;
-    if(it.plano || (paso === 2 ? libre(gx, gy) : !ocupado.has(gx + ',' + gy))) return {gx, gy};
+  for(let s = 0; s < CASA.N * 2; s++) for(let gx = 0; gx < CASA.N; gx++){
+    const m = {gx, gy: s - gx, rot: 0};
+    if(m.gy < 0 || m.gy >= CASA.N) continue;
+    if(!lugarValido(it, m, -1)) continue;
+    const [w, d] = fpDe(it, m), pisa = (p) => p && p.x >= gx && p.x < gx + w && p.y >= m.gy && p.y < m.gy + d;
+    if(!esPlano(it) && (pisa(CASA_AV.ent) || pisa(CASA_AV.bi))) continue;
+    return m;
   }
-  return {gx: 3, gy: 3};
+  return null;
 }

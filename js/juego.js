@@ -32,7 +32,7 @@ const MUEBLES = [
     ['trofeo', 'Trofeo', 300, 2, 42, 'Para lucirse.'],
   ].map(([id, nom, precio, medallas, tamCasa, desc, extra = {}]) => ({id, nom, precio, medallas, tamCasa, desc, svg: () => DIB_MUEBLE[id](), ...extra})),
   {id:'copa', nom:'Copa del Campeón', svg:() => svgCopa(100), tam:96, tamCasa:52, precio:0, oculto:true, desc:'Solo para quien le gana a la Campeona.'},
-  {id:'vitrina', nom:'Vitrina de medallas', svg:() => svgVitrina(S.medallas), tam:120, tamCasa:72, precio:250, desc:'Muestra las medallas que vas ganando.'},
+  {id:'vitrina', nom:'Vitrina de medallas', svg:() => svgVitrina(S.medallas), tam:120, tamCasa:56, precio:250, desc:'Muestra las medallas que vas ganando.'},
   ...PELUCHES.map((e, i) => ({id:'peluche_' + e, nom:'Peluche de ' + ESPECIES[e].nombre, peluche:true, svg:() => svgPeluche(e), tam:78, tamCasa:46,
     precio: 120 + (i % 4) * 30 + (e === 'yaguarayo' ? 200 : 0), medallas: e === 'yaguarayo' ? 3 : i >= 8 ? 2 : i >= 4 ? 1 : 0, desc:'Suavecito, para decorar la casa.'})),
 ];
@@ -247,8 +247,9 @@ function empezarDecorar(){
   if(vista !== 'casa') pintarJuego();
   modo = 'decorar';
   $('#escenario').classList.add('decorando');
-  barraModo('Arrastrá: los de pared van en cualquiera de las dos', 'Listo', salirModo);
-  pintarTodo(); pintarMuebles();
+  barraModo('Tocá un mueble para girarlo o guardarlo', 'Listo', salirModo);
+  selMueble = -1;
+  pintarTodo(); pintarMuebles(); pintarInventarioCasa();
 }
 function barraModo(txt, btn, fn){
   $('#extra').querySelectorAll('.barra-modo').forEach(x => x.remove());
@@ -262,7 +263,8 @@ function salirModo(){
   modo = null;
   const e = $('#escenario'); if(e) e.classList.remove('decorando');
   const ex = $('#extra'); if(ex) ex.querySelectorAll('.barra-modo').forEach(x => x.remove());
-  pintarTodo();
+  selMueble = -1;
+  pintarTodo(); pintarInventarioCasa();
 }
 
 /* ---------------- Hojas: Market y mochila ---------------- */
@@ -457,8 +459,10 @@ function ponerMueble(id){
   if(vista !== 'casa') pintarJuego();
   S.inv.muebles[id]--; if(!S.inv.muebles[id]) delete S.inv.muebles[id];
   const it = POR_ID[id];
-  S.casa.push({id, ...lugarLibre(it)});
-  guardar(); empezarDecorar();
+  const lugar = lugarLibre(it);
+  if(!lugar){ avisar('No queda lugar libre en el piso'); return; }
+  S.casa.push({id, ...lugar});
+  guardar(); empezarDecorar(); selMueble = S.casa.length - 1; pintarMuebles();
 }
 
 /* ---------------- Bono diario y arranque ---------------- */
