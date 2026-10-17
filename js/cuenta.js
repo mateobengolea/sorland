@@ -265,8 +265,50 @@ function pintarCuenta(){
   const el = $('#cuenta'); if(!el) return;
   if(!db || !usuarioId){ el.textContent = ''; return; }
   const est = {guardando:'Guardando...', guardado:'Guardado', error:'No se pudo guardar', local:''}[estadoNube];
-  el.innerHTML = `Jugando como <b></b> · ${est} · <button class="enlace" id="b-salir">Salir</button>`;
+  el.innerHTML = `Jugando como <b></b> · ${est} · <button class="enlace" id="b-recuperar">Recuperar partida</button> · <button class="enlace" id="b-salir">Salir</button>`;
   el.querySelector('b').textContent = apodo || emailUsuario || '';
   $('#b-salir').onclick = salir;
+  $('#b-recuperar').onclick = abrirRecuperar;
+}
+/* ---------- Recuperar una partida guardada en este navegador ---------- */
+function partidasEnNavegador(){
+  const out = [];
+  try {
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i); if(!/sorlandia/i.test(k)) continue;
+      let v = null; try { v = JSON.parse(localStorage.getItem(k)); } catch(e){ continue; }
+      const p = v && v.p && v.p.equipo ? v.p : v;
+      if(!p || !Array.isArray(p.equipo) || !p.equipo.length) continue;
+      out.push({k, p});
+    }
+  } catch(e){}
+  if(S) out.push({k: 'actual', p: S});
+  // Sin repetidas y la de más progreso primero.
+  const vistos = new Set();
+  return out.filter(x => { const f = (x.p.creada || '') + ':' + (x.p.guardado || ''); if(vistos.has(f)) return false; vistos.add(f); return true; })
+    .sort((a, b) => progreso(b.p) - progreso(a.p));
+}
+function abrirRecuperar(){
+  hojaActual = 'recuperar';
+  const v = nuevoVelo(), lista = partidasEnNavegador();
+  const fecha = t => t ? new Date(t).toLocaleString('es-AR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}) : '—';
+  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Recuperar partida"><div class="hoja-cab"><h2>Partidas en este navegador</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <p class="rotulo-chico">Estas son todas las partidas que quedaron guardadas en este navegador. Elegí la que quieras seguir jugando: se sube a tu cuenta.</p>
+    <div class="lista-online">${lista.length ? lista.map((x, i) => { const p = x.p, cr = [...p.equipo, ...(p.reserva || [])];
+      return `<div class="fila-online"><span class="fo-txt"><b>${x.k === 'actual' ? 'La que estás jugando ahora' : 'Guardada el ' + fecha(p.guardado)}</b>
+        <small>${Object.keys(p.medallas || {}).length} medallas · ${cr.length} criaturas (nivel máx. ${Math.max(...cr.map(c => c.nivel || 1))}) · ${p.monedas || 0} monedas · álbum ${Object.keys((p.album && p.album.capt) || {}).length}</small></span>
+        ${x.k === 'actual' ? '' : `<button class="btn" data-rec="${i}">Usar esta</button>`}</div>`; }).join('') : '<p class="vacio">No hay otras partidas guardadas en este navegador.</p>'}</div>
+    <p class="rotulo-chico">Si tu partida estaba en otro navegador o en otro dispositivo, abrí el juego ahí y tocá «Recuperar partida».</p></div>`;
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => {
+    const x = lista[+b.dataset.rec]; if(!x) return;
+    if(!confirm('¿Seguro? Vas a seguir jugando con esa partida (la actual queda guardada como respaldo en este navegador).')) return;
+    respaldarLocal(S, 'antes de recuperar');
+    if(typeof salirDelMundo === 'function') salirDelMundo();
+    S = migrar(JSON.parse(JSON.stringify(x.p)));
+    nubeBloqueada = false; guardadoAlCargar = Date.now() + 1;
+    cerrarHoja(); guardar(); pintarJuego();
+    avisar('¡Partida recuperada! Ya quedó guardada en tu cuenta.', 'nivel');
+  });
 }
 
