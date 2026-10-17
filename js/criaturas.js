@@ -74,6 +74,7 @@ const MOVS = {
   tabano:   {nom:'Ataque de tábanos', tipo:'bicho', poder:90, prec:95, lider:true},
   zonda:    {nom:'Viento zonda', tipo:'viento', poder:90, prec:95, lider:true},
   helada:   {nom:'Helada patagónica', tipo:'hielo', poder:90, prec:95, lider:true},
+  forcejeo: {nom:'Forcejeo', tipo:'normal', poder:35, prec:100, pp:999},
 };
 const MOV_TIPO = {
   fuego:['brasa','llamarada','erupcion'], planta:['hojita','latigo','hojarasca'], agua:['chorrito','ola','maremoto'],
@@ -280,12 +281,15 @@ const OBJETOS = [
   {id:'alfajor', nom:'Alfajor de fuerza', precio:280, medallas:1, usa:'stat', stat:'fuerza', mas:2, icono:'alfajor', desc:'+2 de Fuerza para siempre a la criatura que se lo come.', colores:['#8A5A35']},
   {id:'matecocido', nom:'Mate cocido veloz', precio:280, medallas:1, usa:'stat', stat:'velocidad', mas:2, icono:'taza', desc:'+2 de Velocidad para siempre.', colores:['#C98A52']},
   {id:'guiso', nom:'Guiso de lentejas', precio:280, medallas:1, usa:'stat', stat:'vida', mas:4, icono:'guiso', desc:'+4 de Vida para siempre.', colores:['#C2412B']},
+  {id:'energizante', nom:'Energizante', precio:120, medallas:1, usa:'pp', cant:10, icono:'lata', desc:'Recarga 10 usos de un poder. Sirve en combate.', colores:['#4CC27A', '#FFD23F']},
+  {id:'energizantemax', nom:'Energizante máximo', precio:350, medallas:3, usa:'ppmax', icono:'lata', desc:'Recarga todos los usos de todos los poderes de una criatura. Sirve en combate.', colores:['#7A4FC9', '#FFD23F']},
+  {id:'libro', nom:'Libro de técnica', precio:500, medallas:2, usa:'ppup', icono:'libro', desc:'Le suma usos máximos a un poder para siempre (hasta 3 veces por poder).', colores:['#3B82D6', '#FFD23F']},
   {id:'caramelo', nom:'Caramelo de dulce de leche', precio:600, medallas:2, usa:'nivel', icono:'caramelo', desc:'Sube un nivel a la criatura que lo come.', colores:['#D9A066', '#FFFDF8']},
 ];
 OBJETOS.forEach(o => {
   o.tipoObj = o.captura ? 'capsula' : 'cura';
   if(!o.usa) o.usa = o.captura ? 'capsula' : o.revive ? 'revivir' : 'cura';
-  o.enCombate = ['capsula', 'cura', 'revivir'].includes(o.usa);
+  o.enCombate = ['capsula', 'cura', 'revivir', 'pp', 'ppmax'].includes(o.usa);
 });
 
 /* ---------------- Reglas de combate ---------------- */
@@ -295,6 +299,24 @@ function poderesDe(esp, nivel, extra){
   const ext = (Array.isArray(extra) ? extra : []).filter(m => MOVS[m]).slice(0, 1);
   const lista = [...new Set(def.aprende.filter(([n]) => n <= nivel).map(([, m]) => m))].filter(m => !ext.includes(m));
   return [...lista.slice(-(4 - ext.length)), ...ext];
+}
+/* ---------------- Usos de cada poder (como los PP) ---------------- */
+// Los poderes fuertes tienen menos usos. Se recargan al curarse en un Centro o en casa.
+function ppBase(id){
+  const m = MOVS[id]; if(!m) return 0;
+  if(m.pp) return m.pp;
+  if(m.lider) return 10;
+  if(!m.poder) return 20;
+  return m.poder <= 40 ? 30 : m.poder <= 60 ? 20 : m.poder <= 80 ? 15 : 10;
+}
+const ppPaso = id => Math.max(1, Math.round(ppBase(id) * .2));
+function ppMax(c, id){ return ppBase(id) + ((c.ppExtra && c.ppExtra[id]) || 0) * ppPaso(id); }
+function ppDe(c, id){ return Math.max(0, ppMax(c, id) - ((c.ppUsado && c.ppUsado[id]) || 0)); }
+function gastarPP(c, id){ c.ppUsado = c.ppUsado || {}; c.ppUsado[id] = (c.ppUsado[id] || 0) + 1; }
+function recargarPP(c, id, cant){
+  if(!c.ppUsado) return;
+  if(id == null){ delete c.ppUsado; return; }
+  c.ppUsado[id] = Math.max(0, (c.ppUsado[id] || 0) - cant);
 }
 // Los poderes de una criatura concreta: los que eligió (c.movs) o, si es vieja, los automáticos por nivel.
 function movsDe(c){

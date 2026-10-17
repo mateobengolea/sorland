@@ -524,3 +524,33 @@ svg .aura-flota{animation:auraFlota 3.6s ease-in-out infinite;transform-box:fill
 svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes auraChispa{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.1)}}
 @media (prefers-reduced-motion:reduce){svg .ojos,svg .cuerpo.vivo,svg .aura-sube,svg .aura-flota,svg .aura-chispa{animation:none}}
+.mc-mov{position:relative}
+.mc-mov .usos{position:absolute;right:8px;top:6px;font-size:.68rem;font-weight:800;background:rgba(255,255,255,.85);border:1.5px solid var(--tinta);border-radius:99px;padding:0 6px}
+.mc-mov.pocos .usos{background:#FFE08A}
+.mc-mov.agotado{opacity:.5}
+.mc-mov.agotado .usos{background:#F4B4AC}
+.poderes-ficha span{display:inline-block;margin:2px 6px 0 0;padding:0 6px;border:1.5px solid rgba(34,48,74,.25);border-radius:8px;font-size:.78rem}
+.poderes-ficha small{color:var(--tinta-suave);font-weight:800}
+
+/* ======================= Entrenadores en el combate ======================= */
+.ent-combate{position:absolute;z-index:3;transition:transform .45s ease-in,opacity .45s ease-in}
+.ent-combate svg{width:100%;height:100%;overflow:visible}
+.ent-combate.propio{left:40px;bottom:12px;width:104px;height:146px}
+.ent-combate.rival{right:50px;top:8px;width:80px;height:112px}
+.ent-combate.propio.se-va{transform:translateX(-180%);opacity:0}
+.ent-combate.rival.se-va{transform:translateX(180%);opacity:0}
+.ent-combate.regresa{transition:transform .45s ease-out,opacity .45s ease-out}
+.ent-combate.lanza svg{animation:lanzaBrazo .28s ease-out}
+@keyframes lanzaBrazo{50%{transform:rotate(-9deg) translateY(-5px)}}
+.bicho-combate.oculto{opacity:0;pointer-events:none}
+.capsula-pop{position:absolute;z-index:4;transform:translate(-50%,-50%);animation:popCaps .42s ease-out forwards}
+.capsula-pop i{position:absolute;inset:-22px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 18px #fff;animation:aroCaps .42s ease-out forwards}
+@keyframes popCaps{0%{transform:translate(-50%,-50%) scale(.5) rotate(-30deg)}60%{transform:translate(-50%,-50%) scale(1.25) rotate(10deg)}100%{transform:translate(-50%,-50%) scale(0);opacity:0}}
+@keyframes aroCaps{from{transform:scale(.2);opacity:1}to{transform:scale(1.9);opacity:0}}
+.bicho-combate.sale-propio{animation:saleP .45s ease-out}
+@keyframes saleP{from{transform:scaleX(-1) scale(.3);opacity:0;filter:brightness(3)}}
+.bicho-combate.vuelve{animation:vuelve .48s ease-in forwards}
+@keyframes vuelve{to{transform:scale(.1);opacity:0;filter:brightness(3) sepia(1) hue-rotate(-40deg)}}
+.bicho-combate.vuelve-propio{animation:vuelveP .48s ease-in forwards}
+@keyframes vuelveP{to{transform:scaleX(-1) scale(.1);opacity:0;filter:brightness(3) sepia(1) hue-rotate(-40deg)}}
+@media (max-width:380px){.ent-combate.propio{width:90px;height:126px;left:24px}.ent-combate.rival{width:70px;height:98px;right:30px}}

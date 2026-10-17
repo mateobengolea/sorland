@@ -372,6 +372,8 @@ function usarObjeto(id){
     if(o.usa === 'cura') return l.hp <= 0 ? 'Debilitada: usá Revivir' : l.hp >= l.max ? 'Vida llena' : null;
     if(o.usa === 'revivir') return l.hp > 0 ? 'No está debilitada' : null;
     if(o.usa === 'nivel') return c.nivel >= 100 ? 'Nivel máximo' : null;
+    if(o.usa === 'pp' || o.usa === 'ppmax') return movsDe(c).every(id => ppDe(c, id) >= ppMax(c, id)) ? 'Usos llenos' : null;
+    if(o.usa === 'ppup') return movsDe(c).every(id => ((c.ppExtra && c.ppExtra[id]) || 0) >= 3) ? 'Ya no se puede' : null;
     return null;
   };
   hojaActual = 'usar';
@@ -390,6 +392,8 @@ function usarObjeto(id){
   v.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
     const c = todas[+b.dataset.i]; if(estado(c)) return;
     const l = comoLuchador(c);
+    if(o.usa === 'pp' || o.usa === 'ppup'){ elegirPoderPara(c, o, gastar); return; }
+    if(o.usa === 'ppmax'){ gastar(); recargarPP(c, null); guardar(); cerrarHoja(); avisar(`¡${c.nombre} recargó todos sus poderes!`, 'nivel'); return; }
     gastar();
     if(o.usa === 'cura'){ l.hp = Math.min(l.max, l.hp + o.cura); guardarHp(l); avisar(`${c.nombre} recuperó vida.`); }
     else if(o.usa === 'revivir'){ l.hp = Math.max(1, Math.round(l.max * o.revive)); guardarHp(l); avisar(`¡${c.nombre} se levantó!`); }
@@ -415,6 +419,26 @@ function usarObjeto(id){
     guardar(); cerrarHoja();
     if(vista === 'casa') pintarJuego();
     else if(MW) MW.imgLider = null;
+  });
+}
+// Segundo paso del Energizante y del Libro de técnica: elegir el poder.
+function elegirPoderPara(c, o, gastar){
+  asegurarMovs(c);
+  const v = nuevoVelo();
+  const ups = id => (c.ppExtra && c.ppExtra[id]) || 0;
+  const no = id => o.usa === 'pp' ? (ppDe(c, id) >= ppMax(c, id) ? 'Lleno' : null) : (ups(id) >= 3 ? 'Ya está al máximo' : null);
+  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Elegí un poder"><div class="hoja-cab"><h2>¿Qué poder?</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <p class="rotulo-chico"><b class="pp-nom"></b>: ${o.usa === 'pp' ? `recarga ${o.cant} usos.` : 'suma usos máximos a un poder para siempre.'}</p>
+    <div class="menu-combate lista olvidar">${movsDe(c).map(id => `<button data-pp="${id}" class="mc-mov" style="--tipo:${TIPOS[MOVS[id].tipo].color}" ${no(id) ? 'disabled' : ''}>
+      <b>${MOVS[id].nom}</b><small>Usos ${ppDe(c, id)}/${ppMax(c, id)}${o.usa === 'ppup' ? ` · mejorado ${ups(id)}/3 veces${no(id) ? '' : ` · pasa a ${ppMax(c, id) + ppPaso(id)}`}` : ''}${no(id) ? ' · ' + no(id) : ''}</small></button>`).join('')}</div></div>`;
+  v.querySelector('.pp-nom').textContent = c.nombre;
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => {
+    const id = b.dataset.pp; if(no(id)) return;
+    gastar();
+    if(o.usa === 'pp'){ recargarPP(c, id, o.cant); avisar(`${c.nombre} recargó usos de ${MOVS[id].nom}.`); }
+    else { c.ppExtra = c.ppExtra || {}; c.ppExtra[id] = ups(id) + 1; avisar(`¡${MOVS[id].nom} de ${c.nombre} ahora tiene ${ppMax(c, id)} usos!`, 'nivel'); }
+    guardar(); cerrarHoja();
   });
 }
 /* ---------------- Movimientos de líder: enseñarlos ---------------- */

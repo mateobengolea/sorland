@@ -14,7 +14,7 @@ const capturadaComoLuchador = comoLuchador;
 function equipoLuchadores(){ return S.equipo.map(comoLuchador); }
 function hayLuchadorEnPie(){ return equipoLuchadores().some(l => l.hp > 0); }
 function guardarHp(l){ l.ref.hp = l.hp >= l.max ? null : l.hp; }
-function curarEquipo(){ S.equipo.forEach(c => c.hp = null); S.reserva.forEach(c => c.hp = null); }
+function curarEquipo(){ [...S.equipo, ...S.reserva].forEach(c => { c.hp = null; delete c.ppUsado; }); }
 const brillo = l => l.shiny ? ' ✦' : '';
 
 /* ---------------- Combate ---------------- */
@@ -36,17 +36,41 @@ function empezarCombate(rivales, zona, ent){
   pintarCombate();
   (async () => {
     if(ent){
-      await mensaje(`¡${ent.titulo} ${ent.nombre} te desafía!`, 1100);
-      await mensaje(`${ent.nombre} sacó a ${salvaje.nombre}.`);
+      await mensaje(`¡${ent.titulo} ${ent.nombre} te desafía!`, 1300);
+      const m1 = mensaje(`${ent.nombre} sacó a ${salvaje.nombre}.`, 1200);
+      await sacarCriatura('rival'); await m1;
     } else {
       if(B.legendaria) await mensaje(`¡${salvaje.nombre} apareció delante tuyo!`, 1600);
       else await mensaje(`¡Apareció un ${salvaje.nombre} salvaje!`);
       if(salvaje.shiny){ animar('b-rival', 'destello', 1200); await mensaje(`¡Brilla! ¡Es un ${salvaje.nombre} shiny, de otro color!`, 1700); }
       else if(ESPECIES[salvaje.esp].captura <= .18 && !B.legendaria) await mensaje('¡Es rarísimo verlo por acá!');
     }
-    await mensaje(`¡Dale, ${activo().nombre}!`);
+    const m2 = mensaje(`¡Dale, ${activo().nombre}!`, 1100);
+    await sacarCriatura('propio'); await m2;
     B.ocupado = false; menu('principal');
   })();
+}
+/* ---------------- Entrenadores: sacan y guardan a sus criaturas ---------------- */
+async function popCapsula(cr){
+  const arena = $('.arena'); if(!arena || !cr) return;
+  const r = cr.getBoundingClientRect(), a = arena.getBoundingClientRect();
+  const d = document.createElement('div'); d.className = 'capsula-pop';
+  d.style.left = (r.left - a.left + r.width / 2) + 'px'; d.style.top = (r.top - a.top + r.height * .62) + 'px';
+  d.innerHTML = iconoObjeto(OBJETOS[0], 34) + '<i></i>';
+  arena.appendChild(d); await espera(420); d.remove();
+}
+async function sacarCriatura(lado){
+  const ent = $('#e-' + lado), cr = $('#b-' + lado);
+  if(ent && !ent.classList.contains('se-va')){ ent.classList.add('lanza'); await espera(280); ent.classList.add('se-va'); }
+  await popCapsula(cr);
+  if(cr){ cr.classList.remove('oculto'); animar('b-' + lado, lado === 'propio' ? 'sale-propio' : 'sale', 450); }
+  await espera(380);
+}
+// La criatura vuelve a la cápsula y el entrenador vuelve a entrar.
+async function guardarCriatura(lado, conEntrenador = true){
+  const cr = $('#b-' + lado), ent = $('#e-' + lado);
+  if(cr && !cr.classList.contains('oculto')){ cr.classList.add(lado === 'propio' ? 'vuelve-propio' : 'vuelve'); await espera(480); cr.classList.add('oculto'); }
+  if(ent && conEntrenador){ ent.classList.remove('se-va', 'lanza'); ent.classList.add('regresa'); await espera(460); }
 }
 const activo = () => B.lista[B.i];
 
@@ -59,8 +83,10 @@ function pintarCombate(){
         <div class="nube n1"></div><div class="nube n2"></div>
         <div class="plataforma rival"></div><div class="plataforma propio"></div>
         <div class="ficha-luch rival" id="f-rival"></div>
-        <div class="bicho-combate rival" id="b-rival"></div>
-        <div class="bicho-combate propio" id="b-propio"></div>
+        ${B.ent ? `<div class="ent-combate rival" id="e-rival">${svgEntrenador(aspectoNpc(B.ent))}</div>` : ''}
+        <div class="ent-combate propio" id="e-propio">${svgEntrenador(S.entrenador, undefined, 'arriba')}</div>
+        <div class="bicho-combate rival${B.ent ? ' oculto' : ''}" id="b-rival"></div>
+        <div class="bicho-combate propio oculto" id="b-propio"></div>
         <div class="ficha-luch propio" id="f-propio"></div>
       </div>
       <div class="panel texto-combate" id="t-combate" aria-live="polite"></div>
@@ -70,7 +96,7 @@ function pintarCombate(){
   $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
   pintarPropio();
   fichas();
-  animar('b-rival', 'entra-rival', 700); animar('b-propio', 'entra-propio', 700);
+  if(!B.ent) animar('b-rival', 'entra-rival', 700);
 }
 const nomRival = () => B.ent ? `${B.salvaje.nombre} de ${B.ent.nombre}` : `${B.salvaje.nombre} salvaje`;
 function pintarPropio(){
@@ -117,10 +143,13 @@ function menu(tipo){
     m.querySelector('[data-a=huir]').onclick = () => turno({tipo: 'huir'});
   } else if(tipo === 'pelear'){
     m.className = 'menu-combate grilla-2';
-    m.innerHTML = movsDe(l).map(id => {
-      const mv = MOVS[id], ef = mv.poder ? efectividad(mv.tipo, B.salvaje.tipo) : 1;
-      return `<button data-m="${id}" class="mc-mov" style="--tipo:${TIPOS[mv.tipo].color}">
-        <b>${mv.nom}</b><small>${TIPOS[mv.tipo].nom} · ${mv.poder ? 'Poder ' + mv.poder : 'Especial'}${ef > 1 ? ' · ¡Efectivo!' : ef < 1 ? ' · Poco efectivo' : ''}</small></button>`;
+    const movs = movsDe(l), sinUsos = movs.every(id => ppDe(l.ref, id) <= 0);
+    // Si no le queda ningún uso, solo puede forcejear.
+    m.innerHTML = (sinUsos ? ['forcejeo'] : movs).map(id => {
+      const mv = MOVS[id], ef = mv.poder ? efectividad(mv.tipo, B.salvaje.tipo) : 1, quedan = id === 'forcejeo' ? null : ppDe(l.ref, id), max = id === 'forcejeo' ? null : ppMax(l.ref, id);
+      return `<button data-m="${id}" class="mc-mov${quedan === 0 ? ' agotado' : quedan !== null && quedan <= max / 4 ? ' pocos' : ''}" style="--tipo:${TIPOS[mv.tipo].color}" ${quedan === 0 ? 'disabled' : ''}>
+        <b>${mv.nom}</b><small>${TIPOS[mv.tipo].nom} · ${mv.poder ? 'Poder ' + mv.poder : 'Especial'}${ef > 1 ? ' · ¡Efectivo!' : ef < 1 ? ' · Poco efectivo' : ''}</small>
+        ${quedan !== null ? `<span class="usos">${quedan}/${max}</span>` : '<span class="usos">Sin usos: forcejea</span>'}</button>`;
     }).join('') + `<button class="mc-volver" data-v>Volver</button>`;
     m.querySelectorAll('[data-m]').forEach(b => b.onclick = () => turno({tipo: 'atacar', mov: b.dataset.m}));
     m.querySelector('[data-v]').onclick = () => menu('principal');
@@ -131,9 +160,16 @@ function menu(tipo){
       : `<p class="mc-vacio">No tenés cápsulas, jarabes ni revivir. Comprá en el Market.</p>`) + `<button class="mc-volver" data-v>Volver</button>`;
     m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
       const o = OBJETOS.find(x => x.id === b.dataset.o);
-      if(o.revive) menu('revivir:' + o.id); else turno({tipo: 'objeto', obj: o.id});
+      if(o.revive) menu('revivir:' + o.id); else if(o.usa === 'pp') menu('pp:' + o.id); else turno({tipo: 'objeto', obj: o.id});
     });
     m.querySelector('[data-v]').onclick = () => menu('principal');
+  } else if(tipo.startsWith('pp:')){
+    const id = tipo.slice(3), c = l.ref;
+    m.className = 'menu-combate grilla-2';
+    m.innerHTML = movsDe(l).map(mid => `<button data-pp="${mid}" class="mc-mov" style="--tipo:${TIPOS[MOVS[mid].tipo].color}" ${ppDe(c, mid) >= ppMax(c, mid) ? 'disabled' : ''}><b>${MOVS[mid].nom}</b><small>Usos ${ppDe(c, mid)}/${ppMax(c, mid)}</small></button>`).join('')
+      + `<button class="mc-volver" data-v>Volver</button>`;
+    m.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => turno({tipo: 'objeto', obj: id, mov: b.dataset.pp}));
+    m.querySelector('[data-v]').onclick = () => menu('mochila');
   } else if(tipo.startsWith('revivir:')){
     const id = tipo.slice(8), caidos = B.lista.map((x, i) => [x, i]).filter(([x]) => x.hp <= 0);
     m.className = 'menu-combate lista';
@@ -164,10 +200,13 @@ async function turno(acc){
   const yo = activo(), el = B.salvaje;
   try {
     if(acc.tipo === 'cambio'){
-      const vuelve = yo.nombre;
-      B.i = acc.i; pintarPropio(); fichas(); animar('b-propio', 'entra-propio', 700);
-      if(B.forzado){ B.forzado = false; await mensaje(`¡Dale, ${activo().nombre}!`); return; }
-      await mensaje(`¡Volvé, ${vuelve}! ¡Dale, ${activo().nombre}!`);
+      const vuelve = yo.nombre, forzado = B.forzado;
+      if(!forzado){ mensaje(`¡Volvé, ${vuelve}!`, 600); await guardarCriatura('propio', false); }
+      $('#b-propio').classList.remove('vuelve-propio', 'desmayo');
+      B.i = acc.i; pintarPropio(); fichas();
+      const m3 = mensaje(`¡Dale, ${activo().nombre}!`, 900);
+      await sacarCriatura('propio'); await m3;
+      if(forzado){ B.forzado = false; return; }
       if(await turnoRival()) return;
     } else if(acc.tipo === 'huir' && B.ent){
       await mensaje('¡No podés escaparte de una pelea entre entrenadores!', 1100); return;
@@ -180,6 +219,18 @@ async function turno(acc){
       const o = OBJETOS.find(x => x.id === acc.obj);
       if(o.captura && B.ent){ await mensaje('¡No se le tira una cápsula a la criatura de otro entrenador!', 1200); return; }
       if(o.captura){ if(await tirarCapsula(o)) return; }
+      else if(o.usa === 'pp' || o.usa === 'ppmax'){
+        const c = yo.ref, movs = movsDe(yo);
+        if(o.usa === 'pp'){
+          if(!acc.mov || ppDe(c, acc.mov) >= ppMax(c, acc.mov)) return;
+          S.inv.objetos[o.id]--; recargarPP(c, acc.mov, o.cant);
+          await mensaje(`${yo.nombre} recargó usos de ${MOVS[acc.mov].nom}.`);
+        } else {
+          if(movs.every(id => ppDe(c, id) >= ppMax(c, id))){ await mensaje(`${yo.nombre} tiene todos los usos llenos.`, 900); return; }
+          S.inv.objetos[o.id]--; recargarPP(c, null);
+          await mensaje(`¡${yo.nombre} recargó todos sus poderes!`);
+        }
+      }
       else if(o.revive){
         const l = B.lista[acc.dest];
         if(!l || l.hp > 0) return;
@@ -195,6 +246,10 @@ async function turno(acc){
       if(await turnoRival()) return;
     } else {
       const mov = MOVS[acc.mov];
+      if(acc.mov !== 'forcejeo'){
+        if(ppDe(yo.ref, acc.mov) <= 0){ await mensaje(`¡A ${yo.nombre} no le quedan usos de ${mov.nom}!`); return; }
+        gastarPP(yo.ref, acc.mov);
+      } else await mensaje(`¡A ${yo.nombre} no le quedan usos de ningún poder!`, 900);
       const velYo = yo.stats.velocidad * (yo.penal || 1), velEl = el.stats.velocidad;
       const primeroYo = velYo > velEl || (velYo === velEl && Math.random() < .5);
       if(primeroYo){
@@ -261,16 +316,18 @@ async function ganarCombate(){
   if(B.ent && B.ri < B.rivales.length - 1){
     B.ri++; B.salvaje = B.rivales[B.ri];
     S.album.vistos[B.salvaje.esp] = true;
-    await mensaje(`${B.ent.nombre} sacó a ${B.salvaje.nombre}.`);
-    $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
-    animar('b-rival', 'sale', 400);
+    const br = $('#b-rival'); br.classList.add('oculto'); br.classList.remove('desmayo');
+    br.innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
     fichas();
+    const m4 = mensaje(`${B.ent.nombre} sacó a ${B.salvaje.nombre}.`, 1100);
+    await sacarCriatura('rival'); await m4;
     B.fin = false; B.ocupado = false; menu('principal');
     return;
   }
   if(B.ent){
     const e = B.ent;
     S.vencidos[e.id] = true;
+    await guardarCriatura('rival');
     ganar(e.premio); $('#mon') && ($('#mon').textContent = S.monedas);
     await mensaje(`¡Le ganaste a ${e.titulo} ${e.nombre}!`, 1100);
     for(const l of e.despues) await mensaje(`${e.nombre}: «${l}»`, 1700);
@@ -352,6 +409,8 @@ async function aprenderPoder(c, mov, l){
   const i = await elegirOlvido(c, mov);
   if(i >= 0){
     const viejo = MOVS[c.movs[i]].nom;
+    if(c.ppUsado) delete c.ppUsado[c.movs[i]];
+    if(c.ppExtra) delete c.ppExtra[c.movs[i]];
     c.movs[i] = mov; if(l) l.movs = c.movs;
     await decir(`1, 2 y… ¡puf! ${c.nombre} olvidó ${viejo} y aprendió ${nom}.`, 1600);
   } else await decir(`${c.nombre} no aprendió ${nom}.`, 1100);
@@ -414,6 +473,7 @@ async function propioCaido(){
   const posada = S.respawn && MAPAS[S.respawn.mapa];
   if(B.legendaria) S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
   if(S.cuartel){ S.cuartel.racha = 0; S.cuartel.continuar = false; }
+  await guardarCriatura('propio');
   await mensaje(`Tu equipo quedó agotado. Volvés corriendo ${posada ? 'al Centro de Rehabilitación' : 'a casa'}${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1700);
   B.lista.forEach(guardarHp);
   curarEquipo();
@@ -465,7 +525,8 @@ function terminarCombate(){
   if(B.legendaria && !S.legendarios[B.legendaria]) S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
   B = null;
   guardar();
-  setTimeout(() => pintarMundo(), 300);
+  if($('#e-propio')) guardarCriatura('propio').then(() => setTimeout(() => { if(vista === 'combate') pintarMundo(); }, 350));
+  else setTimeout(() => pintarMundo(), 300);
 }
 
 /* ---------------- Hoja de criaturas: equipo, casa, álbum y medallas ---------------- */
@@ -484,7 +545,7 @@ function tarjetaCriatura(l, acciones){
       <span class="cr-txt"><h3 class="cr-nom"></h3><small>${l.nombre !== sp.nombre ? sp.nombre + ' · ' : ''}Nv ${l.nivel} <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span></small></span></div>
     ${barraVida(pct)}
     <p>Vida ${l.hp}/${l.max} · Fuerza ${l.stats.fuerza} · Velocidad ${l.stats.velocidad}</p>
-    <p><b>Poderes:</b> ${movsDe(l).map(m => MOVS[m].nom).join(', ')}</p>
+    <p class="poderes-ficha"><b>Poderes:</b> ${movsDe(l).map(m => `<span>${MOVS[m].nom} <small>${ppDe(l.ref || l, m)}/${ppMax(l.ref || l, m)}</small></span>`).join('')}</p>
     <p class="cr-evo">${evo}${l.shiny ? ' · ✦ Shiny' : ''}</p>
     ${acciones}</div>`;
 }
