@@ -1,6 +1,6 @@
 # Sorlandia
 
-Juego web de mascotas: elegís a **Carosor** (fuego), **Matesor** (planta) o **Rufisor** (agua), lo cuidás, decorás su casa y lo preparás para los combates.
+Juego web de mascotas: elegís a **Tizoncito** (fuego), **Ombucito** (planta) o **Rufisor** (agua, un yorkie), lo cuidás, decorás su casa y lo preparás para los combates.
 
 ## Cómo está armado
 

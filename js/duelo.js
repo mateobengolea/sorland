@@ -12,7 +12,7 @@ function enviarMapa(payload){ if(ON.canal) ON.canal.send({type: 'broadcast', eve
 
 const POR_DUELO = 3;
 function todasMisCriaturas(){ return [...S.equipo, ...S.reserva]; }
-function paraDuelo(c){ return {esp: c.esp, nombre: String(c.nombre).slice(0, 16), nivel: c.nivel, stats: {...c.stats}, tipo: tipoDe(c.esp), shiny: !!c.shiny}; }
+function paraDuelo(c){ return {esp: c.esp, nombre: String(c.nombre).slice(0, 16), nivel: c.nivel, stats: {...c.stats}, tipo: tipoDe(c.esp), shiny: !!c.shiny, extra: (c.extra || []).slice(0, 1)}; }
 // Si no llegás a elegir a tiempo, van las 3 de más nivel.
 function equipoDuelo(){
   return [...todasMisCriaturas()].sort((a, b) => b.nivel - a.nivel).slice(0, POR_DUELO).map(paraDuelo);
@@ -72,7 +72,8 @@ function armarLado(equipo){
     const stats = {vida: Math.min(999, c.stats.vida | 0), fuerza: Math.min(999, c.stats.fuerza | 0), velocidad: Math.min(999, c.stats.velocidad | 0)};
     const max = vidaMax(stats, nivel);
     if(!ESPECIES[c.esp]) c.esp = 'carosor';
-    return {esp: c.esp, nombre: c.nombre, nivel, stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, hp: max, max, modFuerza: 1};
+    const extra = (Array.isArray(c.extra) ? c.extra : []).filter(m => MOVS[m] && MOVS[m].lider).slice(0, 1);
+    return {esp: c.esp, nombre: c.nombre, nivel, stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, extra, hp: max, max, modFuerza: 1};
   });
   return {lista, i: 0};
 }
@@ -227,7 +228,7 @@ function menuDuelo(tipo){
     m.querySelector('[data-a=rendirse]').onclick = () => menuDuelo('rendirse');
   } else if(tipo === 'pelear'){
     const rival = actDu(DU.otro);
-    m.innerHTML = poderesDe(yo.esp, yo.nivel).map(id => {
+    m.innerHTML = poderesDe(yo.esp, yo.nivel, yo.extra).map(id => {
       const mv = MOVS[id], ef = mv.poder ? efectividad(mv.tipo, rival.tipo) : 1;
       return `<button data-m="${id}" class="mc-mov" style="--tipo:${TIPOS[mv.tipo].color}"><b>${mv.nom}</b><small>${TIPOS[mv.tipo].nom} · ${mv.poder ? 'Poder ' + mv.poder : 'Especial'}${ef > 1 ? ' · ¡Efectivo!' : ef < 1 ? ' · Poco efectivo' : ''}</small></button>`;
     }).join('') + `<button class="mc-volver" data-v>Volver</button>`;
@@ -320,7 +321,7 @@ function resolverTurno(st, acc, rnd){
     const a = st[l].lista[i];
     if(st[l].i !== i || a.hp <= 0) continue;
     const dl = otro(l), d = st[dl].lista[st[dl].i];
-    const permitidos = poderesDe(a.esp, a.nivel);
+    const permitidos = poderesDe(a.esp, a.nivel, a.extra);
     const id = permitidos.includes(acc[l].mov) ? acc[l].mov : permitidos[0];
     const mov = MOVS[id];
     ev.push({t: 'usa', lado: l, mov: id});

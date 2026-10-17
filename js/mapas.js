@@ -80,22 +80,22 @@ const CUARTEL = [
 ];
 
 const LIDERES = {
-  tosca:{id:'tosca', titulo:'Líder', nombre:'Estela Gartija', medalla:'penasco', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
+  tosca:{id:'tosca', titulo:'Líder', nombre:'Estela Gartija', medalla:'penasco', mov:'terremoto', tipoGym:'piedra', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
     equipo:[['fosilito',10],['morrito',11],['tatupiedra',12]],
     antes:['¡Bienvenido al gimnasio de Villa Piedra!', 'Acá entrenamos duro, como las piedras de la sierra.', 'Si querés la Medalla Peñasco, vas a tener que romperme la defensa.'],
     despues:['¡Uf! Me rompiste el caparazón.', 'Te ganaste la Medalla Peñasco. Con ella, el guardia del camino al puerto te deja pasar.'],
     yaGano:'Ya tenés mi medalla. Seguí hacia Puerto Camalote, al este de Pueblo Ceibo.'},
-  iara:{id:'iara', titulo:'Líder', nombre:'Capitana Elsa Lado', medalla:'camalote', premio:700, ropa:'#3B82D6', pelo:'#2A2420',
+  iara:{id:'iara', titulo:'Líder', nombre:'Capitana Elsa Lado', medalla:'camalote', mov:'torrente', tipoGym:'agua', premio:700, ropa:'#3B82D6', pelo:'#2A2420',
     equipo:[['ranacua',14],['bagrecito',15],['carpincho',16]],
     antes:['¡Ahoy! Soy la Capitana Elsa Lado.', 'En este puerto el agua manda. ¿Vas a nadar o te vas a hundir?'],
     despues:['¡Me dejaste a la deriva!', 'Tomá la Medalla Camalote. El camino al norte, a Cerro Tormenta, ya está abierto.'],
     yaGano:'Ya navegaste conmigo. Cerro Tormenta queda al norte del puerto.'},
-  fulgencio:{id:'fulgencio', titulo:'Líder', nombre:'Aitor Menta', medalla:'relampago', premio:1000, ropa:'#4656A0', pelo:'#FFD23F',
+  fulgencio:{id:'fulgencio', titulo:'Líder', nombre:'Aitor Menta', medalla:'relampago', mov:'descarga', tipoGym:'rayo', premio:1000, ropa:'#4656A0', pelo:'#FFD23F',
     equipo:[['pilon',18],['nubarron',19],['chispon',19],['yaguarayo',20]],
     antes:['¿Sentís el aire cargado? Es mi equipo, que ya te tiene ganas.', 'Soy Aitor Menta. Si aguantás la tormenta, la medalla es tuya.'],
     despues:['¡Me dejaste sin batería!', 'La Medalla Relámpago es tuya. Al norte, en Monte Fogón, te espera el último líder.'],
     yaGano:'Ya te ganaste el relámpago. Andá a Monte Fogón, al norte.'},
-  rulo:{id:'rulo', titulo:'Líder', nombre:'Don Armando Bronca', medalla:'brasa', premio:1400, ropa:'#C2412B', pelo:'#3B2A22',
+  rulo:{id:'rulo', titulo:'Líder', nombre:'Don Armando Bronca', medalla:'brasa', mov:'parrilla', tipoGym:'fuego', premio:1400, ropa:'#C2412B', pelo:'#3B2A22',
     equipo:[['fogonero',22],['ajipicante',23],['brasero',24],['zorrolumbre',25]],
     antes:['¡Pasá, pasá, que el fuego está a punto!', 'Soy Don Armando Bronca, el último líder de Sorlandia.', 'A ver si tu equipo aguanta el calor de la parrilla.'],
     despues:['¡Se me apagó el fogón!', 'Te llevás la Medalla Brasa. ¡Con las cuatro medallas sos campeón de Sorlandia!', 'Dicen que con las cuatro medallas, las leyendas de Sorlandia se dejan ver...'],
@@ -416,6 +416,104 @@ function repartirObjetos(M, cant){
 [mapaCeibo, mapaVillaPiedra, mapaCamalote, mapaTormenta, mapaFogon, mapaSupremo].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
 INTERIORES.forEach((info, n) => { const M = mapaInterior(info, n); MAPAS[M.id] = M; });
 const SALIDA_CASA = {mapa: 'ceibo', x: 11, y: 24};
+
+/* ---------------- Centros, markets y gimnasios por dentro ---------------- */
+// Los alumnos de cada gimnasio: hay que ganarles a los tres para poder desafiar al líder.
+const ALUMNOS = {
+  tosca: [['Escalador', 'Aquiles Canto', [['cuarcito', 8], ['fosilito', 9]], 110, ['¡Acá se entrena duro como la piedra!'], ['Pasá. La líder te espera arriba.']],
+          ['Picapedrera', 'Petra Lapiedra', [['fosilito', 9], ['cuarcito', 9]], 120, ['¿Venís a picar piedra conmigo?'], ['Me hiciste polvo.']],
+          ['Geólogo', 'Elmo Lino', [['tatupiedra', 9], ['cuarzon', 10]], 140, ['Estudié todas las rocas de la sierra. ¡Y entrené con ellas!'], ['Sos más duro que el granito.']]],
+  iara:  [['Nadadora', 'Ana Dando', [['pejerrin', 12], ['renacuajin', 12]], 170, ['¡Al agua, pato!'], ['Me dejaste haciendo la plancha.']],
+          ['Bañero', 'Esteban Ñero', [['tortuguin', 13], ['ranacua', 13]], 180, ['Prohibido correr al lado de la pileta. Pelear sí.'], ['Silbato y bandera roja: perdí.']],
+          ['Marinero', 'Paco Rriente', [['pejerrey', 14], ['tortugon', 14]], 200, ['La corriente siempre me lleva a ganar.'], ['Hoy la corriente iba para tu lado.']]],
+  fulgencio: [['Electricista', 'Lucía Lumbrado', [['pilita', 16], ['enchufin', 16]], 240, ['¡Se me encendió la lamparita!'], ['Me dejaste a oscuras.']],
+              ['Técnico', 'Aitor Nillo', [['enchufon', 17], ['pilita', 17]], 260, ['Te voy a ajustar como a un tornillo flojo.'], ['Se me zafó la rosca.']],
+              ['Inventora', 'Dina Mo', [['tormentin', 17], ['pilon', 18], ['enchufon', 18]], 290, ['Pedaleo y genero rayos. ¿Te animás?'], ['Me quedé sin pilas.']]],
+  rulo: [['Parrillero', 'Elsa Lamín', [['fogoncito', 20], ['ajicito', 20]], 320, ['¡Prendé el fuego que arranca el asado!'], ['Se me pasó la achura.']],
+         ['Asador', 'Mario Llejas', [['fogonero', 21], ['ajipicante', 21]], 340, ['Las mollejas, bien doradas. Y vos, bien quemado.'], ['Me ganaste la vuelta y vuelta.']],
+         ['Leñadora', 'Lola Ñita', [['luzmala', 21], ['fogonero', 22], ['ajipicante', 22]], 380, ['Con poquita leña hago un fuegazo.'], ['Me apagaste la brasa.']]],
+};
+const PISO_GYM = {piedra: ['#CFC7B8', '#C2B9A9'], agua: ['#CDEBF7', '#BCE1F2'], rayo: ['#DCE0EE', '#CDD3E6'], fuego: ['#EBCBB2', '#E2BEA2']};
+const BORDE_GYM = {piedra: '#', agua: '~', rayo: 'm', fuego: '!'};
+function interiorBase(id, nombre, w, h, piso, afuera, semilla){
+  const M = nuevoMapa(id, nombre, w, h, semilla, 'p', {pasto: piso[0], pastoAlto: piso[0], brizna: piso[1], tierra: piso[0], arbol: 'normal', fondo: '#3B2A22', interior: true, piso});
+  for(let x = 0; x < w; x++){ M.m[0][x] = 'W'; M.m[1][x] = 'W'; M.m[h - 1][x] = 'W'; }
+  for(let y = 0; y < h; y++){ M.m[y][0] = 'W'; M.m[y][w - 1] = 'W'; }
+  const sx = Math.floor(w / 2);
+  M.salida(sx, h - 1, afuera.mapa, afuera.x, afuera.y);
+  M.m[h - 1][sx] = 'x';
+  M.entrada = {x: sx, y: h - 2};
+  M.afuera = afuera;
+  M.zonas = [['interior', 0, 0, w - 1, h - 1]]; M.zonaBase = 'interior';
+  M.mueble = (tipo, x, y, extra = {}) => { M.m[y][x] = 'm'; M.muebles.push({tipo, x, y, ...extra}); };
+  return M;
+}
+function mapaCentro(id, pueblo, afuera){
+  const M = interiorBase(id, 'Centro de Rehabilitación · ' + pueblo, 13, 10, ['#F6E4EA', '#EED6DF'], afuera, 7100 + id.length * 31);
+  for(let x = 4; x <= 8; x++) M.mueble('mostrador', x, 3, {col: '#FF8FB1'});
+  M.mueble('maquina', 9, 2); M.mueble('maquina', 3, 2);
+  M.mueble('camilla', 1, 2); M.mueble('camilla', 11, 2);
+  M.mueble('planta', 1, 8); M.mueble('planta', 11, 8);
+  for(const x of [2, 3, 9, 10]) M.mueble('banco', x, 6);
+  M.muebles.push({tipo: 'alfombra', x: 6, y: 6});
+  M.npc({id: id + '_enf', x: 6, y: 2, tipo: 'enfermera', nombre: 'Enfermera Carosor', suelo: 'p', ropa: '#FF8FB1', pelo: '#B5452B', peinado: 'colita', gorra: '#FFFFFF'});
+  return M;
+}
+function mapaMarket(id, pueblo, afuera){
+  const M = interiorBase(id, 'Market · ' + pueblo, 13, 10, ['#EAF2DE', '#DDE9CD'], afuera, 7300 + id.length * 17);
+  for(const x of [1, 3, 4]) M.mueble('mostrador', x, 3, {col: '#4CC27A'});
+  M.mueble('caja', 2, 3, {col: '#4CC27A'});
+  for(let x = 7; x <= 10; x++){ M.mueble('gondola', x, 4); M.mueble('gondola', x, 6); }
+  M.mueble('heladera', 10, 2); M.mueble('heladera', 11, 2); M.mueble('estante', 7, 2); M.mueble('estante', 8, 2);
+  M.mueble('planta', 1, 8); M.mueble('planta', 11, 8);
+  M.npc({id: id + '_vend', x: 3, y: 2, tipo: 'vendedor', nombre: 'Vendedor Elmer Cado', suelo: 'p', ropa: '#4CC27A', pelo: '#3B2A22', peinado: 'corto', gorra: '#4CC27A'});
+  return M;
+}
+function mapaGimnasio(id, L, afuera, zonaAfuera){
+  const tipo = L.tipoGym, w = 13, h = 16;
+  const M = interiorBase(id, 'Gimnasio de ' + L.nombre, w, h, PISO_GYM[tipo], afuera, 7700 + id.length * 13);
+  M.zonaPelea = zonaAfuera;
+  const borde = BORDE_GYM[tipo];
+  // Zonas de los costados con el terreno del tipo (rocas, pileta, bobinas o lava).
+  for(let y = 4; y <= 12; y++) for(const x of [1, 2, 3, 9, 10, 11]){
+    if((x + y) % 3 === 0) continue;
+    if(borde === 'm') M.mueble('bobina', x, y); else M.m[y][x] = borde;
+  }
+  // Pasillo central entre columnas: los alumnos esperan al costado.
+  const alumnos = ALUMNOS[L.id], lugares = [[5, 11], [7, 8], [5, 5]];
+  for(let y = 4; y <= 12; y++) for(const x of [5, 7]){
+    if(lugares.some(([lx, ly]) => lx === x && ly === y)) continue;
+    M.mueble('columna', x, y, {col: TIPOS[tipo].color});
+  }
+  for(const x of [4, 8]) for(let y = 4; y <= 12; y++) if(M.m[y][x] === 'p' && (y % 2)) M.mueble('antorcha', x, y, {col: TIPOS[tipo].color});
+  M.mueble('columna', 4, 3, {col: TIPOS[tipo].color}); M.mueble('columna', 8, 3, {col: TIPOS[tipo].color});
+  M.mueble('estandarte', 3, 2, {col: TIPOS[tipo].color}); M.mueble('estandarte', 9, 2, {col: TIPOS[tipo].color});
+  M.muebles.push({tipo: 'podio', x: 6, y: 3, col: TIPOS[tipo].color});
+  const ids = alumnos.map(([titulo, nombre, equipo, premio, antes, despues], i) => {
+    const [x, y] = lugares[i], nid = 'gym_' + L.id + '_' + i;
+    M.npc({...entrenador(nid, x, y, titulo, nombre, equipo, premio, antes, despues, TIPOS[tipo].color), suelo: 'p'});
+    return nid;
+  });
+  M.npc({id: 'lider_' + L.id, x: 6, y: 2, tipo: 'lider', lider: L.id, nombre: L.nombre, alumnos: ids, suelo: 'p', ropa: L.ropa, pelo: L.pelo});
+  return M;
+}
+function crearEdificiosPorDentro(){
+  for(const M of Object.values(MAPAS)){
+    if(M.tema.interior) continue;
+    for(const k of Object.keys(M.puertas)){
+      const acc = M.puertas[k], [px, py] = k.split(',').map(Number);
+      const afuera = {mapa: M.id, x: px, y: py + 1};
+      let N = null;
+      if(acc === 'centro') N = mapaCentro('centro_' + M.id, M.nombre, afuera);
+      else if(acc === 'market') N = mapaMarket('market_' + M.id, M.nombre, afuera);
+      else if(acc && acc.lider) N = mapaGimnasio('gym_' + acc.lider, LIDERES[acc.lider], afuera, M.zonas[0][0]);
+      if(!N) continue;
+      MAPAS[N.id] = N;
+      M.puertas[k] = {interior: N.id};
+    }
+  }
+}
+crearEdificiosPorDentro();
 
 function zonaEn(M, x, y){
   for(const [z, x0, y0, x1, y1] of M.zonas) if(x >= x0 && x <= x1 && y >= y0 && y <= y1) return z;

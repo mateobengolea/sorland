@@ -64,6 +64,10 @@ function migrar(p){
   if(!p.duelos) p.duelos = {ganados: 0, perdidos: 0};
   if(!p.casa) p.casa = [];
   if(!p.fondo) p.fondo = 'durazno';
+  if(!p.discos) p.discos = {};
+  // Los iniciales de fuego y planta cambiaron de nombre: si no les pusiste apodo, se actualiza.
+  const NOMBRES_VIEJOS = {Carosor: 'carosor', Carosaurio: 'carosaurio', 'Carotitán': 'carotitan', Matesor: 'matesor', Matesaurio: 'matesaurio', 'Matetitán': 'matetitan'};
+  for(const c of [...p.equipo, ...p.reserva]) if(NOMBRES_VIEJOS[c.nombre] && ESPECIES[c.esp] && NOMBRES_VIEJOS[c.nombre] === c.esp) c.nombre = ESPECIES[c.esp].nombre;
   if((p.v || 1) < 3){
     // Antes el inicial era la mascota: ahora es la primera criatura del equipo.
     if(p.especie && ESPECIES[p.especie]){
@@ -333,13 +337,18 @@ function pintarHoja(){
     }).join('');
   } else {
     titulo = 'Mochila';
-    pest = pestanas([['aventura', 'Aventura'], ['muebles', 'Muebles'], ['fondos', 'Casa']], pestana.mochila);
+    pest = pestanas([['aventura', 'Aventura'], ['movs', 'Movimientos'], ['muebles', 'Muebles'], ['fondos', 'Casa']], pestana.mochila);
     const t = pestana.mochila;
     if(t === 'aventura'){
       const ids = OBJETOS.filter(o => S.inv.objetos[o.id] > 0);
       cuerpo = ids.length ? ids.map(o => `<div class="item"><span class="em">${iconoObjeto(o, 40)}</span><h3>${o.nom}</h3><p>${o.desc}</p><p class="precio">Tenés ${S.inv.objetos[o.id]}</p></div>`).join('')
         + `<p class="vacio" style="grid-column:1/-1;padding:4px">Las cápsulas se usan en combate. Los jarabes, en combate o desde Criaturas.</p>`
         : '<div class="vacio">No tenés cápsulas ni jarabes. Pasá por un Market.</div>';
+    } else if(t === 'movs'){
+      const ids = Object.keys(S.discos || {}).filter(m => MOVS[m]);
+      cuerpo = ids.length ? ids.map(m => { const mv = MOVS[m], quien = [...S.equipo, ...S.reserva].filter(c => (c.extra || [])[0] === m).map(c => c.nombre);
+          return `<div class="item"><span class="em"><span class="disco-mov" style="--tipo:${TIPOS[mv.tipo].color}"></span></span><h3>${mv.nom}</h3><p>${TIPOS[mv.tipo].nom} · poder ${mv.poder}${quien.length ? `<br>Lo sabe: ${esc(quien.join(', '))}` : ''}</p><button class="btn" data-ensenar="${m}">Enseñar</button></div>`; }).join('')
+        : '<div class="vacio">Ganale a un líder de gimnasio y te regala su movimiento.</div>';
     } else if(t === 'muebles'){
       const ids = Object.keys(S.inv.muebles).filter(id => S.inv.muebles[id] > 0 && POR_ID[id]);
       const max = 6 + cantMedallas() * 2, lleno = S.casa.length >= max;
@@ -355,7 +364,34 @@ function pintarHoja(){
   v.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { pestana[hojaActual] = b.dataset.tab; pintarHoja(); });
   v.querySelectorAll('[data-comprar]').forEach(b => b.onclick = () => comprar(b.dataset.comprar));
   v.querySelectorAll('[data-poner]').forEach(b => b.onclick = () => ponerMueble(b.dataset.poner));
+  v.querySelectorAll('[data-ensenar]').forEach(b => b.onclick = () => elegirAprendiz(b.dataset.ensenar));
   v.querySelectorAll('[data-fondo]').forEach(b => b.onclick = () => { S.fondo = b.dataset.fondo; guardar(); pintarTodo(); pintarHoja(); });
+}
+/* ---------------- Movimientos de líder: enseñarlos ---------------- */
+function elegirAprendiz(mov){
+  const mv = MOVS[mov]; if(!mv) return;
+  hojaActual = 'aprender';
+  const v = nuevoVelo();
+  const todas = [...S.equipo, ...S.reserva];
+  v.innerHTML = `<div class="hoja hoja-elegir" role="dialog" aria-label="Enseñar movimiento">
+    <div class="hoja-cab"><h2>¿Quién aprende ${esc(mv.nom)}?</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <p class="rotulo-chico">Tipo ${TIPOS[mv.tipo].nom} · poder ${mv.poder}. Cada criatura puede tener un movimiento de líder: si ya sabe otro, lo reemplaza. El disco queda en tu mochila para enseñarlo de nuevo.</p>
+    <div class="grilla-elegir">${todas.map((c, i) => {
+      const ya = (c.extra || [])[0];
+      return `<button class="elegible${ya === mov ? ' elegida' : ''}${c.shiny ? ' es-shiny' : ''}" data-i="${i}" style="--tipo:${TIPOS[tipoDe(c.esp)].color}">
+        <span class="el-img">${svgEspecie(c.esp, {humor: 'feliz', shiny: c.shiny})}</span><b data-nom="${i}"></b>
+        <small>${ya === mov ? 'Ya lo sabe' : ya ? 'Sabe ' + MOVS[ya].nom : 'Nv ' + c.nivel + ' · ' + TIPOS[tipoDe(c.esp)].nom}</small></button>`;
+    }).join('')}</div>
+    <div class="acciones-jugador"><button class="btn btn-2" id="ap-despues">Más tarde (queda en la Mochila)</button></div></div>`;
+  todas.forEach((c, i) => { v.querySelector(`[data-nom="${i}"]`).textContent = c.nombre + (c.shiny ? ' ✦' : ''); });
+  v.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
+    const c = todas[+b.dataset.i];
+    if((c.extra || [])[0] === mov) return;
+    c.extra = [mov]; guardar(); cerrarHoja();
+    avisar(`¡${c.nombre} aprendió ${mv.nom}!`, 'nivel');
+  });
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelector('#ap-despues').onclick = cerrarHoja;
 }
 function comprar(id){
   const it = POR_ID[id];

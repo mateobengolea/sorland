@@ -65,6 +65,11 @@ const MOVS = {
   picadura: {nom:'Picadura', tipo:'bicho', poder:40, prec:100},
   enjambre: {nom:'Enjambre', tipo:'bicho', poder:65, prec:95},
   plaga:    {nom:'Plaga', tipo:'bicho', poder:95, prec:80},
+  // Movimientos que enseñan los líderes de gimnasio (pegan fuerte y casi no fallan).
+  terremoto:{nom:'Terremoto serrano', tipo:'piedra', poder:90, prec:95, lider:true},
+  torrente: {nom:'Torrente del puerto', tipo:'agua', poder:90, prec:95, lider:true},
+  descarga: {nom:'Descarga de tormenta', tipo:'rayo', poder:90, prec:95, lider:true},
+  parrilla: {nom:'Fuego de parrilla', tipo:'fuego', poder:90, prec:95, lider:true},
 };
 const MOV_TIPO = {
   fuego:['brasa','llamarada','erupcion'], planta:['hojita','latigo','hojarasca'], agua:['chorrito','ola','maremoto'],
@@ -103,12 +108,12 @@ function linea(o){
 }
 
 // --- Iniciales
-linea({ids:['carosor','carosaurio','carotitan'], nombres:['Carosor','Carosaurio','Carotitán'], tipo:'fuego', niveles:[16,32], base:[20,7,5], mano:'carosor', col:['#F47A45','#D85A2A','#FFD98A','#FFD23F'], inicial:true,
+linea({ids:['carosor','carosaurio','carotitan'], nombres:['Tizoncito','Tizonazo','Tizontitán'], tipo:'fuego', niveles:[16,32], base:[20,7,5], mano:'carosor', col:['#F47A45','#D85A2A','#FFD98A','#FFD23F'], inicial:true,
   descs:['Cabeza dura y cola encendida. Le encanta entrenar.', 'Ya no cabe en la mochila. Cuando se emociona, le salen llamas de la cabeza.', 'Dicen que una vez prendió una parrilla con solo mirarla.']});
-linea({ids:['matesor','matesaurio','matetitan'], nombres:['Matesor','Matesaurio','Matetitán'], tipo:'planta', niveles:[16,32], base:[24,6,5], mano:'matesor', col:['#72C25B','#4FA03C','#E5F5C6','#9BDB6E'], inicial:true,
+linea({ids:['matesor','matesaurio','matetitan'], nombres:['Ombucito','Ombuzón','Ombutitán'], tipo:'planta', niveles:[16,32], base:[24,6,5], mano:'matesor', col:['#72C25B','#4FA03C','#E5F5C6','#9BDB6E'], inicial:true,
   descs:['Tiene un brote de yerba en la cabeza. Tranquilo y compañero.', 'Le florece la espalda y huele a mate recién cebado.', 'Un bosque entero le crece encima. Aguanta lo que le tiren.']});
 linea({ids:['rufisor','rufisaurio','rufititan'], nombres:['Rufisor','Rufisaurio','Rufititán'], tipo:'agua', niveles:[16,32], base:[20,6,7], mano:'rufisor', col:['#4EA8E3','#2E86C4','#D6EFFF','#8FD3F7'], inicial:true,
-  descs:['Escurridizo y juguetón, con aletas en la cresta.', 'Nada más rápido que una lancha. Le encanta salpicar.', 'Cuando ruge, el río sube un metro.']});
+  descs:['Un perrito yorkie de agua: chiquito, peinado con moño y con más carácter que un perro grande.', 'Se sacude al salir del agua y moja a todos. Su flequillo nunca se despeina.', 'Cuando ladra, el río sube un metro.']});
 
 // --- Especies de las primeras regiones y sus evoluciones
 linea({ids:['pampito','pampero'], nombres:['Pampito','Pampero'], tipo:'normal', niveles:[18], base:[16,5,8], mano:'pampito', col:['#D9C3A0','#B79D78','#F4E8D2','#8C6E4A'],
@@ -257,10 +262,12 @@ const OBJETOS = [
 OBJETOS.forEach(o => o.tipoObj = o.captura ? 'capsula' : 'cura');
 
 /* ---------------- Reglas de combate ---------------- */
-function poderesDe(esp, nivel){
+// Hasta 4 poderes: los que aprendió por nivel y, si tiene, el que le enseñó un líder.
+function poderesDe(esp, nivel, extra){
   const def = ESPECIES[esp];
-  const lista = def.aprende.filter(([n]) => n <= nivel).map(([, m]) => m);
-  return [...new Set(lista)].slice(-4);
+  const ext = (Array.isArray(extra) ? extra : []).filter(m => MOVS[m]).slice(0, 1);
+  const lista = [...new Set(def.aprende.filter(([n]) => n <= nivel).map(([, m]) => m))].filter(m => !ext.includes(m));
+  return [...lista.slice(-(4 - ext.length)), ...ext];
 }
 function tipoDe(esp){ return ESPECIES[esp].tipo; }
 function nombreEspecie(esp){ return ESPECIES[esp].nombre; }

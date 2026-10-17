@@ -8,7 +8,7 @@ const MAX_EQUIPO = 6;
 /* ---------------- Equipo ---------------- */
 function comoLuchador(c){
   const max = vidaMax(c.stats, c.nivel);
-  return {ref: c, esp: c.esp, nombre: c.nombre, nivel: c.nivel, stats: c.stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, hp: c.hp == null ? max : Math.min(c.hp, max), max};
+  return {ref: c, esp: c.esp, nombre: c.nombre, nivel: c.nivel, stats: c.stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, extra: c.extra || [], hp: c.hp == null ? max : Math.min(c.hp, max), max};
 }
 const capturadaComoLuchador = comoLuchador;
 function equipoLuchadores(){ return S.equipo.map(comoLuchador); }
@@ -116,7 +116,7 @@ function menu(tipo){
     m.querySelector('[data-a=huir]').onclick = () => turno({tipo: 'huir'});
   } else if(tipo === 'pelear'){
     m.className = 'menu-combate grilla-2';
-    m.innerHTML = poderesDe(l.esp, l.nivel).map(id => {
+    m.innerHTML = poderesDe(l.esp, l.nivel, l.extra).map(id => {
       const mv = MOVS[id], ef = mv.poder ? efectividad(mv.tipo, B.salvaje.tipo) : 1;
       return `<button data-m="${id}" class="mc-mov" style="--tipo:${TIPOS[mv.tipo].color}">
         <b>${mv.nom}</b><small>${TIPOS[mv.tipo].nom} · ${mv.poder ? 'Poder ' + mv.poder : 'Especial'}${ef > 1 ? ' · ¡Efectivo!' : ef < 1 ? ' · Poco efectivo' : ''}</small></button>`;
@@ -276,7 +276,11 @@ async function ganarCombate(){
       const m = MEDALLAS.find(x => x.id === e.medalla);
       mostrarMedalla(m);
       await mensaje(`¡Conseguiste la ${m.nom}!`, 2400);
-      if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las cuatro medallas! ¡Sos campeón de Sorlandia!', 2400);
+      if(e.mov && MOVS[e.mov]){
+        S.discos[e.mov] = true; S.ensenar = e.mov;
+        await mensaje(`${e.nombre} te regaló su movimiento: ${MOVS[e.mov].nom}.`, 2200);
+      }
+      if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las cuatro medallas! El camino a la Cumbre Suprema está abierto.', 2400);
     }
   } else if(B.legendaria){
     S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
@@ -303,7 +307,7 @@ function mostrarMedalla(m){
 
 async function darXP(l, xp){
   await mensaje(`${l.nombre} ganó ${xp} de experiencia.`, 800);
-  const movsAntes = poderesDe(l.esp, l.nivel);
+  const movsAntes = poderesDe(l.esp, l.nivel, l.extra);
   const c = l.ref; c.xp = (c.xp || 0) + xp;
   let subio = false;
   while(c.xp >= xpPara(c.nivel)){ c.xp -= xpPara(c.nivel); c.nivel++; c.stats.vida += 2; c.stats.fuerza += 1; c.stats.velocidad += 1; subio = true; }
@@ -312,7 +316,7 @@ async function darXP(l, xp){
     l.hp = Math.min(nuevoMax, l.hp + (nuevoMax - l.max)); l.max = nuevoMax; l.nivel = c.nivel;
     await mensaje(`¡${l.nombre} subió a nivel ${c.nivel}!`);
   }
-  for(const m of poderesDe(l.esp, l.nivel)) if(!movsAntes.includes(m)) await mensaje(`¡${l.nombre} aprendió ${MOVS[m].nom}!`);
+  for(const m of poderesDe(l.esp, l.nivel, l.extra)) if(!movsAntes.includes(m)) await mensaje(`¡${l.nombre} aprendió ${MOVS[m].nom}!`);
   if(evolucionPendiente(c)) await animarEvolucion(l);
 }
 async function animarEvolucion(l){
@@ -411,7 +415,7 @@ function tarjetaCriatura(l, acciones){
       <span class="cr-txt"><h3 class="cr-nom"></h3><small>${l.nombre !== sp.nombre ? sp.nombre + ' · ' : ''}Nv ${l.nivel} <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span></small></span></div>
     ${barraVida(pct)}
     <p>Vida ${l.hp}/${l.max} · Fuerza ${l.stats.fuerza} · Velocidad ${l.stats.velocidad}</p>
-    <p><b>Poderes:</b> ${poderesDe(l.esp, l.nivel).map(m => MOVS[m].nom).join(', ')}</p>
+    <p><b>Poderes:</b> ${poderesDe(l.esp, l.nivel, l.extra).map(m => MOVS[m].nom).join(', ')}</p>
     <p class="cr-evo">${evo}${l.shiny ? ' · ✦ Shiny' : ''}</p>
     ${acciones}</div>`;
 }

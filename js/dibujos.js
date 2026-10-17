@@ -5,7 +5,58 @@ const COL = {
   matesor:{main:'#72C25B',osc:'#4FA03C',panza:'#E5F5C6'},
   rufisor:{main:'#4EA8E3',osc:'#2E86C4',panza:'#D6EFFF'},
 };
+// Rufisor: un yorkie de agua. Pelo azul acero en el cuerpo, cara canela y moño con gotita.
+function yorkieRufisor(o = {}){
+  const T = '#22304A', azul = '#4E8FD6', azulOsc = '#2F6DB5', canela = '#E2AE6C', canelaOsc = '#C98A47', hocico = '#F6D7A6';
+  const humor = o.humor || 'bien';
+  let ojos, boca, cejas = '';
+  if(o.dormido){
+    ojos = `<path d="M74 80 Q82 86 90 80" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/><path d="M110 80 Q118 86 126 80" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`;
+    boca = '';
+  } else {
+    const oy = humor === 'mal' ? 82 : 78;
+    ojos = `<ellipse cx="81" cy="${oy}" rx="7" ry="8.5" fill="${T}"/><circle cx="83.5" cy="${oy - 3}" r="2.6" fill="#fff"/>
+            <ellipse cx="119" cy="${oy}" rx="7" ry="8.5" fill="${T}"/><circle cx="121.5" cy="${oy - 3}" r="2.6" fill="#fff"/>`;
+    if(humor === 'feliz') boca = `<path d="M92 104 Q100 118 108 104 Z" fill="#B8364F" stroke="${T}" stroke-width="2.5" stroke-linejoin="round"/><path d="M96 108 Q100 116 104 108" fill="#FF8FAE"/>`;
+    else if(humor === 'bien') boca = `<path d="M92 104 Q96 109 100 104 Q104 109 108 104" fill="none" stroke="${T}" stroke-width="3" stroke-linecap="round"/>`;
+    else { boca = `<path d="M92 110 Q100 103 108 110" fill="none" stroke="${T}" stroke-width="3" stroke-linecap="round"/>`;
+      cejas = `<path d="M71 66 L88 71" stroke="${T}" stroke-width="3" stroke-linecap="round"/><path d="M129 66 L112 71" stroke="${T}" stroke-width="3" stroke-linecap="round"/>`; }
+  }
+  // Borde de pelo largo (ondas) abajo del cuerpo
+  let ondas = 'M50 150';
+  for(let i = 0; i < 8; i++){ const x = 50 + i * 12.5; ondas += ` Q${x + 6.25} ${i % 2 ? 176 : 182} ${x + 12.5} 168`; }
+  return `<g class="cuerpo">
+      <path d="M58 128 C40 118 40 98 50 92 C52 104 60 110 66 118Z" fill="${azul}" stroke="${T}" stroke-width="3.5" stroke-linejoin="round"/>
+      <ellipse cx="78" cy="180" rx="13" ry="8" fill="${canela}" stroke="${T}" stroke-width="3.5"/>
+      <ellipse cx="122" cy="180" rx="13" ry="8" fill="${canela}" stroke="${T}" stroke-width="3.5"/>
+      <path d="${ondas} L150 150 C150 120 128 106 100 106 C72 106 50 120 50 150Z" fill="${azul}" stroke="${T}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M70 126 Q76 146 72 164 M88 120 Q92 146 88 170 M112 120 Q108 146 112 170 M130 126 Q124 146 128 164" fill="none" stroke="${azulOsc}" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+      <ellipse cx="100" cy="146" rx="22" ry="18" fill="${canela}" opacity=".9"/>
+      <ellipse cx="72" cy="168" rx="9" ry="10" fill="${canela}" stroke="${T}" stroke-width="3"/>
+      <ellipse cx="128" cy="168" rx="9" ry="10" fill="${canela}" stroke="${T}" stroke-width="3"/>
+      <path d="M62 54 L68 14 L92 44Z" fill="${canela}" stroke="${T}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M68 24 L72 42 L84 44Z" fill="#F0A3B4"/>
+      <path d="M138 54 L132 14 L108 44Z" fill="${canela}" stroke="${T}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M132 24 L128 42 L116 44Z" fill="#F0A3B4"/>
+      <path d="M58 86 C54 110 60 128 70 134 C68 118 70 104 74 96Z" fill="${canelaOsc}" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M142 86 C146 110 140 128 130 134 C132 118 130 104 126 96Z" fill="${canelaOsc}" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="100" cy="84" rx="44" ry="38" fill="${canela}" stroke="${T}" stroke-width="4"/>
+      <path d="M64 70 C70 44 88 38 100 40 C112 38 130 44 136 70 C124 58 112 56 100 62 C88 56 76 58 64 70Z" fill="${azul}" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M100 42 C96 32 98 24 100 20 C102 24 104 32 100 42Z" fill="${azul}" stroke="${T}" stroke-width="3"/>
+      <path d="M100 30 L82 20 L84 40Z M100 30 L118 20 L116 40Z" fill="#8FD3F7" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M100 22 C104 28 106 31 106 34 A6 6 0 0 1 94 34 C94 31 96 28 100 22Z" fill="#FFFFFF" stroke="${T}" stroke-width="2.5"/>
+      <ellipse cx="100" cy="100" rx="19" ry="13" fill="${hocico}" stroke="${T}" stroke-width="3"/>
+      <path d="M84 104 C78 112 80 120 84 124 M116 104 C122 112 120 120 116 124" fill="none" stroke="${canelaOsc}" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="100" cy="94" rx="7" ry="5" fill="${T}"/><ellipse cx="98" cy="92.5" rx="2.2" ry="1.4" fill="#fff" opacity=".8"/>
+      <ellipse cx="68" cy="94" rx="7" ry="4.5" fill="#FF8FAE" opacity=".75"/>
+      <ellipse cx="132" cy="94" rx="7" ry="4.5" fill="#FF8FAE" opacity=".75"/>
+      ${cejas}${ojos}${boca}
+      <path d="M36 98 C38 102 40 104 40 106 A3 3 0 0 1 34 106 C34 104 35 102 36 98Z" fill="#8FD3F7" stroke="${T}" stroke-width="1.8"/>
+      <path d="M160 112 C162 116 164 118 164 121 A3.5 3.5 0 0 1 157 121 C157 118 158 116 160 112Z" fill="#8FD3F7" stroke="${T}" stroke-width="1.8"/>
+    </g>`;
+}
 function cuerpoInicial(esp, o = {}){
+  if(esp === 'rufisor') return yorkieRufisor(o);
   const c = COL[esp], T = '#22304A';
   const humor = o.humor || 'bien';
   let atras = '', cabeza = '', cola = '';
@@ -494,6 +545,16 @@ function svgEspecie(esp, o = {}){
   const brillos = o.shiny ? `<g fill="#FFE45C" ${st(2)}><path d="M28 40 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/><path d="M168 30 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M172 150 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/></g>` : '';
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${SOMBRA}
     <g transform="translate(100 188) scale(${esc}) translate(-100 -188)"><g class="cuerpo"${shiny}>${interiorEspecie(esp, o)}</g></g>${brillos}</svg>`;
+}
+// La Enfermera Carosor: una criatura de fuego con cofia y cruz, que atiende los centros.
+function svgEnfermera(){
+  const base = svgEspecie('carosor', {humor: 'feliz'});
+  const cofia = `<g stroke="#22304A" stroke-width="3.5" stroke-linejoin="round">
+      <path d="M66 52 C66 30 134 30 134 52 L128 60 C112 54 88 54 72 60Z" fill="#FFFFFF"/>
+      <rect x="92" y="34" width="16" height="16" rx="3" fill="#FFFFFF" stroke="none"/>
+      <path d="M96 38 h8 v5 h5 v8 h-5 v5 h-8 v-5 h-5 v-8 h5z" fill="#E2574C" stroke-width="2"/></g>
+    <g stroke="#22304A" stroke-width="3"><circle cx="100" cy="150" r="9" fill="#FFFFFF"/><path d="M96 150 h8 M100 146 v8" stroke="#E2574C" stroke-width="3"/></g>`;
+  return base.replace(/<\/svg>$/, cofia + '</svg>');
 }
 // Compatibilidad: los iniciales se dibujaban con svgCriatura.
 function svgCriatura(esp, o = {}){ return svgEspecie(esp, o); }

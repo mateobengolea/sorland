@@ -57,6 +57,7 @@ function pintarMundo(){
   });
   mostrarZona(true);
   MW.raf = requestAnimationFrame(cuadro);
+  if(S.ensenar){ const mov = S.ensenar; delete S.ensenar; setTimeout(() => { if(MW) elegirAprendiz(mov); }, 600); }
   if(S.cuartel && S.cuartel.continuar){ S.cuartel.continuar = false; setTimeout(() => { if(MW) siguienteCuartel(); }, 500); }
   if(typeof alEntrarAlMapa === 'function') alEntrarAlMapa();
 }
@@ -134,7 +135,9 @@ function cuadro(ahora){
       const nx = MW.pos.x + dx, ny = MW.pos.y + dy;
       if(transitable(M, nx, ny)){ MW.desde = {...MW.pos}; MW.hacia = {x: nx, y: ny}; MW.t = 0; MW.segDesde = {...MW.seg}; MW.seg = {...MW.pos}; MW.paso = !MW.paso; }
       else {
-        const n = npcEn(M, nx, ny);
+        let n = npcEn(M, nx, ny);
+        // Por encima del mostrador también se puede hablar con quien atiende.
+        if(!n && M.muebles.some(mb => mb.x === nx && mb.y === ny && (mb.tipo === 'mostrador' || mb.tipo === 'caja'))) n = npcEn(M, nx + dx, ny + dy);
         if(n){ MW.teclas.clear(); hablarCon(n); }
         else if(M.altares[nx + ',' + ny]){ MW.teclas.clear(); visitarAltar(M.altares[nx + ',' + ny]); }
         else if(typeof jugadorEn === 'function'){ const j = jugadorEn(nx, ny); if(j){ MW.teclas.clear(); abrirInteraccion(j); } }
@@ -175,7 +178,8 @@ function alLlegar(){
     // Al entrar por una puerta volvés al casillero de abajo para no quedar adentro.
     const afuera = {x, y: y + 1};
     if(acc && acc.interior){
-      S.mundo = {mapa: acc.interior, x: 5, y: 7};
+      const ent = (MAPAS[acc.interior] && MAPAS[acc.interior].entrada) || {x: 5, y: 7};
+      S.mundo = {mapa: acc.interior, x: ent.x, y: ent.y, mira: 'arriba'};
       salirDelMundo(); guardar(); pintarMundo();
       return true;
     }
@@ -241,18 +245,59 @@ async function hablarCon(n){
     await dialogo(n.nombre, n.regalo ? [n.frases[0], '¡Volvé cuando quieras!'] : n.frases); return;
   }
   if(n.tipo === 'guardia'){ await dialogo(n.nombre, guardiaAbierto(n) ? n.abierto : n.frases); return; }
+  if(n.tipo === 'enfermera'){
+    const M = mapaActual();
+    await dialogo(n.nombre, ['¡Hola! Bienvenido al Centro de Rehabilitación.', 'Dejame a tus criaturas un ratito...']);
+    curarEquipo();
+    if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; avisar('Te curaste: el Cuartel Supremo vuelve a empezar.'); }
+    if(M.afuera) S.respawn = {...M.afuera};
+    guardar();
+    await dialogo(n.nombre, ['¡Listo! Tu equipo está como nuevo.', 'Si te va mal en una pelea, te traen a este centro.']);
+    return;
+  }
+  if(n.tipo === 'vendedor'){
+    await dialogo(n.nombre, ['¡Bienvenido al Market! ¿Qué vas a llevar?']);
+    pestana.tienda = 'aventura'; abrirHoja('tienda');
+    return;
+  }
+  if(n.tipo === 'lider'){ await hablarConLider(n); return; }
   if(n.tipo === 'entrenador'){
     if(S.vencidos[n.id]){ await dialogo(`${n.titulo} ${n.nombre}`, n.despues); return; }
     if(!hayLuchadorEnPie()){ await dialogo(`${n.titulo} ${n.nombre}`, ['Tu equipo está agotado. Andá a descansar y después peleamos.']); return; }
     await dialogo(`${n.titulo} ${n.nombre}`, n.antes);
-    lanzarPeleaEntrenador(n, zonaEn(mapaActual(), n.x, n.y));
+    const Ma = mapaActual();
+    lanzarPeleaEntrenador(n, Ma.zonaPelea || zonaEn(Ma, n.x, n.y));
   }
+}
+async function hablarConLider(n){
+  const L = LIDERES[n.lider], quien = `${L.titulo} ${L.nombre}`;
+  if(S.medallas[L.medalla]){
+    // Partidas viejas: si ya tenía la medalla, igual le da su movimiento.
+    if(L.mov && !S.discos[L.mov]){
+      await dialogo(quien, ['¡Volviste! Me olvidé de darte algo la otra vez.']);
+      await darMovimientoLider(L);
+      return;
+    }
+    await dialogo(quien, [L.yaGano]); return;
+  }
+  const faltan = n.alumnos.filter(id => !S.vencidos[id]).length;
+  if(faltan){
+    await dialogo(quien, [`Para pelear conmigo, primero ganale a mis alumnos.`, faltan === 1 ? 'Te falta uno.' : `Te faltan ${faltan}.`]);
+    return;
+  }
+  await desafiarLider(L, mapaActual());
+}
+async function darMovimientoLider(L){
+  S.discos[L.mov] = true; guardar();
+  const mv = MOVS[L.mov];
+  await dialogo(`${L.titulo} ${L.nombre}`, [`Te regalo mi movimiento: ${mv.nom}.`, `Es de tipo ${TIPOS[mv.tipo].nom}, poder ${mv.poder}. Cualquier criatura tuya lo puede aprender.`]);
+  elegirAprendiz(L.mov);
 }
 async function desafiarLider(L, M){
   if(S.medallas[L.medalla]){ await dialogo(`${L.titulo} ${L.nombre}`, [L.yaGano]); return; }
   if(!hayLuchadorEnPie()){ await dialogo(`${L.titulo} ${L.nombre}`, ['Tu equipo está agotado. Pasá por el Centro de Rehabilitación y volvé.']); return; }
   await dialogo(`${L.titulo} ${L.nombre}`, L.antes);
-  lanzarPeleaEntrenador({...L, lider: true}, M.zonas[0][0]);
+  lanzarPeleaEntrenador({...L, lider: true}, M.zonaPelea || M.zonas[0][0]);
 }
 /* ---------------- Cuartel Supremo ---------------- */
 async function entrarCuartel(){
@@ -343,7 +388,7 @@ function colorSuelo(M, c, x, y){
     case 'v': return t.pasto;
     case '!': return '#E2492E';
     case 'W': return '#C9B08E';
-    case 'p': case 'm': case 'x': return (x + y) % 2 ? '#E2C29A' : '#DDBB91';
+    case 'p': case 'm': case 'x': return t.piso ? t.piso[(x + y) % 2] : (x + y) % 2 ? '#E2C29A' : '#DDBB91';
     case 'A': return M.base === 's' ? t.tierra : M.id === 'camalote' ? '#5AB4E8' : t.pasto;
     case '#': case 'T': {
       if(M.id === 'ceibo') return zonaEn(M, x, y) === 'sierras' ? t.tierra : t.pasto;
@@ -379,6 +424,7 @@ function dibujar(ahora){
     if(c === 'x'){ ctx.fillStyle = '#B5452B'; ctx.fillRect(sx + 4, sy + 6, TS - 8, TS - 12); }
     if(M.salidas[x + ',' + y] && c !== 'x') flecha(ctx, sx, sy, x, y, M, ahora);
   }
+  for(const mb of M.muebles) if(mb.tipo === 'podio'){ ctx.fillStyle = mb.col; ctx.globalAlpha = .35; ctx.fillRect(mb.x * TS - camX - TS, mb.y * TS - camY - TS, TS * 3, TS * 2 + 4); ctx.globalAlpha = 1; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2; ctx.strokeRect(mb.x * TS - camX - TS + 1, mb.y * TS - camY - TS + 1, TS * 3 - 2, TS * 2 + 2); }
   for(const mb of M.muebles) if(mb.tipo === 'alfombra'){ ctx.fillStyle = '#E2574C'; ctx.fillRect(mb.x * TS - camX - 12, mb.y * TS - camY + 4, TS * 2, TS - 8); ctx.strokeStyle = '#FFD23F'; ctx.lineWidth = 2; ctx.strokeRect(mb.x * TS - camX - 8, mb.y * TS - camY + 8, TS * 2 - 8, TS - 16); }
   for(const e of M.edificios){ ctx.fillStyle = 'rgba(34,48,74,.16)'; ctx.fillRect(e.x * TS - camX + 4, (e.y + 2) * TS - camY, e.ancho * TS, 8); }
   for(const it of M.items) if(!S.recogidos[it.id]) brilloItem(ctx, it.x * TS - camX, it.y * TS - camY, ahora);
@@ -390,7 +436,7 @@ function dibujar(ahora){
       if(c === 'R' || c === 'H' || c === 'D') edificioTile(ctx, sx, sy, x, y, c, M);
       if(c === 'A') altar(ctx, sx, sy, x, y, ahora, M);
     }
-    for(const mb of M.muebles) if(mb.y === y && mb.tipo !== 'alfombra') muebleInterior(ctx, mb.x * TS - camX, mb.y * TS - camY, mb.tipo);
+    for(const mb of M.muebles) if(mb.y === y && mb.tipo !== 'alfombra' && mb.tipo !== 'podio') muebleInterior(ctx, mb.x * TS - camX, mb.y * TS - camY, mb.tipo, mb, ahora);
     if(MW.seg && y === Math.floor(segY() + .5)) seguidor(ctx, ahora, camX, camY);
     for(let x = x0; x <= x1; x++) if(M.m[y][x] === 'T') arbol(ctx, Math.round(x * TS - camX), Math.round(y * TS - camY), x, y, M);
     for(const n of M.npcs) if(n.y === y && !(n.tipo === 'guardia' && guardiaAbierto(n))) persona(ctx, (n.x + .5) * TS - camX, (n.y + 1) * TS - camY, n, ahora);
@@ -653,8 +699,15 @@ function aspectoNpc(n){
   }
   return n._aspecto;
 }
+let _imgEnfermera = null;
 function persona(ctx, cx, piso, n, t){
   ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
+  if(n.tipo === 'enfermera'){
+    if(!_imgEnfermera) _imgEnfermera = imagenSvg(svgEnfermera(), 120, 120);
+    const sube = Math.sin(t / 400) * 1.5;
+    if(_imgEnfermera.complete) ctx.drawImage(_imgEnfermera, cx - 26, piso - 50 + sube, 52, 52);
+    return;
+  }
   dibujarEntrenador(ctx, spritesEntrenador(aspectoNpc(n)), cx, piso, n.mira || 'abajo', 0, 46);
   if(n.tipo === 'entrenador' && !S.vencidos[n.id]){
     const b = Math.sin(t / 300 + n.x) * 2;
@@ -722,7 +775,7 @@ function pared(ctx, sx, sy, x, y, M){
     if(y === 0 && x % 3 === 1 && x > 0 && x < M.w - 1){ ctx.fillStyle = '#9FD9F2'; ctx.fillRect(sx + 6, sy + 8, 20, 18); ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2; ctx.strokeRect(sx + 6, sy + 8, 20, 18); }
   } else { ctx.fillStyle = '#5A4232'; ctx.fillRect(sx, sy, TS + 1, TS + 1); }
 }
-function muebleInterior(ctx, sx, sy, tipo){
+function muebleInterior(ctx, sx, sy, tipo, mb = {}, t = 0){
   ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
   const rr = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 4) : ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke(); };
   if(tipo === 'cama'){ rr(sx + 2, sy - 6, 28, 36, '#F4E8D2'); rr(sx + 4, sy + 8, 24, 20, '#3B82D6'); rr(sx + 6, sy - 2, 20, 8, '#fff'); }
@@ -731,4 +784,15 @@ function muebleInterior(ctx, sx, sy, tipo){
   else if(tipo === 'planta'){ rr(sx + 9, sy + 14, 14, 14, '#C97B4A'); ctx.fillStyle = '#4FAE56'; ctx.beginPath(); ctx.arc(sx + 16, sy + 8, 11, 0, 7); ctx.fill(); ctx.stroke(); }
   else if(tipo === 'mesa'){ rr(sx + 2, sy + 4, 28, 18, '#B5835A'); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx + 16, sy + 10, 4, 0, 7); ctx.fill(); }
   else if(tipo === 'sillon'){ rr(sx + 2, sy + 2, 28, 26, '#7A4FC9'); rr(sx + 6, sy + 12, 20, 12, '#9C7CD4'); }
+  else if(tipo === 'mostrador'){ rr(sx - 1, sy + 2, 34, 28, '#FFFDF8'); ctx.fillStyle = mb.col || '#FF8FB1'; ctx.fillRect(sx, sy + 16, 32, 6); ctx.strokeRect(sx - 1, sy + 2, 34, 8); }
+  else if(tipo === 'caja'){ rr(sx - 1, sy + 2, 34, 28, '#FFFDF8'); ctx.fillStyle = mb.col || '#4CC27A'; ctx.fillRect(sx, sy + 16, 32, 6); rr(sx + 7, sy - 8, 18, 14, '#22304A'); ctx.fillStyle = '#7CF2A8'; ctx.fillRect(sx + 10, sy - 5, 12, 5); }
+  else if(tipo === 'camilla'){ rr(sx + 3, sy - 4, 26, 32, '#FFFFFF'); rr(sx + 6, sy - 1, 20, 8, '#FFD6E2'); ctx.fillStyle = '#E2574C'; ctx.fillRect(sx + 13, sy + 12, 6, 14); ctx.fillRect(sx + 9, sy + 16, 14, 6); }
+  else if(tipo === 'maquina'){ rr(sx + 3, sy - 10, 26, 38, '#E9EEF5'); rr(sx + 7, sy - 6, 18, 12, '#22304A'); const p = (Math.sin(t / 300) + 1) / 2; ctx.fillStyle = `rgba(124,242,168,${.5 + p * .5})`; ctx.fillRect(sx + 9, sy - 4, 14, 8); for(let i = 0; i < 3; i++){ ctx.fillStyle = ['#FF8FB1', '#FFD23F', '#5AB4E8'][i]; ctx.beginPath(); ctx.arc(sx + 10 + i * 6, sy + 16, 3.5, 0, 7); ctx.fill(); ctx.stroke(); } }
+  else if(tipo === 'banco'){ rr(sx + 1, sy + 10, 30, 12, '#5AB4E8'); rr(sx + 1, sy + 2, 30, 9, '#3B82D6'); }
+  else if(tipo === 'gondola'){ rr(sx - 1, sy - 6, 34, 34, '#F4E8D2'); const cols = ['#E2574C', '#FFD23F', '#4CC27A', '#5AB4E8', '#FF8FB1']; for(let i = 0; i < 4; i++){ ctx.fillStyle = cols[(i + mb.x) % 5]; ctx.fillRect(sx + 2 + i * 7.5, sy - 2, 6, 10); ctx.fillStyle = cols[(i + mb.x + 2) % 5]; ctx.fillRect(sx + 2 + i * 7.5, sy + 12, 6, 10); } }
+  else if(tipo === 'heladera'){ rr(sx + 2, sy - 14, 28, 42, '#DDF2FF'); ctx.fillStyle = 'rgba(90,180,232,.45)'; ctx.fillRect(sx + 6, sy - 10, 20, 30); ctx.fillStyle = '#E2574C'; ctx.fillRect(sx + 8, sy - 6, 6, 9); ctx.fillStyle = '#FFD23F'; ctx.fillRect(sx + 17, sy - 6, 6, 9); ctx.fillStyle = '#4CC27A'; ctx.fillRect(sx + 8, sy + 8, 15, 6); }
+  else if(tipo === 'columna'){ rr(sx + 6, sy - 12, 20, 40, '#F2EEE6'); ctx.fillStyle = mb.col || '#999'; ctx.fillRect(sx + 6, sy - 12, 20, 6); ctx.fillRect(sx + 6, sy + 22, 20, 6); ctx.strokeRect(sx + 6, sy - 12, 20, 40); }
+  else if(tipo === 'bobina'){ rr(sx + 8, sy + 16, 16, 12, '#4656A0'); ctx.fillStyle = '#C98A47'; ctx.fillRect(sx + 11, sy - 4, 10, 20); ctx.strokeRect(sx + 11, sy - 4, 10, 20); ctx.fillStyle = '#9AA2AD'; ctx.beginPath(); ctx.arc(sx + 16, sy - 6, 6, 0, 7); ctx.fill(); ctx.stroke(); if(Math.sin(t / 90 + mb.x * 3 + mb.y) > .6){ ctx.strokeStyle = '#FFE36B'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(sx + 16, sy - 12); ctx.lineTo(sx + 10, sy - 18); ctx.lineTo(sx + 18, sy - 20); ctx.lineTo(sx + 12, sy - 28); ctx.stroke(); } }
+  else if(tipo === 'antorcha'){ rr(sx + 13, sy + 6, 6, 20, '#8A5A35'); const f = Math.sin(t / 120 + mb.y) * 2; ctx.fillStyle = mb.col || '#FF9F2E'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 1 + f * .3, 6, 9 + f, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFF6B0'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 4, 2.5, 4, 0, 0, 7); ctx.fill(); }
+  else if(tipo === 'estandarte'){ rr(sx + 14, sy - 14, 4, 42, '#8A5A35'); ctx.fillStyle = mb.col || '#999'; ctx.beginPath(); ctx.moveTo(sx + 4, sy - 10); ctx.lineTo(sx + 28, sy - 10); ctx.lineTo(sx + 28, sy + 16); ctx.lineTo(sx + 16, sy + 10); ctx.lineTo(sx + 4, sy + 16); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFFDF8'; ctx.beginPath(); ctx.arc(sx + 16, sy + 1, 5, 0, 7); ctx.fill(); }
 }
