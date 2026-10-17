@@ -38,12 +38,12 @@ let emailUsuario = null, apodo = null, metaApodo = null, estadoNube = 'local'; /
 const RE_APODO = /^[A-Za-z0-9_ÁÉÍÓÚáéíóúÑñÜü]{3,16}$/;
 const URL_JUEGO = location.origin + location.pathname;
 
-async function guardarNube(){
-  if(!db || !usuarioId || !S || nubeBloqueada) return;
+async function guardarNube(forzar){
+  if(!db || !usuarioId || !S || (nubeBloqueada && !forzar)) return;
   // ¿Alguien guardó desde otra pestaña o dispositivo después de que cargaste? Entonces no pisamos su partida.
   try {
     const {data: r} = await db.from('partidas').select('data->guardado, data->pestana').eq('user_id', usuarioId).maybeSingle();
-    if(r && r.pestana && r.pestana !== MI_PESTANA && Number(r.guardado || 0) > guardadoAlCargar){
+    if(!forzar && r && r.pestana && r.pestana !== MI_PESTANA && Number(r.guardado || 0) > guardadoAlCargar){
       nubeBloqueada = true; estadoNube = 'error'; pintarCuenta();
       avisar('Tu partida se abrió en otro dispositivo o pestaña. Recargá la página para seguir desde ahí (esta no se guarda en la nube).');
       return;
@@ -65,6 +65,8 @@ async function entrarAlJuego(){
   if(e1){ pintarAcceso('entrar', 'No se pudo conectar con el servidor. Probá recargar la página.'); return; }
   if(!perfil){ pintarApodo(); return; }
   apodo = perfil.apodo;
+  // Si la cuenta está abierta en otro lado, le pedimos que guarde y se cierre antes de cargar.
+  await tomarSesion();
   // 2) partida
   const { data, error } = await db.from('partidas').select('data').eq('user_id', usuarioId).maybeSingle();
   if(error){ estadoNube = 'error'; }
@@ -104,6 +106,59 @@ function conectarNube(){
       setTimeout(() => pintarAcceso('entrar'), 0);
     }
   });
+}
+
+/* ---------- Una sola sesión a la vez ---------- */
+// Al entrar desde otro navegador o pestaña, la sesión anterior guarda todo en la nube y se desconecta.
+let canalCuenta = null, bcCuenta = null, esperandoLiberada = null;
+function mensajeSesion(p){
+  if(!p || p.pestana === MI_PESTANA) return;
+  if(p.tipo === 'nueva' && S && !sesionCerrada) cederSesion(p.pestana);
+  else if(p.tipo === 'liberada' && p.para === MI_PESTANA && esperandoLiberada) esperandoLiberada();
+}
+function enviarSesion(p){
+  const msg = {...p, pestana: MI_PESTANA};
+  try { if(bcCuenta) bcCuenta.postMessage(msg); } catch(e){}
+  try { if(canalCuenta) canalCuenta.send({type: 'broadcast', event: 'sesion', payload: msg}); } catch(e){}
+}
+function abrirCanalCuenta(){
+  return new Promise(res => {
+    try { if(!bcCuenta && 'BroadcastChannel' in window){ bcCuenta = new BroadcastChannel('sorlandia-cuenta:' + usuarioId); bcCuenta.onmessage = e => mensajeSesion(e.data); } } catch(e){}
+    if(!db || canalCuenta){ res(); return; }
+    const c = db.channel('sl:cuenta:' + usuarioId, {config: {private: true, broadcast: {self: false}}});
+    canalCuenta = c;
+    const listo = setTimeout(res, 2500);
+    c.on('broadcast', {event: 'sesion'}, ({payload}) => mensajeSesion(payload))
+     .subscribe(estado => { if(estado === 'SUBSCRIBED'){ clearTimeout(listo); res(); } });
+  });
+}
+async function tomarSesion(){
+  if(!usuarioId) return;
+  await abrirCanalCuenta();
+  // Avisamos que entramos y esperamos (poco) a que la otra sesión termine de guardar.
+  await new Promise(res => {
+    const fin = setTimeout(() => { esperandoLiberada = null; res(); }, 2500);
+    esperandoLiberada = () => { clearTimeout(fin); esperandoLiberada = null; setTimeout(res, 300); };
+    enviarSesion({tipo: 'nueva'});
+  });
+}
+let sesionCerrada = false;
+async function cederSesion(para){
+  sesionCerrada = true;
+  clearTimeout(timerGuardar);
+  if(S){ S.guardado = Date.now(); S.pestana = MI_PESTANA; try { localStorage.setItem(claveLocal(), JSON.stringify(S)); } catch(e){} }
+  try { await guardarNube(true); } catch(e){}
+  enviarSesion({tipo: 'liberada', para});
+  nubeBloqueada = true;
+  try { if(typeof salirDelMundo === 'function') salirDelMundo(); } catch(e){}
+  try { if(typeof cortarOnline === 'function') cortarOnline(); } catch(e){}
+  B = null; S = null; vista = 'cerrada';
+  cerrarHoja();
+  $('#app').innerHTML = `<div class="eleccion"><div class="titulo">${svgLogo()}<h1 class="solo-lector">Sorlandia</h1></div>
+    <div class="panel ficha" style="text-align:center"><h2 style="margin:0 0 6px">Abriste tu cuenta en otro lado</h2>
+    <p>Para no perder nada, guardamos tu partida y cerramos esta sesión. Podés seguir jugando en el otro navegador o dispositivo.</p>
+    <button class="grande" id="b-volver-aca">Seguir jugando acá</button></div></div>`;
+  $('#b-volver-aca').onclick = () => location.reload();
 }
 
 /* ---------- Pantallas de acceso ---------- */
