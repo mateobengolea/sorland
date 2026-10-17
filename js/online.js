@@ -20,7 +20,7 @@ const onlineListo = () => !!(db && usuarioId && apodo);
 function miPresencia(){
   return {id: usuarioId, apodo, esp: S.equipo[0] ? S.equipo[0].esp : 'carosor', shiny: !!(S.equipo[0] && S.equipo[0].shiny), ent: S.entrenador,
           nivel: nivelEntrenador(), medallas: cantMedallas(), campeon: !!S.campeon,
-          x: S.mundo.x, y: S.mundo.y, dir: MW ? MW.dir : 1, mira: MW ? MW.mira : 'abajo', t: Date.now()};
+          x: S.mundo.x, y: S.mundo.y, dir: MW ? MW.dir : 1, mira: MW ? MW.mira : 'abajo', pelea: ON.pelea || null, t: Date.now()};
 }
 function nivelEntrenador(){ return S.equipo.reduce((m, c) => Math.max(m, c.nivel), 1); }
 function imagenEntrenador(ent){
@@ -36,12 +36,16 @@ function imagenDe(esp){
 /* ---------------- Entrar y salir del canal del mapa ---------------- */
 function alEntrarAlMapa(){
   pintarBotonHablar();
+  ON.pelea = null;
   conectarGlobal(); avisarDondeEstoy();
   if(!onlineListo()) return;
   const id = S.mundo.mapa;
   if(ON.canal && ON.mapa === id){
-    const p = miPresencia(); ON.ultimaPresencia = Date.now();
-    ON.canal.track(p); ON.canal.send({type: 'broadcast', event: 'mov', payload: {id: p.id, x: p.x, y: p.y, dir: p.dir}});
+    // Volví al mismo mapa (después de una pelea): aviso por broadcast, que no tiene límite de presencia.
+    const p = miPresencia();
+    ON.canal.send({type: 'broadcast', event: 'mov', payload: {id: p.id, x: p.x, y: p.y, dir: p.dir, mira: p.mira}});
+    ON.canal.send({type: 'broadcast', event: 'pelea', payload: {id: usuarioId, pelea: null}});
+    trackMapa();
     return;
   }
   dejarCanal();
@@ -50,21 +54,33 @@ function alEntrarAlMapa(){
   ON.canal = canal;
   canal
     .on('presence', {event: 'sync'}, () => {
-      const estado = canal.presenceState(), vistos = new Set();
+      const estado = canal.presenceState(), vistos = new Set(); let hayNuevo = false;
       for(const k in estado){
         const p = estado[k][estado[k].length - 1];
         if(!p || p.id === usuarioId) continue;
         vistos.add(p.id);
         const o = ON.otros.get(p.id);
-        if(o){ Object.assign(o, {apodo: p.apodo, esp: p.esp, shiny: p.shiny, ent: p.ent, nivel: p.nivel, medallas: p.medallas, campeon: p.campeon}); if(!o.movido){ o.x = p.x; o.y = p.y; } }
-        else ON.otros.set(p.id, {...p, px: p.x, py: p.y});
+        if(o){ Object.assign(o, {apodo: p.apodo, esp: p.esp, shiny: p.shiny, ent: p.ent, nivel: p.nivel, medallas: p.medallas, campeon: p.campeon});
+               if(!o.movido){ o.x = p.x; o.y = p.y; } if(!o.peleaPorMensaje) o.pelea = p.pelea; }
+        else { ON.otros.set(p.id, {...p, px: p.x, py: p.y}); hayNuevo = true; }
       }
       for(const k of [...ON.otros.keys()]) if(!vistos.has(k)) ON.otros.delete(k);
       actualizarContador();
+      // Llegó alguien: le cuento dónde estoy y si estoy peleando (por broadcast, sin gastar presencia).
+      if(hayNuevo) setTimeout(() => {
+        if(ON.canal !== canal) return;
+        const p = miPresencia();
+        canal.send({type: 'broadcast', event: 'mov', payload: {id: p.id, x: p.x, y: p.y, dir: p.dir, mira: p.mira}});
+        canal.send({type: 'broadcast', event: 'pelea', payload: {id: usuarioId, pelea: ON.pelea || null}});
+      }, 300 + Math.random() * 500);
     })
     .on('broadcast', {event: 'mov'}, ({payload: p}) => {
       const o = ON.otros.get(p.id); if(!o) return;
       o.x = p.x; o.y = p.y; o.dir = p.dir; o.mira = p.mira || o.mira; o.movido = true;
+    })
+    .on('broadcast', {event: 'pelea'}, ({payload: p}) => {
+      const o = ON.otros.get(p.id); if(!o) return;
+      o.pelea = p.pelea || null; o.peleaPorMensaje = true;
     })
     .on('broadcast', {event: 'decir'}, ({payload: p}) => {
       if(ON.silenciados.has(p.id)) return;
@@ -73,7 +89,7 @@ function alEntrarAlMapa(){
     })
     .on('broadcast', {event: 'duelo'}, ({payload: p}) => { if(p.para === usuarioId && typeof recibirDuelo === 'function') recibirDuelo(p); })
     .subscribe(async estado => {
-      if(estado === 'SUBSCRIBED'){ await canal.track(miPresencia()); ON.ultimaPresencia = Date.now(); }
+      if(estado === 'SUBSCRIBED'){ ON.ultimaPresencia = Date.now(); await canal.track(miPresencia()); }
     });
 }
 function alSalirDelMapa(){ /* el canal sigue abierto mientras dure el combate; se cambia al entrar a otro mapa */ }
@@ -85,14 +101,15 @@ function dejarCanal(){
 function cortarOnline(){
   dejarCanal();
   if(ONG.canal){ try { db.removeChannel(ONG.canal); } catch(e){} }
-  ONG.canal = null; ONG.estado = {};
+  ONG.canal = null; ONG.estado = {}; ONG.listo = false; ONG.firma = null; clearTimeout(ONG.timer);
 }
 
 /* ---------------- Cuántos hay online (en todo el juego) ---------------- */
-const ONG = {canal: null, estado: {}, ultimo: 0};
+const ONG = {canal: null, estado: {}, ultimo: 0, listo: false, firma: null, timer: 0};
 function dondeEstoy(){
   if(vista === 'casa') return 'En su casa';
-  if(vista === 'combate' || vista === 'duelo') return 'Peleando';
+  if(ON.pelea) return ON.pelea.tipo === 'duelo' ? 'En duelo con ' + ON.pelea.contra : 'En batalla';
+  if(vista === 'combate' || vista === 'duelo') return 'En batalla';
   const M = S && S.mundo && MAPAS[S.mundo.mapa];
   return M ? (M.tema.interior ? 'De visita en ' + M.nombre : M.nombre) : 'Paseando';
 }
@@ -102,12 +119,29 @@ function conectarGlobal(){
   const canal = db.channel('sl:global', {config: {private: true, presence: {key: usuarioId}}});
   ONG.canal = canal;
   canal.on('presence', {event: 'sync'}, () => { ONG.estado = canal.presenceState(); actualizarOnline(); })
-       .subscribe(async estado => { if(estado === 'SUBSCRIBED'){ ONG.ultimo = Date.now(); await canal.track(presenciaGlobal()); } });
+       .subscribe(async estado => {
+         if(estado === 'SUBSCRIBED'){
+           ONG.listo = true; ONG.ultimo = Date.now();
+           const p = presenciaGlobal(); ONG.firma = JSON.stringify([p.donde, p.medallas, p.campeon, p.puntos, p.ent]);
+           await canal.track(p);
+         } else if(estado === 'CHANNEL_ERROR' || estado === 'TIMED_OUT' || estado === 'CLOSED'){
+           // Se cortó: reintento en un rato con un canal nuevo.
+           if(ONG.canal !== canal) return;
+           ONG.listo = false; ONG.canal = null; ONG.firma = null;
+           try { db.removeChannel(canal); } catch(e){}
+           setTimeout(conectarGlobal, 15000);
+         }
+       });
 }
 function avisarDondeEstoy(){
-  if(!ONG.canal) return;
-  ONG.ultimo = Date.now();
-  ONG.canal.track(presenciaGlobal());
+  if(!ONG.canal || !ONG.listo) return;
+  const p = presenciaGlobal(), firma = JSON.stringify([p.donde, p.medallas, p.campeon, p.puntos, p.ent]);
+  if(firma === ONG.firma) return;
+  const espera = 5000 - (Date.now() - ONG.ultimo);
+  clearTimeout(ONG.timer);
+  if(espera > 0){ ONG.timer = setTimeout(avisarDondeEstoy, espera); return; }
+  ONG.ultimo = Date.now(); ONG.firma = firma;
+  ONG.canal.track(p);
 }
 function jugadoresOnline(){
   return Object.entries(ONG.estado).map(([id, l]) => ({id, ...(l[l.length - 1] || {})})).filter(p => p.apodo);
@@ -147,7 +181,23 @@ function alMoverme(){
   if(!ON.canal) return;
   const p = miPresencia();
   ON.canal.send({type: 'broadcast', event: 'mov', payload: {id: p.id, x: p.x, y: p.y, dir: p.dir, mira: p.mira}});
-  if(Date.now() - ON.ultimaPresencia > 2500){ ON.ultimaPresencia = Date.now(); ON.canal.track(p); }
+  if(Date.now() - ON.ultimaPresencia > 20000) trackMapa();
+}
+// Supabase limita cuántas veces por segundo se puede actualizar la presencia:
+// se manda como mucho una cada 5 s y, si hay cambios en el medio, va la última al final.
+function trackMapa(){
+  if(!ON.canal) return;
+  const espera = 5000 - (Date.now() - ON.ultimaPresencia);
+  clearTimeout(ON.timerTrack);
+  if(espera > 0){ ON.timerTrack = setTimeout(trackMapa, espera); return; }
+  ON.ultimaPresencia = Date.now();
+  ON.canal.track(miPresencia());
+}
+// Avisa a los del mapa (y al contador global) que empecé o terminé una pelea.
+function marcarPelea(tipo, contra){
+  ON.pelea = tipo ? {tipo, contra: contra || ''} : null;
+  if(ON.canal) ON.canal.send({type: 'broadcast', event: 'pelea', payload: {id: usuarioId, pelea: ON.pelea}});
+  avisarDondeEstoy();
 }
 
 /* ---------------- Dibujo de otros jugadores ---------------- */
@@ -170,7 +220,19 @@ function otroJugador(ctx, cx, piso, o, t){
   ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
   dibujarEntrenador(ctx, spritesEntrenador(o.ent), cx, piso, o.mira || 'abajo', paso, 48);
   etiqueta(ctx, (o.campeon ? '♛ ' : '') + o.apodo + (o.medallas ? ' ' + '★'.repeat(o.medallas) : ''), cx, piso - 62, o.campeon ? 'rgba(184,134,11,.95)' : 'rgba(122,79,201,.9)');
-  if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - 68);
+  if(o.pelea) cartelPelea(ctx, o.pelea.tipo === 'duelo' ? '⚔ En duelo' : '⚔ En batalla', cx, piso - 84, t);
+  else if(o.burbuja && o.burbuja.hasta > t) burbuja(ctx, o.burbuja.txt, cx, piso - 68);
+}
+function cartelPelea(ctx, txt, cx, y, t){
+  ctx.save();
+  ctx.font = '800 11px system-ui, sans-serif';
+  const w = ctx.measureText(txt).width + 16, h = 18, sube = Math.sin(t / 260) * 1.5;
+  const x = cx - w / 2, yy = y + sube;
+  ctx.fillStyle = '#E2574C'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, yy, w, h, 9) : ctx.rect(x, yy, w, h); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(txt, cx, yy + h / 2 + .5);
+  ctx.restore();
 }
 function burbuja(ctx, txt, cx, abajo){
   ctx.font = '700 12px Nunito, sans-serif'; ctx.textAlign = 'center';
@@ -209,7 +271,7 @@ function abrirInteraccion(o){
     <p class="rotulo-chico">Decile algo</p>
     <div class="frases">${FRASES.map(f => `<button data-f="${esc(f)}">${esc(f)}</button>`).join('')}</div>
     <div class="acciones-jugador">
-      <button class="grande" id="j-duelo">Desafiar a duelo</button>
+      ${o.pelea ? `<button class="grande" id="j-duelo" disabled>Está ${o.pelea.tipo === 'duelo' ? 'en un duelo' : 'en batalla'}</button>` : '<button class="grande" id="j-duelo">Desafiar a duelo</button>'}
       <button class="btn btn-2" id="j-silenciar">${sil ? 'Dejar de silenciar' : 'Silenciar sus mensajes'}</button>
     </div></div>`;
   $('#j-nom').textContent = o.apodo;

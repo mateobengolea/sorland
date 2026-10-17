@@ -97,6 +97,7 @@ function empezarDuelo(equipoA, equipoB){
                      ultimaActividad: Date.now()});
   DU.otro = DU.lado === 'A' ? 'B' : 'A';
   if(typeof registrarDuelo === 'function') registrarDuelo(DU.sala, DU.rival.id);
+  if(typeof marcarPelea === 'function') marcarPelea('duelo', DU.rival.apodo);
   const canal = db.channel(DU.sala, {config: {private: true, broadcast: {self: false}}});
   DU.canal = canal;
   canal.on('broadcast', {event: 'accion'}, ({payload}) => recibirAccion(payload))

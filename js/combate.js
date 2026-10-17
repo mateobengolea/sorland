@@ -24,6 +24,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 const ARENAS = {pradera:'pradera', bosque:'bosque', rio:'rio', costa:'rio', sierras:'sierras', serrania:'sierras', cumbres:'cumbres', volcan:'volcan'};
 function empezarCombate(rivales, zona, ent){
   vista = 'combate';
+  if(typeof marcarPelea === 'function') marcarPelea('combate');
   cerrarHoja();
   rivales.forEach(r => { r.max = r.hp; });
   const salvaje = rivales[0];
