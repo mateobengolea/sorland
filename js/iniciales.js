@@ -65,25 +65,6 @@ const INICIALES_V2 = {
     ${envolverCara(`<ellipse cx="64" cy="100" rx="8" ry="5" fill="#FF8FAE" opacity=".75"/><ellipse cx="136" cy="100" rx="8" ry="5" fill="#FF8FAE" opacity=".75"/>
       ${ojosPar(80, 120, 82, 1.05, o)}${bocaCaricatura(100, 104, o, 10)}`, 100, 90, o)}`;
   },
-  matesaurio: o => {
-    const C = '#5FB24A', D = '#3E8A30', B = '#E0F2C0', H = '#8ED063', T = '#8A5A35';
-    return `
-    <path d="M120 70 C112 50 120 28 140 22 C150 10 172 14 176 30 C192 34 194 56 180 66 C178 80 158 86 146 78 C136 86 120 84 120 70Z" fill="${H}" ${L4}/>
-    <path d="M132 40 C140 36 150 40 152 48 M160 34 C168 36 172 44 168 52" fill="none" stroke="#5DA84A" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M140 74 L144 100 L132 100 Z" fill="${T}" ${L3}/>
-    <path d="M56 160 C34 170 20 160 18 146 C32 150 44 146 58 136Z" fill="${C}" ${L4}/>
-    <path d="M60 184 C56 168 64 154 80 154 C94 154 98 168 96 186 C86 192 68 192 60 184Z" fill="${D}" ${L4}/>${garras([[66, 188], [77, 191], [88, 189]], '#F4F9E8')}
-    <path d="M140 184 C144 168 136 154 120 154 C106 154 102 168 104 186 C114 192 132 192 140 184Z" fill="${D}" ${L4}/>${garras([[112, 189], [123, 191], [134, 188]], '#F4F9E8')}
-    <path d="M100 96 C136 96 152 124 150 150 C148 172 126 184 100 184 C74 184 52 172 50 150 C48 124 64 96 100 96Z" fill="${C}" ${L4}/>
-    <path d="M100 112 C120 112 130 132 128 152 C126 170 114 178 100 178 C86 178 74 170 72 152 C70 132 80 112 100 112Z" fill="${B}" ${L3}/>
-    <path d="M64 114 C48 118 42 134 46 146 C48 154 58 154 60 148 C62 140 68 132 76 128Z" fill="${C}" ${L3}/>
-    <path d="M136 114 C152 118 158 134 154 146 C152 154 142 154 140 148 C138 140 132 132 124 128Z" fill="${C}" ${L3}/>
-    <path d="M58 52 C40 44 34 28 42 20 C52 26 60 36 66 46Z M142 52 C160 44 166 28 158 20 C148 26 140 36 134 46Z" fill="${H}" ${L3}/>
-    <path d="M100 34 C138 34 156 56 154 84 C152 108 132 120 100 120 C68 120 48 108 46 84 C44 56 62 34 100 34Z" fill="${C}" ${L4}/>
-    <circle cx="70" cy="54" r="4.5" fill="${D}"/><circle cx="128" cy="50" r="5" fill="${D}"/><circle cx="62" cy="134" r="4" fill="${D}"/><circle cx="140" cy="138" r="4" fill="${D}"/>
-    ${envolverCara(`<ellipse cx="62" cy="92" rx="7" ry="4.5" fill="#FF8FAE" opacity=".65"/><ellipse cx="138" cy="92" rx="7" ry="4.5" fill="#FF8FAE" opacity=".65"/>
-      ${ojosPar(80, 120, 74, 1, o)}${bocaCaricatura(100, 98, o, 11)}`, 100, 82, o)}`;
-  },
   matetitan: o => {
     const C = '#4E9E44', D = '#367530', B = '#D8EDB0', Ca = '#8A6A3E', H = '#6FBF4F', T = '#7A4F2C';
     return `
@@ -103,29 +84,6 @@ const INICIALES_V2 = {
       ${ojosPar(36, 64, 122, .85, o, true)}${o.humor === 'feliz' ? '<path d="M30 146 Q42 156 54 148 Z" fill="#B8364F" stroke="#22304A" stroke-width="2.5" stroke-linejoin="round"/>' : ''}`, 48, 130, o)}`;
   },
   /* ---------------- Agua (el yorkie sigue siendo Rufisor) ---------------- */
-  rufititan: o => {
-    const A = '#2F74BD', Ao = '#1F5596', K = '#E2AE6C', Ag = '#8FD3F7', Bl = '#DFF4FF';
-    return `
-    <path d="M150 112 C170 96 186 74 182 50 C196 62 200 92 186 116 C176 132 162 138 150 136Z" fill="${A}" ${L4}/>
-    <path d="M182 50 C186 36 198 34 200 44 C192 46 190 54 192 62Z" fill="${Ag}" ${L3}/>
-    <path d="M132 144 C130 162 132 176 136 188 L156 188 C158 172 158 156 154 144Z" fill="${Ao}" ${L4}/>${garras([[140, 188], [148, 189]], '#FFFDF8')}
-    <path d="M66 112 C92 100 140 102 160 118 C176 132 170 156 148 160 C118 166 90 164 74 152 C58 140 52 120 66 112Z" fill="${A}" ${L4}/>
-    <path d="M84 150 C104 158 128 160 148 154 C138 162 110 164 90 158Z" fill="${K}"/>
-    <path d="M150 150 C150 166 152 178 156 190 L174 190 C174 174 172 160 168 148Z" fill="${A}" ${L4}/>${garras([[160, 190], [168, 191]], '#FFFDF8')}
-    <path d="M80 148 C80 164 80 176 82 190 L100 190 C100 176 100 162 98 150Z" fill="${A}" ${L4}/>${garras([[86, 190], [94, 191]], '#FFFDF8')}
-    <path d="M102 150 C102 164 104 176 106 190 L122 190 C122 176 122 164 120 152Z" fill="${A}" ${L4}/>${garras([[110, 190], [117, 191]], '#FFFDF8')}
-    <path d="M60 46 C84 30 108 40 116 60 C126 52 140 58 136 72 C150 72 156 88 144 96 C152 108 140 120 126 114 C118 128 96 128 88 116 C76 124 58 116 60 102 C46 98 44 80 56 74 C46 62 50 50 60 46Z" fill="${Ag}" ${L4}/>
-    <path d="M74 56 C82 50 94 54 96 62 M112 70 C120 68 128 74 126 82 M84 98 C92 96 100 100 100 108" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-    <path d="M44 56 L30 14 C48 20 58 34 62 48Z" fill="${A}" ${L4}/><path d="M42 50 L36 26 L54 44Z" fill="${Ag}"/>
-    <path d="M86 58 L98 18 C108 30 108 46 100 58Z" fill="${A}" ${L4}/><path d="M92 54 L98 32 L102 52Z" fill="${Ag}"/>
-    <path d="M70 52 C96 52 110 70 108 92 C106 110 92 120 70 120 C48 120 34 108 32 90 C30 68 46 52 70 52Z" fill="${A}" ${L4}/>
-    <path d="M34 96 C22 98 14 106 16 114 C18 122 32 124 46 120 C58 116 62 106 56 100 C50 94 42 94 34 96Z" fill="${K}" ${L3}/>
-    <path d="M36 72 C44 66 54 66 58 72" fill="none" stroke="${Ao}" stroke-width="3" stroke-linecap="round"/>
-    ${envolverCara(`<ellipse cx="18" cy="106" rx="6" ry="4.5" fill="${TK}"/><path d="M22 118 Q34 124 46 118" fill="none" ${L3}/>
-      ${o.humor === 'feliz' ? '<path d="M24 118 Q34 128 44 119 Z" fill="#B8364F" stroke="#22304A" stroke-width="2.5" stroke-linejoin="round"/>' : ''}
-      ${ojosPar(52, 80, 84, .82, o, true)}`, 64, 90, o)}
-    <g fill="${Bl}" stroke="${TK}" stroke-width="2"><circle cx="186" cy="146" r="5"/><circle cx="194" cy="132" r="3"/></g>`;
-  },
 };
 
 /* =====================================================================
