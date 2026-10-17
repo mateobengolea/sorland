@@ -303,7 +303,7 @@ function pintarHoja(){
     titulo = 'Market';
     pest = pestanas([['aventura', 'Aventura'], ['muebles', 'Muebles'], ['peluches', 'Peluches'], ['fondos', 'Casa']], pestana.tienda);
     const t = pestana.tienda;
-    const lista = t === 'aventura' ? OBJETOS : t === 'muebles' ? MUEBLES.filter(m => !m.peluche && !m.oculto) : t === 'peluches' ? MUEBLES.filter(m => m.peluche) : FONDOS;
+    const lista = t === 'aventura' ? OBJETOS.filter(o => !o.clave) : t === 'muebles' ? MUEBLES.filter(m => !m.peluche && !m.oculto) : t === 'peluches' ? MUEBLES.filter(m => m.peluche) : FONDOS;
     cuerpo = lista.map(it => {
       const bloq = bloqueado(it), tiene = t === 'fondos' && S.inv.fondos.includes(it.id);
       let btn;

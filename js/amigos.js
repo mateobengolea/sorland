@@ -92,7 +92,7 @@ async function abrirPerfil(id, base = {}){
           ${f.album != null ? `<p class="rotulo-chico" style="margin:2px 0 0">Álbum: ${f.album} criaturas · Duelos: ${f.ganados || 0} ganados</p>` : ''}
         </div></div>
       <div class="acciones-jugador">
-        ${est === 'amigos' ? `<button class="grande" id="pf-duelo" ${online ? '' : 'disabled'}>${online ? 'Invitar a duelo' : 'No está conectado'}</button><button class="btn btn-2" id="pf-quitar">Quitar de amigos</button>`
+        ${est === 'amigos' ? `<button class="grande" id="pf-duelo" ${online ? '' : 'disabled'}>${online ? 'Invitar a duelo' : 'No está conectado'}</button>${online ? '<button class="btn" id="pf-trueque">Intercambiar criaturas</button>' : ''}<button class="btn btn-2" id="pf-quitar">Quitar de amigos</button>`
           : est === 'enviada' ? '<button class="grande" disabled>Solicitud enviada</button>'
           : est === 'recibida' ? '<button class="grande" id="pf-aceptar">Aceptar solicitud</button><button class="btn btn-2" id="pf-rechazar">Rechazar</button>'
           : '<button class="grande" id="pf-agregar">Agregar a amigos</button>'}
@@ -105,6 +105,7 @@ async function abrirPerfil(id, base = {}){
     if(b('#pf-rechazar')) b('#pf-rechazar').onclick = async () => { await responderAmistad(id, false); f.amistad = null; pintar(); };
     if(b('#pf-quitar')) b('#pf-quitar').onclick = async () => { await quitarAmistad(id); f.amistad = null; avisar(`Ya no son amigos con ${f.apodo}`); pintar(); };
     if(b('#pf-duelo')) b('#pf-duelo').onclick = () => invitarADuelo(id, f.apodo);
+    if(b('#pf-trueque')) b('#pf-trueque').onclick = () => { cerrarHoja(); if(typeof pedirTrueque === 'function') pedirTrueque({id, apodo: f.apodo}); };
   };
   pintar();
   if(db && usuarioId){

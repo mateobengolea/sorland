@@ -188,7 +188,7 @@ function abrirVuelo(){
   if(!tieneHab('vuelo') || !MW || MW.ocupado) return;
   hojaActual = 'vuelo';
   const v = nuevoVelo();
-  const pueblos = ['ceibo', 'villapiedra', 'panal', 'camalote', 'barrilete', 'tormenta', 'escarcha', 'fogon', 'supremo'].filter(id => MAPAS[id]);
+  const pueblos = ['ceibo', 'villapiedra', 'panal', 'camalote', 'barrilete', 'tormenta', 'escarcha', 'fogon', 'supremo', 'malbec', 'bahia'].filter(id => MAPAS[id]);
   v.innerHTML = `<div class="hoja" role="dialog" aria-label="Volar"><div class="hoja-cab"><h2>¿A dónde volás?</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <p class="rotulo-chico">${esc(S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura')} te lleva volando hasta el Centro de Rehabilitación de un pueblo que ya visitaste.</p>
     <div class="lista-online">${pueblos.map(id => { const ok = S.visitados && S.visitados[id] && destinoVuelo(id), aca = S.mundo.mapa === id;
@@ -810,14 +810,24 @@ function jugador(ctx, cx, piso, t){
   const paso = moviendo ? (MW.paso ? 1 : 2) : 0;
   const M = mapaActual(), enAgua = M.m[MW.pos.y][MW.pos.x] === '~' || (MW.hacia && M.m[MW.hacia.y][MW.hacia.x] === '~');
   if(enAgua){
-    // Nadando: la criatura del equipo hace de tabla y se ven ondas alrededor.
+    // Nadando: vas montado arriba de tu criatura de agua (o la primera del equipo).
     const ola = Math.sin(t / 300) * 1.5;
+    const c = S.equipo.find(x => tipoDe(x.esp) === 'agua') || S.equipo[0];
+    const vistaC = MW.mira === 'arriba' ? 'espalda' : MW.mira === 'abajo' ? 'frente' : 'lado';
     ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(cx, piso - 3, 18 + ola, 6, 0, 0, 7); ctx.stroke();
-    ctx.fillStyle = S.equipo[0] ? TIPOS[tipoDe(S.equipo[0].esp)].color : '#5AB4E8'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.ellipse(cx, piso - 6 + ola * .5, 16, 6, 0, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.save(); ctx.translate(0, ola * .5 - 4);
-    dibujarEntrenador(ctx, MW.sprites, cx, piso, MW.mira, 0, 48);
+    ctx.beginPath(); ctx.ellipse(cx, piso - 4, 22 + ola, 7, 0, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx, piso - 4, 30 + ola * 2, 10, 0, 0, 7); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1;
+    if(c){
+      const img = imagenCriatura(c.esp, c.shiny, vistaC), tam = 46;
+      ctx.save(); ctx.translate(cx, piso + 6 + ola * .5);
+      if(vistaC === 'lado' && MW.mira === 'izq') ctx.scale(-1, 1);
+      if(img.complete && img.naturalWidth) ctx.drawImage(img, -tam / 2, -tam, tam, tam);
+      ctx.restore();
+      // El agua tapa la parte de abajo de la criatura.
+      ctx.fillStyle = 'rgba(90,180,232,.55)'; ctx.beginPath(); ctx.ellipse(cx, piso - 2, 21, 6, 0, 0, Math.PI); ctx.fill();
+    }
+    ctx.save(); ctx.translate(0, ola * .5 - 22);
+    dibujarEntrenador(ctx, MW.sprites, cx, piso, MW.mira, 0, 44);
     ctx.restore();
   } else {
     ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
@@ -1022,6 +1032,7 @@ const ICONOS_MENU = {
   volar: '<path d="M8 38c10-2 18-10 22-22 2 10 10 18 22 20-10 4-24 6-44 2z" fill="#9FD4F5"/><path d="M20 36c6-2 10-6 12-12" fill="none" stroke-width="2.5"/>',
   hablar: '<path d="M10 14h40a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H26l-10 8v-8h-6a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFFDF8"/><circle cx="22" cy="28" r="2.5" fill="#22304A"/><circle cx="30" cy="28" r="2.5" fill="#22304A"/><circle cx="38" cy="28" r="2.5" fill="#22304A"/>',
   amigos: '<circle cx="22" cy="20" r="8" fill="#FFD23F"/><path d="M8 46c0-9 6-15 14-15s14 6 14 15z" fill="#FFD23F"/><circle cx="40" cy="22" r="7" fill="#FF8FB1"/><path d="M30 46c1-8 5-13 10-13 7 0 12 5 12 13z" fill="#FF8FB1"/>',
+  pescar: '<path d="M10 52 L44 10" stroke-width="4"/><path d="M44 10 C52 16 52 30 48 40" fill="none" stroke-width="1.5"/><circle cx="48" cy="44" r="4" fill="#E2574C"/><path d="M22 46 c4 -6 14 -6 18 0 c-4 6 -14 6 -18 0z M40 46 l6 -4 v8z" fill="#5AB4E8"/>',
   ranking: '<path d="M18 10h24v10c0 10-6 16-12 16s-12-6-12-16z" fill="#FFD23F"/><path d="M18 14H10c0 8 4 12 10 12M42 14h8c0 8-4 12-10 12" fill="none" stroke-width="3"/><rect x="24" y="36" width="12" height="6" fill="#C98A3C"/><rect x="18" y="42" width="24" height="8" rx="2" fill="#8A5A35"/>',
 };
 function abrirMenuMundo(){
@@ -1031,13 +1042,14 @@ function abrirMenuMundo(){
   const M = mapaActual();
   const op = [['criaturas', 'Criaturas'], ['mochila', 'Mochila'], ['mapa', 'Mapa'],
     ...(tieneHab('vuelo') && !M.tema.interior && !M.tema.cueva ? [['volar', 'Volar']] : []),
+    ...((S.inv.objetos.cana || S.inv.objetos.supercana) && typeof pescar === 'function' ? [['pescar', 'Pescar']] : []),
     ['hablar', 'Hablar'], ['amigos', 'Amigos'], ['ranking', 'Ranking']];
   v.innerHTML = `<div class="hoja hoja-menu" role="dialog" aria-label="Menú"><div class="hoja-cab"><h2>Menú</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <div class="grilla-menu">${op.map(([k, n]) => `<button class="op-menu" data-op="${k}" ${k === 'amigos' ? 'data-aviso-amigos' : ''}><svg viewBox="0 0 60 60" aria-hidden="true"><g stroke="#22304A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${ICONOS_MENU[k]}</g></svg><span>${n}</span></button>`).join('')}</div></div>`;
   v.querySelector('.cerrar').onclick = cerrarHoja;
   if(typeof pintarAvisoAmigos === 'function') pintarAvisoAmigos();
   const acc = {criaturas: () => abrirEquipo(), mochila: () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); }, mapa: abrirMapa, volar: abrirVuelo,
-    hablar: () => { cerrarHoja(); if(typeof abrirHablar === 'function') abrirHablar(); }, amigos: () => abrirAmigos('amigos'), ranking: abrirRanking};
+    hablar: () => { cerrarHoja(); if(typeof abrirHablar === 'function') abrirHablar(); }, pescar: () => { cerrarHoja(); pescar(); }, amigos: () => abrirAmigos('amigos'), ranking: abrirRanking};
   v.querySelectorAll('[data-op]').forEach(b => b.onclick = () => acc[b.dataset.op]());
 }
 

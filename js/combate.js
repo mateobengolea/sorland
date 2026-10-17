@@ -584,7 +584,7 @@ function abrirEquipo(tab){
 function barraVida(pct){ return `<div class="barra"><i style="width:${pct}%;background:${pct > 50 ? 'var(--verde)' : pct > 20 ? 'var(--ambar)' : 'var(--rojo)'}"></i></div>`; }
 function tarjetaCriatura(l, acciones){
   const sp = ESPECIES[l.esp], pct = l.hp / l.max * 100;
-  const evo = sp.evol ? `Evoluciona en nivel ${sp.evol.nivel}` : sp.de ? 'Última evolución' : 'No evoluciona';
+  const evo = sp.evol ? `Evoluciona en nivel ${sp.evol.nivel}` : sp.evolPiedra ? 'Evoluciona con piedras' : sp.de ? 'Última evolución' : 'No evoluciona';
   return `<div class="item criatura ${l.shiny ? 'es-shiny' : ''}">
     <div class="cr-cab"><span class="cr-mini">${svgEspecie(l.esp, {humor: l.hp > 0 ? 'feliz' : 'mal', shiny: l.shiny})}</span>
       <span class="cr-txt"><h3 class="cr-nom"></h3><small>${l.nombre !== sp.nombre ? sp.nombre + ' · ' : ''}Nv ${l.nivel} <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span></small></span></div>
@@ -623,7 +623,7 @@ function pintarEquipo(){
     }).join('');
   } else {
     const atrapadas = NORMALES.filter(e => S.album.capt[e]).length, vistas = NORMALES.filter(e => S.album.vistos[e]).length;
-    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">Atrapadas ${atrapadas} de ${NORMALES.length} · Vistas ${vistas} · Legendarias ${LEGENDARIAS.filter(e => S.album.capt[e]).length} de 3</p>` + ORDEN_ALBUM.map((e, i) => {
+    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">Atrapadas ${atrapadas} de ${NORMALES.length} · Vistas ${vistas} · Legendarias ${LEGENDARIAS.filter(e => S.album.capt[e]).length} de ${LEGENDARIAS.length}</p>` + ORDEN_ALBUM.map((e, i) => {
       const sp = ESPECIES[e], capt = S.album.capt[e], visto = S.album.vistos[e];
       const num = sp.legendaria ? '★' : '#' + String(i + 1).padStart(3, '0');
       if(!visto) return `<div class="item album chico"><span class="num">${num}</span><span class="cr-album" style="filter:brightness(0);opacity:.1">${svgEspecie(e)}</span><h3>???</h3></div>`;
