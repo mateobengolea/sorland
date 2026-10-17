@@ -8,9 +8,23 @@ function leerLocal(clave){
   try { const t = localStorage.getItem(clave || claveLocal()); return t ? JSON.parse(t) : null; } catch(e){ return null; }
 }
 let timerGuardar = null;
+// Cada pestaña o dispositivo tiene su marca. Si otra guardó después de que cargaste, esta deja de pisar la nube.
+const MI_PESTANA = Math.random().toString(36).slice(2, 10);
+let guardadoAlCargar = 0, nubeBloqueada = false;
+// Cuánto avanzó una partida: sirve para no reemplazar una partida avanzada por una más chica.
+function progreso(p){
+  if(!p) return -1;
+  const cr = [...(p.equipo || []), ...(p.reserva || [])];
+  return Object.keys(p.medallas || {}).length * 1000 + Object.keys((p.album && p.album.capt) || {}).length * 20
+    + cr.reduce((s, c) => s + (c.nivel || 0), 0) + Object.keys(p.vencidos || {}).length * 5;
+}
+function respaldarLocal(p, motivo){
+  if(!p) return;
+  try { localStorage.setItem('sorlandia-respaldo:' + (usuarioId || 'local') + ':' + Date.now(), JSON.stringify({motivo, p})); } catch(e){}
+}
 function guardar(){
   if(!S) return;
-  S.guardado = Date.now();
+  S.guardado = Date.now(); S.pestana = MI_PESTANA;
   try { localStorage.setItem(claveLocal(), JSON.stringify(S)); } catch(e){}
   clearTimeout(timerGuardar);
   timerGuardar = setTimeout(guardarNube, 1500);
@@ -25,11 +39,21 @@ const RE_APODO = /^[A-Za-z0-9_ÁÉÍÓÚáéíóúÑñÜü]{3,16}$/;
 const URL_JUEGO = location.origin + location.pathname;
 
 async function guardarNube(){
-  if(!db || !usuarioId || !S) return;
+  if(!db || !usuarioId || !S || nubeBloqueada) return;
+  // ¿Alguien guardó desde otra pestaña o dispositivo después de que cargaste? Entonces no pisamos su partida.
+  try {
+    const {data: r} = await db.from('partidas').select('data->guardado, data->pestana').eq('user_id', usuarioId).maybeSingle();
+    if(r && r.pestana && r.pestana !== MI_PESTANA && Number(r.guardado || 0) > guardadoAlCargar){
+      nubeBloqueada = true; estadoNube = 'error'; pintarCuenta();
+      avisar('Tu partida se abrió en otro dispositivo o pestaña. Recargá la página para seguir desde ahí (esta no se guarda en la nube).');
+      return;
+    }
+  } catch(e){}
   estadoNube = 'guardando'; pintarCuenta();
   const { error } = await db.from('partidas').upsert({
     user_id: usuarioId, nombre: S.equipo[0] ? S.equipo[0].nombre : '', especie: S.equipo[0] ? S.equipo[0].esp : '', nivel: S.equipo[0] ? S.equipo[0].nivel : 1, data: S,
   });
+  if(!error) guardadoAlCargar = S.guardado;
   estadoNube = error ? 'error' : 'guardado'; pintarCuenta();
   if(!error && typeof actualizarFicha === 'function') actualizarFicha();
 }
@@ -46,8 +70,13 @@ async function entrarAlJuego(){
   if(error){ estadoNube = 'error'; }
   const remoto = data && data.data;
   const local = leerLocal() || leerLocal(CLAVE); // CLAVE sola = partida jugada antes sin cuenta
-  if(remoto && (!local || (remoto.guardado||0) >= (local.guardado||0))) S = remoto;
-  else S = local;
+  // Se queda con la más nueva, salvo que la otra tenga claramente más progreso (así una pestaña vieja no borra lo jugado).
+  let elegida = remoto && (!local || (remoto.guardado||0) >= (local.guardado||0)) ? remoto : local;
+  const otra = elegida === remoto ? local : remoto;
+  if(otra && progreso(otra) > progreso(elegida) + 5){ respaldarLocal(elegida, 'menos progreso'); elegida = otra; }
+  else if(otra && otra !== elegida) respaldarLocal(otra, 'reemplazada');
+  S = elegida;
+  guardadoAlCargar = (remoto && remoto.guardado) || 0;
   migrar(S);
   modo = null;
   if(S && S.entrenador){
