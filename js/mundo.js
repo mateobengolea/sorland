@@ -24,9 +24,7 @@ function pintarMundo(){
       <canvas id="lienzo" aria-label="Mapa de Sorlandia"></canvas>
       <div class="cartel-zona" id="cartel-zona"></div>
       <div class="mundo-botones">
-        <button id="m-equipo">Criaturas</button>
-        <button id="m-mochila">Mochila</button>
-        ${tieneHab('vuelo') && !M.tema.interior && !M.tema.cueva ? '<button id="m-volar">Volar</button>' : ''}
+        <button id="m-menu" class="btn-menu" aria-label="Abrir menú"><i></i><i></i><i></i><span>Menú</span></button>
       </div>
       <div class="dpad" aria-label="Moverse">
         <button data-d="up" aria-label="Arriba">▲</button>
@@ -40,9 +38,7 @@ function pintarMundo(){
     <p class="pie" id="cuenta"></p>`;
   pintarTodo(); pintarCuenta();
   if(typeof prepararBadge === 'function') prepararBadge();
-  $('#m-equipo').onclick = () => abrirEquipo();
-  $('#m-mochila').onclick = () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); };
-  if($('#m-volar')) $('#m-volar').onclick = abrirVuelo;
+  $('#m-menu').onclick = abrirMenuMundo;
   $('#dialogo').onclick = avanzarDialogo;
 
   const canvas = $('#lienzo');
@@ -828,7 +824,10 @@ function segX(){ return MW.hacia ? MW.segDesde.x + (MW.seg.x - MW.segDesde.x) * 
 function segY(){ return MW.hacia ? MW.segDesde.y + (MW.seg.y - MW.segDesde.y) * MW.t : MW.seg.y; }
 function seguidor(ctx, t, camX, camY){
   const c = S.equipo[0]; if(!c) return;
-  const img = imagenCriatura(c.esp, c.shiny);
+  // Mira hacia donde camina: de espaldas si sube, de costado si va a los lados, de frente si baja.
+  const vx = MW.seg.x - MW.segDesde.x, vy = MW.seg.y - MW.segDesde.y;
+  if(vy < 0) MW.segVista = 'espalda'; else if(vy > 0) MW.segVista = 'frente'; else if(vx) MW.segVista = 'lado';
+  const img = imagenCriatura(c.esp, c.shiny, MW.segVista || 'frente');
   const x = segX(), y = segY(), Mx = mapaActual();
   // Mientras nadás, tu criatura va de tabla: no camina atrás.
   if(Mx.m[MW.pos.y][MW.pos.x] === '~' || Mx.m[Math.round(y)][Math.round(x)] === '~') return;
@@ -836,9 +835,8 @@ function seguidor(ctx, t, camX, camY){
   const cx = (x + .5) * TS - camX, piso = (y + 1) * TS - camY, tam = 36;
   const salto = MW.hacia ? Math.abs(Math.sin(MW.t * Math.PI)) * 3 : Math.abs(Math.sin(t / 380)) * 1.5;
   ctx.save(); ctx.translate(cx, piso - salto);
-  const vx = MW.seg.x - MW.segDesde.x;
   if(vx) MW.segDir = vx;
-  if((MW.segDir || MW.dir) < 0) ctx.scale(-1, 1);
+  if(MW.segVista === 'lado' && (MW.segDir || MW.dir) < 0) ctx.scale(-1, 1);
   ctx.fillStyle = 'rgba(34,48,74,.18)'; ctx.beginPath(); ctx.ellipse(0, -2, 10, 3.5, 0, 0, 7); ctx.fill();
   if(img.complete && img.naturalWidth) ctx.drawImage(img, -tam / 2, -tam + 2, tam, tam);
   ctx.restore();
@@ -1007,4 +1005,108 @@ function paredCueva(ctx, sx, sy, x, y, M){
   if(piso(x, y - 1)) ctx.fillRect(sx, sy, TS + 1, 3);
   if(piso(x - 1, y)) ctx.fillRect(sx, sy, 2, TS * .45);
   if(piso(x + 1, y)) ctx.fillRect(sx + TS - 2, sy, 2, TS * .45);
+}
+
+/* ---------------- Menú del mundo ---------------- */
+const ICONOS_MENU = {
+  criaturas: '<path d="M30 46c-9 0-15-6-15-12 0-5 5-8 9-6 3 1 4 4 6 4s3-3 6-4c4-2 9 1 9 6 0 6-6 12-15 12z" fill="#F47A45"/><circle cx="17" cy="20" r="5" fill="#F47A45"/><circle cx="26" cy="13" r="5" fill="#F47A45"/><circle cx="35" cy="13" r="5" fill="#F47A45"/><circle cx="44" cy="20" r="5" fill="#F47A45"/>',
+  mochila: '<rect x="14" y="18" width="32" height="34" rx="9" fill="#4CC27A"/><path d="M22 18v-4a8 8 0 0 1 16 0v4" fill="none" stroke-width="3.5"/><rect x="20" y="34" width="20" height="12" rx="3" fill="#7FDBA0"/>',
+  mapa: '<path d="M8 16l14-6 16 6 14-6v34l-14 6-16-6-14 6z" fill="#FFE9A8"/><path d="M22 10v34M38 16v34" fill="none" stroke-width="2.5"/><path d="M12 30q8-6 14 2t14-4" fill="none" stroke="#E2574C" stroke-width="3" stroke-dasharray="3 3"/>',
+  volar: '<path d="M8 38c10-2 18-10 22-22 2 10 10 18 22 20-10 4-24 6-44 2z" fill="#9FD4F5"/><path d="M20 36c6-2 10-6 12-12" fill="none" stroke-width="2.5"/>',
+  hablar: '<path d="M10 14h40a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H26l-10 8v-8h-6a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFFDF8"/><circle cx="22" cy="28" r="2.5" fill="#22304A"/><circle cx="30" cy="28" r="2.5" fill="#22304A"/><circle cx="38" cy="28" r="2.5" fill="#22304A"/>',
+  amigos: '<circle cx="22" cy="20" r="8" fill="#FFD23F"/><path d="M8 46c0-9 6-15 14-15s14 6 14 15z" fill="#FFD23F"/><circle cx="40" cy="22" r="7" fill="#FF8FB1"/><path d="M30 46c1-8 5-13 10-13 7 0 12 5 12 13z" fill="#FF8FB1"/>',
+  ranking: '<path d="M18 10h24v10c0 10-6 16-12 16s-12-6-12-16z" fill="#FFD23F"/><path d="M18 14H10c0 8 4 12 10 12M42 14h8c0 8-4 12-10 12" fill="none" stroke-width="3"/><rect x="24" y="36" width="12" height="6" fill="#C98A3C"/><rect x="18" y="42" width="24" height="8" rx="2" fill="#8A5A35"/>',
+};
+function abrirMenuMundo(){
+  if(!MW || MW.ocupado) return;
+  hojaActual = 'menu';
+  const v = nuevoVelo();
+  const M = mapaActual();
+  const op = [['criaturas', 'Criaturas'], ['mochila', 'Mochila'], ['mapa', 'Mapa'],
+    ...(tieneHab('vuelo') && !M.tema.interior && !M.tema.cueva ? [['volar', 'Volar']] : []),
+    ['hablar', 'Hablar'], ['amigos', 'Amigos'], ['ranking', 'Ranking']];
+  v.innerHTML = `<div class="hoja hoja-menu" role="dialog" aria-label="Menú"><div class="hoja-cab"><h2>Menú</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <div class="grilla-menu">${op.map(([k, n]) => `<button class="op-menu" data-op="${k}" ${k === 'amigos' ? 'data-aviso-amigos' : ''}><svg viewBox="0 0 60 60" aria-hidden="true"><g stroke="#22304A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${ICONOS_MENU[k]}</g></svg><span>${n}</span></button>`).join('')}</div></div>`;
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  if(typeof pintarAvisoAmigos === 'function') pintarAvisoAmigos();
+  const acc = {criaturas: () => abrirEquipo(), mochila: () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); }, mapa: abrirMapa, volar: abrirVuelo,
+    hablar: () => { cerrarHoja(); if(typeof abrirHablar === 'function') abrirHablar(); }, amigos: () => abrirAmigos('amigos'), ranking: abrirRanking};
+  v.querySelectorAll('[data-op]').forEach(b => b.onclick = () => acc[b.dataset.op]());
+}
+
+/* ---------------- Mapa de Sorlandia ---------------- */
+const REGION = {
+  ceibo: [26, 88], villapiedra: [26, 64], panal: [52, 60], camalote: [74, 88], barrilete: [74, 64],
+  tormenta: [74, 42], escarcha: [74, 22], cueva: [50, 10], fogon: [26, 24], supremo: [26, 4],
+};
+const RUTAS = [['ceibo', 'villapiedra', 'cortar'], ['villapiedra', 'panal'], ['ceibo', 'camalote', 'fuerza'], ['camalote', 'barrilete', 'surf'],
+  ['barrilete', 'tormenta'], ['tormenta', 'escarcha'], ['escarcha', 'cueva', 'destello'], ['cueva', 'fogon'], ['fogon', 'supremo', 'medallas']];
+function regionDe(id){
+  if(REGION[id]) return id;
+  // Interiores: la región es el mapa de afuera.
+  const M = MAPAS[id]; if(M && M.afuera) return regionDe(M.afuera.mapa);
+  const casa = INTERIORES.find(x => x.id === id); if(casa) return regionDe(casa.afuera.mapa);
+  return null;
+}
+function abrirMapa(){
+  hojaActual = 'mapa';
+  const v = nuevoVelo();
+  const vis = S.visitados || {}, aca = regionDe(S.mundo.mapa), M = mapaActual();
+  const W = 340, H = 300, px = ([x, y]) => [14 + x / 100 * (W - 28), 18 + y / 100 * (H - 40)];
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="mapa-region" aria-label="Mapa de Sorlandia"><defs><pattern id="olas" width="14" height="8" patternUnits="userSpaceOnUse"><path d="M0 6q3.5-4 7 0t7 0" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/></pattern></defs>
+    <rect width="${W}" height="${H}" rx="14" fill="#BFE6FB"/><rect width="${W}" height="${H}" rx="14" fill="url(#olas)"/>
+    <path d="M30 ${H - 6} C10 ${H - 80} 20 150 40 90 C60 30 120 0 200 10 C280 18 330 60 326 140 C322 220 300 ${H - 10} 250 ${H - 6}Z" fill="#CFE8B0" stroke="#22304A" stroke-width="2.5"/>
+    <path d="M200 40 C230 30 300 40 300 90" fill="none" stroke="#9AA3AE" stroke-width="10" stroke-linecap="round" opacity=".5"/>`;
+  for(const [a, b, hab] of RUTAS){
+    const [x1, y1] = px(REGION[a]), [x2, y2] = px(REGION[b]), ok = vis[a] && vis[b];
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${ok ? '#C98A52' : '#9AA3AE'}" stroke-width="5" stroke-dasharray="${ok ? '0' : '6 5'}" stroke-linecap="round"/>`;
+    if(hab){
+      // En los tramos verticales la etiqueta va al costado, para no tapar el nombre del pueblo.
+      const vertical = Math.abs(x2 - x1) < Math.abs(y2 - y1) * .5;
+      const mx = (x1 + x2) / 2 + (vertical ? 40 : 0), my = (y1 + y2) / 2 + (vertical ? 4 : -12), puede = hab === 'medallas' ? MEDALLAS.every(m => S.medallas[m.id]) : tieneHab(hab);
+      const txt = hab === 'medallas' ? '8 medallas' : HABILIDADES[hab].nom;
+      svg += `<g transform="translate(${mx} ${my})"><rect x="-30" y="-9" width="60" height="18" rx="9" fill="${puede ? '#4CC27A' : '#FFFDF8'}" stroke="#22304A" stroke-width="1.8"/><text y="4" text-anchor="middle" font-size="9.5" font-weight="800" fill="${puede ? '#fff' : '#22304A'}">${txt}</text></g>`;
+    }
+  }
+  for(const [id, p] of Object.entries(REGION)){
+    const [x, y] = px(p), conocido = vis[id] || id === aca, gym = Object.values(LIDERES).find(L => crearEdificioDe(id, L.id));
+    const med = gym && S.medallas[gym.medalla];
+    svg += `<g transform="translate(${x} ${y})">${id === aca ? '<circle r="17" fill="none" stroke="#E2574C" stroke-width="3" class="aca-pulso"/>' : ''}
+      <circle r="11" fill="${conocido ? (id === 'cueva' ? '#6E5A4A' : '#FFD23F') : '#D9DEE6'}" stroke="#22304A" stroke-width="2.5"/>
+      ${med ? '<circle cx="9" cy="-9" r="5" fill="#FFD23F" stroke="#22304A" stroke-width="1.5"/><path d="M7 -9 l1.5 1.5 l3 -3" fill="none" stroke="#22304A" stroke-width="1.5"/>' : ''}
+      <text y="25" text-anchor="middle" font-size="10.5" font-weight="800" fill="#22304A" stroke="#FFFDF8" stroke-width="3" paint-order="stroke">${conocido ? MAPAS[id].nombre : '???'}</text></g>`;
+  }
+  svg += '</svg>';
+  v.innerHTML = `<div class="hoja hoja-mapa" role="dialog" aria-label="Mapa"><div class="hoja-cab"><h2>Mapa</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <div class="pestanas" role="tablist"><button role="tab" data-tab="region" aria-selected="true">Sorlandia</button><button role="tab" data-tab="zona" aria-selected="false">${esc(M.nombre)}</button></div>
+    <div class="mapa-cuerpo" id="mapa-region">${svg}<p class="rotulo-chico">Las etiquetas marcan lo que hace falta para pasar: en verde, lo que ya podés usar. El círculo rojo es donde estás.</p></div>
+    <div class="mapa-cuerpo" id="mapa-zona" hidden><canvas id="minimapa"></canvas><p class="rotulo-chico">Punto rojo: vos. Flechas: salidas. Casitas: puertas.</p></div></div>`;
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+    v.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+    $('#mapa-region').hidden = b.dataset.tab !== 'region'; $('#mapa-zona').hidden = b.dataset.tab !== 'zona';
+    if(b.dataset.tab === 'zona') pintarMinimapa();
+  });
+}
+// ¿El mapa tiene el gimnasio de ese líder?
+function crearEdificioDe(mapaId, liderId){
+  const M = MAPAS[mapaId]; if(!M) return false;
+  return Object.values(M.puertas).some(a => a && a.interior === 'gym_' + liderId);
+}
+function pintarMinimapa(){
+  const M = mapaActual(), cv = $('#minimapa'); if(!cv) return;
+  const anchoDisp = Math.min(340, cv.parentElement.clientWidth || 320), t = Math.max(3, Math.floor(anchoDisp / M.w));
+  cv.width = M.w * t; cv.height = M.h * t;
+  cv.style.width = cv.width + 'px'; cv.style.height = cv.height + 'px';
+  const ctx = cv.getContext('2d');
+  const col = c => ({T: '#3E7A44', '#': '#7C8592', '~': '#5AB4E8', b: '#C98A52', '=': '#E9D3A0', ':': '#D9D0C1', R: '#E2574C', H: '#F4E8D2', D: '#8A5A35', W: '#C9B08E', '!': '#E2492E', m: '#B5835A', k: '#7A6B5D', c: '#7CC56A', O: '#9AA2AD', A: '#FFD23F', x: '#B5452B'}[c]);
+  for(let y = 0; y < M.h; y++) for(let x = 0; x < M.w; x++){
+    const c = M.m[y][x];
+    ctx.fillStyle = (c === 'c' || c === 'O') && quitado(M, x, y) ? colorSuelo(M, '.', x, y) : col(c) || colorSuelo(M, c, x, y);
+    ctx.fillRect(x * t, y * t, t, t);
+  }
+  ctx.fillStyle = '#FFFDF8'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 1.5;
+  for(const k of Object.keys(M.salidas)){ const [x, y] = k.split(',').map(Number); ctx.beginPath(); ctx.arc((x + .5) * t, (y + .5) * t, t * .9, 0, 7); ctx.fill(); ctx.stroke(); }
+  const {x, y} = MW ? MW.pos : S.mundo;
+  ctx.fillStyle = '#E2574C'; ctx.beginPath(); ctx.arc((x + .5) * t, (y + .5) * t, t * 1.1, 0, 7); ctx.fill(); ctx.stroke();
 }

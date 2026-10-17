@@ -493,3 +493,34 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .inv-item:disabled{opacity:.5}
 .inv-vacio{margin:6px 0;font-size:.8rem;color:var(--tinta-suave)}
 #muebles{pointer-events:none}
+
+/* ======================= Menú y mapa ======================= */
+.btn-menu{display:flex;align-items:center;gap:6px;padding:6px 12px!important}
+.btn-menu i{display:none}
+.btn-menu::before{content:'';width:16px;height:12px;background:linear-gradient(var(--tinta) 0 2.5px,transparent 2.5px 4.75px,var(--tinta) 4.75px 7.25px,transparent 7.25px 9.5px,var(--tinta) 9.5px 12px)}
+.mundo-botones .conectados{align-self:flex-end}
+.grilla-menu{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 2px 8px}
+.op-menu{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px 10px;border:2.5px solid var(--tinta);border-radius:16px;background:#FFFDF8;box-shadow:0 4px 0 var(--sombra);font-weight:800;font-size:.85rem;cursor:pointer}
+.op-menu:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sombra)}
+.op-menu svg{width:44px;height:44px}
+.hoja-mapa{max-height:92vh}
+.mapa-cuerpo{overflow:auto;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mapa-region{width:100%;max-width:420px;height:auto;font-family:Nunito,sans-serif}
+.aca-pulso{animation:pulsoMapa 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulsoMapa{50%{opacity:.25;transform:scale(1.25)}}
+#minimapa{border:2.5px solid var(--tinta);border-radius:10px;image-rendering:pixelated}
+
+/* ======================= Criaturas con más vida ======================= */
+svg .ojos{animation:parpadeo 5s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes parpadeo{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.12)}}
+svg .cuerpo.vivo{animation:respiraCr 3.2s ease-in-out infinite;transform-origin:100px 186px}
+@keyframes respiraCr{50%{transform:scale(1.025,.975)}}
+.bichito svg .cuerpo.vivo{animation:respira 2.6s ease-in-out infinite}
+.bicho-combate svg .cuerpo.vivo{animation-duration:2.4s}
+svg .aura-sube{animation:auraSube 2.8s ease-in infinite;transform-box:fill-box}
+@keyframes auraSube{0%{transform:translateY(10px);opacity:0}25%{opacity:.95}100%{transform:translateY(-26px);opacity:0}}
+svg .aura-flota{animation:auraFlota 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes auraFlota{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(5px,-8px) rotate(14deg)}}
+svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes auraChispa{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){svg .ojos,svg .cuerpo.vivo,svg .aura-sube,svg .aura-flota,svg .aura-chispa{animation:none}}

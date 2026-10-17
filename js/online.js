@@ -295,9 +295,7 @@ function abrirInteraccion(o){
 
 /* ---------------- Hablar ---------------- */
 function pintarBotonHablar(){
-  const caja = document.querySelector('.mundo-botones'); if(!caja || $('#m-hablar')) return;
-  const b = document.createElement('button'); b.id = 'm-hablar'; b.textContent = 'Hablar';
-  b.onclick = abrirHablar; caja.appendChild(b);
+  const caja = document.querySelector('.mundo-botones'); if(!caja || $('#m-conectados')) return;
   const c = document.createElement('span'); c.id = 'm-conectados'; c.className = 'conectados'; caja.appendChild(c);
   const lienzo = $('#lienzo'); if(lienzo) lienzo.addEventListener('pointerdown', tocarLienzo);
   actualizarContador();

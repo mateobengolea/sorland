@@ -15,8 +15,7 @@ function yorkieRufisor(o = {}){
     boca = '';
   } else {
     const oy = humor === 'mal' ? 82 : 78;
-    ojos = `<ellipse cx="81" cy="${oy}" rx="7" ry="8.5" fill="${T}"/><circle cx="83.5" cy="${oy - 3}" r="2.6" fill="#fff"/>
-            <ellipse cx="119" cy="${oy}" rx="7" ry="8.5" fill="${T}"/><circle cx="121.5" cy="${oy - 3}" r="2.6" fill="#fff"/>`;
+    ojos = `<g class="ojos" style="animation-delay:${o.parpadeo || 0}s">${ojo(81, oy, 1.02, o.iris || '#4A3220')}${ojo(119, oy, 1.02, o.iris || '#4A3220')}</g>`;
     if(humor === 'feliz') boca = `<path d="M92 104 Q100 118 108 104 Z" fill="#B8364F" stroke="${T}" stroke-width="2.5" stroke-linejoin="round"/><path d="M96 108 Q100 116 104 108" fill="#FF8FAE"/>`;
     else if(humor === 'bien') boca = `<path d="M92 104 Q96 109 100 104 Q104 109 108 104" fill="none" stroke="${T}" stroke-width="3" stroke-linecap="round"/>`;
     else { boca = `<path d="M92 110 Q100 103 108 110" fill="none" stroke="${T}" stroke-width="3" stroke-linecap="round"/>`;
@@ -45,12 +44,12 @@ function yorkieRufisor(o = {}){
       <path d="M100 42 C96 32 98 24 100 20 C102 24 104 32 100 42Z" fill="${azul}" stroke="${T}" stroke-width="3"/>
       <path d="M100 30 L82 20 L84 40Z M100 30 L118 20 L116 40Z" fill="#8FD3F7" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>
       <path d="M100 22 C104 28 106 31 106 34 A6 6 0 0 1 94 34 C94 31 96 28 100 22Z" fill="#FFFFFF" stroke="${T}" stroke-width="2.5"/>
-      <ellipse cx="100" cy="100" rx="19" ry="13" fill="${hocico}" stroke="${T}" stroke-width="3"/>
+      ${envolverCara(`<ellipse cx="100" cy="100" rx="19" ry="13" fill="${hocico}" stroke="${T}" stroke-width="3"/>
       <path d="M84 104 C78 112 80 120 84 124 M116 104 C122 112 120 120 116 124" fill="none" stroke="${canelaOsc}" stroke-width="3" stroke-linecap="round"/>
       <ellipse cx="100" cy="94" rx="7" ry="5" fill="${T}"/><ellipse cx="98" cy="92.5" rx="2.2" ry="1.4" fill="#fff" opacity=".8"/>
       <ellipse cx="68" cy="94" rx="7" ry="4.5" fill="#FF8FAE" opacity=".75"/>
       <ellipse cx="132" cy="94" rx="7" ry="4.5" fill="#FF8FAE" opacity=".75"/>
-      ${cejas}${ojos}${boca}
+      ${cejas}${ojos}${boca}`, 100, 88, o)}
       <path d="M36 98 C38 102 40 104 40 106 A3 3 0 0 1 34 106 C34 104 35 102 36 98Z" fill="#8FD3F7" stroke="${T}" stroke-width="1.8"/>
       <path d="M160 112 C162 116 164 118 164 121 A3.5 3.5 0 0 1 157 121 C157 118 158 116 160 112Z" fill="#8FD3F7" stroke="${T}" stroke-width="1.8"/>
     </g>`;
@@ -85,9 +84,8 @@ function cuerpoInicial(esp, o = {}){
     boca = `<ellipse cx="100" cy="102" rx="4" ry="3" fill="${T}"/>`;
   } else {
     const oy = humor === 'mal' ? 84 : 80;
-    ojos = `<ellipse cx="82" cy="${oy}" rx="6.5" ry="8.5" fill="${T}"/><circle cx="84.5" cy="${oy-3}" r="2.4" fill="#fff"/>
-            <ellipse cx="118" cy="${oy}" rx="6.5" ry="8.5" fill="${T}"/><circle cx="120.5" cy="${oy-3}" r="2.4" fill="#fff"/>`;
-    if(humor === 'feliz') boca = `<path d="M88 97 Q100 114 112 97 Z" fill="#B8364F" stroke="${T}" stroke-width="3" stroke-linejoin="round"/>`;
+    ojos = `<g class="ojos" style="animation-delay:${o.parpadeo || 0}s">${ojo(82, oy, 1, o.iris)}${ojo(118, oy, 1, o.iris)}</g>`;
+    if(humor === 'feliz') boca = `<path d="M88 97 Q100 114 112 97 Z" fill="#B8364F" stroke="${T}" stroke-width="3" stroke-linejoin="round"/><path d="M94 104 Q100 110 106 104 Q100 101 94 104Z" fill="#FF8FAE"/>`;
     else if(humor === 'bien') boca = `<path d="M89 99 Q100 108 111 99" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`;
     else { boca = `<path d="M90 106 Q100 97 110 106" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`;
       cejas = `<path d="M72 70 L88 74" stroke="${T}" stroke-width="3" stroke-linecap="round"/><path d="M128 70 L112 74" stroke="${T}" stroke-width="3" stroke-linecap="round"/>`; }
@@ -105,16 +103,29 @@ function cuerpoInicial(esp, o = {}){
       <ellipse cx="148" cy="136" rx="9" ry="14" fill="${c.main}" stroke="${T}" stroke-width="3.5" transform="rotate(-30 148 136)"/>
       ${cabeza}
       <ellipse cx="100" cy="82" rx="50" ry="42" fill="${c.main}" stroke="${T}" stroke-width="4"/>
-      <ellipse cx="68" cy="96" rx="8" ry="5" fill="#FF8FAE" opacity=".8"/>
-      <ellipse cx="132" cy="96" rx="8" ry="5" fill="#FF8FAE" opacity=".8"/>
-      ${cejas}${ojos}${boca}${manchas}
+      ${envolverCara(`<ellipse cx="68" cy="96" rx="8" ry="5" fill="#FF8FAE" opacity=".8"/><ellipse cx="132" cy="96" rx="8" ry="5" fill="#FF8FAE" opacity=".8"/>${cejas}${ojos}${boca}`, 100, 86, o)}${manchas}
     </g>`;
 }
 
 
 /* ---------------- Dibujos de especies salvajes ---------------- */
 const TINTA = '#22304A';
+// Ojo con iris de color, brillo grande y uno chiquito: le da vida a la mirada.
+function ojo(x, y, s = 1, iris = '#4A3A6B'){
+  return `<ellipse cx="${x}" cy="${y}" rx="${6.6 * s}" ry="${8.6 * s}" fill="${TINTA}"/>`
+    + `<ellipse cx="${x}" cy="${y + 2.4 * s}" rx="${4.6 * s}" ry="${5.4 * s}" fill="${iris}"/>`
+    + `<ellipse cx="${x}" cy="${y + 4.2 * s}" rx="${3 * s}" ry="${2.4 * s}" fill="${iris}" opacity=".6" style="mix-blend-mode:screen"/>`
+    + `<circle cx="${x + 2.5 * s}" cy="${y - 3.3 * s}" r="${2.7 * s}" fill="#fff"/>`
+    + `<circle cx="${x - 2.4 * s}" cy="${y + 3.6 * s}" r="${1.3 * s}" fill="#fff" opacity=".9"/>`;
+}
+// Envuelve la cara: de espaldas no se ve; de costado se corre hacia adelante y se achica.
+function envolverCara(html, cx, cy, o){
+  if(o.espalda) return '';
+  if(o.lado) return `<g transform="translate(${cx + 13} ${cy}) scale(.76 1) translate(${-cx} ${-cy})">${html}</g>`;
+  return html;
+}
 function carita(cx, cy, o = {}){
+  if(o.espalda) return '';
   const s = o.esc || 1, dx = 17*s, T = TINTA;
   let ojos;
   if(o.dormido || o.chill){
@@ -122,15 +133,16 @@ function carita(cx, cy, o = {}){
             <path d="M${cx+dx-7} ${cy} Q${cx+dx} ${cy+(o.chill?-4:5)} ${cx+dx+7} ${cy}" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`;
     if(o.chill) ojos += `<path d="M${cx-dx-7} ${cy} h14 M${cx+dx-7} ${cy} h14" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`;
   } else {
-    ojos = `<ellipse cx="${cx-dx}" cy="${cy}" rx="${6*s}" ry="${8*s}" fill="${T}"/><circle cx="${cx-dx+2.5*s}" cy="${cy-3*s}" r="${2.3*s}" fill="#fff"/>
-            <ellipse cx="${cx+dx}" cy="${cy}" rx="${6*s}" ry="${8*s}" fill="${T}"/><circle cx="${cx+dx+2.5*s}" cy="${cy-3*s}" r="${2.3*s}" fill="#fff"/>`;
+    ojos = `<g class="ojos" style="animation-delay:${o.parpadeo || 0}s">${ojo(cx - dx, cy, s * .95, o.iris)}${ojo(cx + dx, cy, s * .95, o.iris)}</g>`;
   }
   const my = cy + 17*s;
   const boca = o.enojo
     ? `<path d="M${cx-8} ${my+4} Q${cx} ${my-4} ${cx+8} ${my+4}" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`
+    : o.humor === 'feliz'
+    ? `<path d="M${cx-9} ${my-1} Q${cx} ${my+12} ${cx+9} ${my-1} Z" fill="#B8364F" stroke="${T}" stroke-width="3" stroke-linejoin="round"/><path d="M${cx-4} ${my+5} Q${cx} ${my+9} ${cx+4} ${my+5} Q${cx} ${my+3} ${cx-4} ${my+5}Z" fill="#FF8FAE"/>`
     : `<path d="M${cx-9} ${my} Q${cx} ${my+9} ${cx+9} ${my}" fill="none" stroke="${T}" stroke-width="3.5" stroke-linecap="round"/>`;
   const mejillas = o.sinMejillas ? '' : `<ellipse cx="${cx-dx-12*s}" cy="${cy+12*s}" rx="${7*s}" ry="${4.5*s}" fill="#FF8FAE" opacity=".75"/><ellipse cx="${cx+dx+12*s}" cy="${cy+12*s}" rx="${7*s}" ry="${4.5*s}" fill="#FF8FAE" opacity=".75"/>`;
-  return mejillas + ojos + (o.sinBoca ? '' : boca);
+  return envolverCara(mejillas + ojos + (o.sinBoca ? '' : boca), cx, cy, o);
 }
 const SOMBRA = `<ellipse cx="100" cy="188" rx="54" ry="8" fill="rgba(34,48,74,.16)"/>`;
 const sw = 'stroke="#22304A" stroke-width="4"';
@@ -560,14 +572,55 @@ function interiorEspecie(esp, o = {}){
   return dibujoGenerado(d, o.humor === 'mal' ? {...o, enojo: true} : o, e.etapa);
 }
 const ESCALA_ETAPA = [1, 1, 1.07, 1.14];
+// Iris según el tipo: la mirada tiene el color de su elemento.
+const IRIS = {fuego:'#9A3B1A', agua:'#1F5FA8', planta:'#2F7A2C', rayo:'#8A6A00', piedra:'#4E5664', viento:'#2D7FA6', hielo:'#2B8FB3', bicho:'#5B7A1E', normal:'#6B4426'};
+// Luz arriba a la izquierda y sombra abajo a la derecha, siguiendo el contorno: da volumen a cualquier criatura.
+const DEFS_VOLUMEN = `<defs><filter id="sl-vol" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+  <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="b"/>
+  <feOffset in="b" dx="-6" dy="-8" result="o1"/><feComposite in="SourceAlpha" in2="o1" operator="out" result="sombra"/>
+  <feFlood flood-color="#3A3F6B" flood-opacity=".55"/><feComposite in2="sombra" operator="in" result="s2"/>
+  <feOffset in="b" dx="6" dy="8" result="o2"/><feComposite in="SourceAlpha" in2="o2" operator="out" result="luz"/>
+  <feFlood flood-color="#FFFFFF" flood-opacity=".9"/><feComposite in2="luz" operator="in" result="l2"/>
+  <feBlend in="l2" in2="SourceGraphic" mode="soft-light" result="c1"/>
+  <feBlend in="s2" in2="c1" mode="multiply"/></filter></defs>`;
+// Detalles animados alrededor según el tipo (solo se mueven en la página, no en el mapa).
+function auraTipo(tipo){
+  const g = (cls, x, y, delay, cuerpo) => `<g class="${cls}" style="animation-delay:${delay}s"><g transform="translate(${x} ${y})">${cuerpo}</g></g>`;
+  const llama = `<path d="M0 8 C-6 2 -3 -6 0 -10 C3 -6 6 2 0 8Z" fill="#FF9F2E" stroke="#22304A" stroke-width="1.6"/><path d="M0 6 C-2 3 -1 -1 0 -3 C1 -1 2 3 0 6Z" fill="#FFE36B"/>`;
+  const burbuja = r => `<circle r="${r}" fill="rgba(191,233,255,.5)" stroke="#5AB4E8" stroke-width="1.6"/><circle cx="${-r * .35}" cy="${-r * .35}" r="${r * .3}" fill="#fff"/>`;
+  const hojita = `<path d="M0 0 C6 -8 14 -6 16 0 C10 6 4 6 0 0Z" fill="#7CC56A" stroke="#22304A" stroke-width="1.6"/><path d="M2 0 L13 -1" stroke="#3E9150" stroke-width="1.2"/>`;
+  const chispa = c => `<path d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2Z" fill="${c}" stroke="#22304A" stroke-width="1.2"/>`;
+  const rayo = `<path d="M2 -10 L-4 1 L1 1 L-2 10 L5 -2 L0 -2Z" fill="#FFE45C" stroke="#22304A" stroke-width="1.5" stroke-linejoin="round"/>`;
+  const remolino = `<path d="M-10 0 C-10 -8 6 -9 7 -2 C8 3 0 4 -1 0" fill="none" stroke="#9FD4F5" stroke-width="2.5" stroke-linecap="round"/>`;
+  const luciernaga = `<circle r="5" fill="rgba(255,236,120,.35)"/><circle r="2.2" fill="#FFE45C"/>`;
+  const piedrita = r => `<ellipse rx="${r}" ry="${r * .7}" fill="#9AA2AD" stroke="#22304A" stroke-width="1.4"/>`;
+  const A = {
+    fuego: g('aura-sube', 34, 120, 0, llama) + g('aura-sube', 166, 104, 1.1, llama) + g('aura-sube', 154, 50, 1.9, llama),
+    agua: g('aura-sube', 32, 116, 0, burbuja(5)) + g('aura-sube', 168, 96, .9, burbuja(4)) + g('aura-sube', 150, 44, 1.7, burbuja(3.5)),
+    planta: g('aura-flota', 26, 70, 0, hojita) + g('aura-flota', 160, 128, 1.2, hojita),
+    rayo: g('aura-chispa', 34, 70, 0, rayo) + g('aura-chispa', 166, 120, .7, rayo),
+    hielo: g('aura-chispa', 30, 64, 0, chispa('#E4F6FF')) + g('aura-chispa', 170, 100, .6, chispa('#BFE9FF')) + g('aura-chispa', 150, 36, 1.2, chispa('#FFFFFF')),
+    viento: g('aura-flota', 30, 90, 0, remolino) + g('aura-flota', 168, 60, 1.4, remolino),
+    bicho: g('aura-flota', 32, 60, 0, luciernaga) + g('aura-flota', 168, 110, .9, luciernaga) + g('aura-flota', 150, 34, 1.7, luciernaga),
+    piedra: g('aura-chispa', 34, 182, 0, piedrita(5)) + g('aura-chispa', 168, 184, .8, piedrita(4)),
+    normal: g('aura-chispa', 32, 58, 0, chispa('#FFD23F')) + g('aura-chispa', 168, 72, 1, chispa('#FFFFFF')),
+  };
+  return `<g class="aura" aria-hidden="true">${A[tipo] || ''}</g>`;
+}
+function hashTexto(t){ let h = 0; for(const ch of t) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
+// o.vista: 'frente' (por defecto), 'espalda' o 'lado' (mirando a la derecha).
 function svgEspecie(esp, o = {}){
   const e = ESPECIES[esp];
   if(!e) return '';
   const esc = (e.legendaria ? 1.08 : ESCALA_ETAPA[e.etapa] || 1) * (o.escala || 1);
   const shiny = o.shiny ? ' style="filter:hue-rotate(155deg) saturate(1.35)"' : '';
   const brillos = o.shiny ? `<g fill="#FFE45C" ${st(2)}><path d="M28 40 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/><path d="M168 30 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M172 150 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/></g>` : '';
-  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${SOMBRA}
-    <g transform="translate(100 188) scale(${esc}) translate(-100 -188)"><g class="cuerpo"${shiny}>${interiorEspecie(esp, o)}</g></g>${brillos}</svg>`;
+  const vista = o.vista || 'frente';
+  const op = {...o, iris: IRIS[e.tipo], parpadeo: (hashTexto(esp) % 40) / 10, espalda: vista === 'espalda', lado: vista === 'lado'};
+  const escX = vista === 'lado' ? esc * .9 : esc;
+  const aura = o.aura === false ? '' : auraTipo(e.tipo);
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${DEFS_VOLUMEN}${SOMBRA}${aura}
+    <g transform="translate(100 188) scale(${escX} ${esc}) translate(-100 -188)"><g class="cuerpo vivo"${shiny}><g filter="url(#sl-vol)">${interiorEspecie(esp, op)}</g></g></g>${brillos}</svg>`;
 }
 // La Enfermera Carosor: una princesita de diseño propio que atiende los centros.
 function svgEnfermera(){
@@ -722,9 +775,9 @@ function spritesEntrenador(e){
   return _spritesCache[k];
 }
 const _criaturaCache = {};
-function imagenCriatura(esp, shiny){
-  const k = esp + (shiny ? '*' : '');
-  if(!_criaturaCache[k]) _criaturaCache[k] = imagenSvg(svgEspecie(esp, {humor: 'feliz', shiny}), 144, 144);
+function imagenCriatura(esp, shiny, vista = 'frente'){
+  const k = esp + (shiny ? '*' : '') + vista;
+  if(!_criaturaCache[k]) _criaturaCache[k] = imagenSvg(svgEspecie(esp, {humor: 'feliz', shiny, vista, aura: false}), 144, 144);
   return _criaturaCache[k];
 }
 // Dibuja un entrenador en el canvas. mira: abajo, arriba, izq o der.
