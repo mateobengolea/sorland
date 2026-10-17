@@ -8,7 +8,7 @@ const MAX_EQUIPO = 6;
 /* ---------------- Equipo ---------------- */
 function comoLuchador(c){
   const max = vidaMax(c.stats, c.nivel);
-  return {ref: c, esp: c.esp, nombre: c.nombre, nivel: c.nivel, stats: c.stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, extra: c.extra || [], hp: c.hp == null ? max : Math.min(c.hp, max), max};
+  return {ref: c, esp: c.esp, nombre: c.nombre, nivel: c.nivel, stats: c.stats, tipo: tipoDe(c.esp), shiny: !!c.shiny, movs: movsDe(c), hp: c.hp == null ? max : Math.min(c.hp, max), max};
 }
 const capturadaComoLuchador = comoLuchador;
 function equipoLuchadores(){ return S.equipo.map(comoLuchador); }
@@ -21,7 +21,8 @@ const brillo = l => l.shiny ? ' ✦' : '';
 let B = null;
 const espera = ms => new Promise(r => setTimeout(r, ms));
 
-const ARENAS = {pradera:'pradera', bosque:'bosque', rio:'rio', costa:'rio', sierras:'sierras', serrania:'sierras', cumbres:'cumbres', volcan:'volcan'};
+const ARENAS = {pradera:'pradera', bosque:'bosque', rio:'rio', costa:'rio', sierras:'sierras', serrania:'sierras', cumbres:'cumbres', volcan:'volcan',
+  bosquepanal:'bosque', lomasventosas:'pradera', vallehelado:'cumbres', cueva:'sierras'};
 function empezarCombate(rivales, zona, ent){
   vista = 'combate';
   if(typeof marcarPelea === 'function') marcarPelea('combate');
@@ -116,7 +117,7 @@ function menu(tipo){
     m.querySelector('[data-a=huir]').onclick = () => turno({tipo: 'huir'});
   } else if(tipo === 'pelear'){
     m.className = 'menu-combate grilla-2';
-    m.innerHTML = poderesDe(l.esp, l.nivel, l.extra).map(id => {
+    m.innerHTML = movsDe(l).map(id => {
       const mv = MOVS[id], ef = mv.poder ? efectividad(mv.tipo, B.salvaje.tipo) : 1;
       return `<button data-m="${id}" class="mc-mov" style="--tipo:${TIPOS[mv.tipo].color}">
         <b>${mv.nom}</b><small>${TIPOS[mv.tipo].nom} · ${mv.poder ? 'Poder ' + mv.poder : 'Especial'}${ef > 1 ? ' · ¡Efectivo!' : ef < 1 ? ' · Poco efectivo' : ''}</small></button>`;
@@ -325,8 +326,9 @@ function mostrarMedalla(m){
 
 async function darXP(l, xp){
   await mensaje(`${l.nombre} ganó ${xp} de experiencia.`, 800);
-  const movsAntes = poderesDe(l.esp, l.nivel, l.extra);
-  const c = l.ref; c.xp = (c.xp || 0) + xp;
+  const c = l.ref; asegurarMovs(c);
+  const nivelAntes = c.nivel;
+  c.xp = (c.xp || 0) + xp;
   let subio = false;
   while(c.xp >= xpPara(c.nivel)){ c.xp -= xpPara(c.nivel); c.nivel++; c.stats.vida += 2; c.stats.fuerza += 1; c.stats.velocidad += 1; subio = true; }
   if(subio){
@@ -334,8 +336,57 @@ async function darXP(l, xp){
     l.hp = Math.min(nuevoMax, l.hp + (nuevoMax - l.max)); l.max = nuevoMax; l.nivel = c.nivel;
     await mensaje(`¡${l.nombre} subió a nivel ${c.nivel}!`);
   }
-  for(const m of poderesDe(l.esp, l.nivel, l.extra)) if(!movsAntes.includes(m)) await mensaje(`¡${l.nombre} aprendió ${MOVS[m].nom}!`);
-  if(evolucionPendiente(c)) await animarEvolucion(l);
+  for(const m of nuevosEnNivel(c.esp, nivelAntes, c.nivel)) await aprenderPoder(c, m, l);
+  if(evolucionPendiente(c)){
+    await animarEvolucion(l);
+    for(const m of nuevosEnNivel(c.esp, c.nivel - 1, c.nivel)) await aprenderPoder(c, m, l);
+  }
+}
+/* ---------------- Aprender un poder nuevo (con elección si ya sabe 4) ---------------- */
+async function aprenderPoder(c, mov, l){
+  asegurarMovs(c);
+  if(!MOVS[mov] || c.movs.includes(mov)) return;
+  const nom = MOVS[mov].nom;
+  const decir = (t, ms) => vista === 'combate' && $('#t-combate') ? mensaje(t, ms) : (avisar(t, 'nivel'), Promise.resolve());
+  if(c.movs.length < 4){ c.movs.push(mov); if(l) l.movs = c.movs; await decir(`¡${c.nombre} aprendió ${nom}!`, 1100); return; }
+  const i = await elegirOlvido(c, mov);
+  if(i >= 0){
+    const viejo = MOVS[c.movs[i]].nom;
+    c.movs[i] = mov; if(l) l.movs = c.movs;
+    await decir(`1, 2 y… ¡puf! ${c.nombre} olvidó ${viejo} y aprendió ${nom}.`, 1600);
+  } else await decir(`${c.nombre} no aprendió ${nom}.`, 1100);
+}
+function tarjetaPoder(id, extra = ''){
+  const mv = MOVS[id];
+  return `<b>${mv.nom}</b><small>${TIPOS[mv.tipo].nom} · ${mv.poder ? 'Poder ' + mv.poder : 'Especial'}${mv.prec ? ' · Precisión ' + mv.prec : ''}${extra}</small>`;
+}
+// Devuelve el índice del poder a olvidar, o -1 si decidís no aprender el nuevo.
+function elegirOlvido(c, nuevo){
+  return new Promise(res => {
+    const m = $('#menu-combate');
+    if(vista === 'combate' && m){
+      const t = $('#t-combate'); if(t) t.textContent = `${c.nombre} quiere aprender ${MOVS[nuevo].nom}, pero ya sabe 4 poderes. ¿Cuál olvida?`;
+      m.className = 'menu-combate lista olvidar';
+      m.innerHTML = `<div class="mc-nuevo" style="--tipo:${TIPOS[MOVS[nuevo].tipo].color}"><span>Nuevo</span>${tarjetaPoder(nuevo)}</div>`
+        + c.movs.map((id, i) => `<button data-olv="${i}" class="mc-mov" style="--tipo:${TIPOS[MOVS[id].tipo].color}">${tarjetaPoder(id, ' · Olvidar')}</button>`).join('')
+        + `<button class="mc-volver" data-no>No aprender ${MOVS[nuevo].nom}</button>`;
+      m.querySelectorAll('[data-olv]').forEach(b => b.onclick = () => { m.innerHTML = ''; res(+b.dataset.olv); });
+      m.querySelector('[data-no]').onclick = () => { m.innerHTML = ''; res(-1); };
+      return;
+    }
+    hojaActual = 'olvidar';
+    const v = nuevoVelo(false);
+    v.innerHTML = `<div class="hoja" role="dialog" aria-label="Aprender poder"><div class="hoja-cab"><h2>¿Qué poder olvida?</h2></div>
+      <p class="rotulo-chico"><b class="ol-nom"></b> quiere aprender <b>${MOVS[nuevo].nom}</b>, pero ya sabe 4 poderes.</p>
+      <div class="menu-combate lista olvidar">
+        <div class="mc-nuevo" style="--tipo:${TIPOS[MOVS[nuevo].tipo].color}"><span>Nuevo</span>${tarjetaPoder(nuevo)}</div>
+        ${c.movs.map((id, i) => `<button data-olv="${i}" class="mc-mov" style="--tipo:${TIPOS[MOVS[id].tipo].color}">${tarjetaPoder(id, ' · Olvidar')}</button>`).join('')}
+        <button class="mc-volver" data-no>No aprender ${MOVS[nuevo].nom}</button></div></div>`;
+    v.querySelector('.ol-nom').textContent = c.nombre;
+    const fin = i => { cerrarHoja(); res(i); };
+    v.querySelectorAll('[data-olv]').forEach(b => b.onclick = () => fin(+b.dataset.olv));
+    v.querySelector('[data-no]').onclick = () => fin(-1);
+  });
 }
 async function animarEvolucion(l){
   const c = l.ref, antes = c.nombre;
@@ -433,7 +484,7 @@ function tarjetaCriatura(l, acciones){
       <span class="cr-txt"><h3 class="cr-nom"></h3><small>${l.nombre !== sp.nombre ? sp.nombre + ' · ' : ''}Nv ${l.nivel} <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span></small></span></div>
     ${barraVida(pct)}
     <p>Vida ${l.hp}/${l.max} · Fuerza ${l.stats.fuerza} · Velocidad ${l.stats.velocidad}</p>
-    <p><b>Poderes:</b> ${poderesDe(l.esp, l.nivel, l.extra).map(m => MOVS[m].nom).join(', ')}</p>
+    <p><b>Poderes:</b> ${movsDe(l).map(m => MOVS[m].nom).join(', ')}</p>
     <p class="cr-evo">${evo}${l.shiny ? ' · ✦ Shiny' : ''}</p>
     ${acciones}</div>`;
 }

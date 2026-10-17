@@ -67,7 +67,7 @@ function pintarMundo(){
     const quien = S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura';
     setTimeout(() => { if(MW) dialogo(M.nombre, tieneHab('destello')
       ? [`${quien} usó Destello. ¡La cueva se iluminó!`]
-      : ['Está oscurísimo: casi no ves tus propios pies.', 'Con Destello, que enseña Elsa Ltamontes en Villa Piedra, se vería todo.']); }, 400);
+      : ['Está oscurísimo: casi no ves tus propios pies.', 'Con Destello, que enseña Elsa Ltamontes en Pueblo Panal, se vería todo.']); }, 400);
   }
   if(S.ensenar){ const mov = S.ensenar; delete S.ensenar; setTimeout(() => { if(MW) elegirAprendiz(mov); }, 600); }
   if(S.cuartel && S.cuartel.continuar){ S.cuartel.continuar = false; setTimeout(() => { if(MW) siguienteCuartel(); }, 500); }
@@ -191,7 +191,7 @@ function abrirVuelo(){
   if(!tieneHab('vuelo') || !MW || MW.ocupado) return;
   hojaActual = 'vuelo';
   const v = nuevoVelo();
-  const pueblos = ['ceibo', 'villapiedra', 'camalote', 'tormenta', 'fogon', 'supremo'].filter(id => MAPAS[id]);
+  const pueblos = ['ceibo', 'villapiedra', 'panal', 'camalote', 'barrilete', 'tormenta', 'escarcha', 'fogon', 'supremo'].filter(id => MAPAS[id]);
   v.innerHTML = `<div class="hoja" role="dialog" aria-label="Volar"><div class="hoja-cab"><h2>¿A dónde volás?</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <p class="rotulo-chico">${esc(S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura')} te lleva volando hasta el Centro de Rehabilitación de un pueblo que ya visitaste.</p>
     <div class="lista-online">${pueblos.map(id => { const ok = S.visitados && S.visitados[id] && destinoVuelo(id), aca = S.mundo.mapa === id;
@@ -930,7 +930,7 @@ const AMBIENTE = {
   ceibo: {tipo: 'hojas', n: 12, mariposas: 3}, villapiedra: {tipo: 'polvo', n: 14}, camalote: {tipo: 'brillos', n: 16, mariposas: 1},
   tormenta: {tipo: 'lluvia', n: 70, rayos: true}, fogon: {tipo: 'brasas', n: 30}, supremo: {tipo: 'motas', n: 22, mariposas: 2},
   cueva: {tipo: 'polvo', n: 12}, gym_rulo: {tipo: 'brasas', n: 16}, gym_patinaje: {tipo: 'nieve', n: 34}, gym_tornado: {tipo: 'hojas', n: 10},
-  gym_flor: {tipo: 'hojas', n: 10, mariposas: 2}, gym_saltamontes: {tipo: 'motas', n: 10, mariposas: 2},
+  gym_flor: {tipo: 'hojas', n: 10, mariposas: 2}, panal: {tipo: 'motas', n: 12, mariposas: 4}, barrilete: {tipo: 'hojas', n: 16}, escarcha: {tipo: 'nieve', n: 40}, gym_saltamontes: {tipo: 'motas', n: 10, mariposas: 2},
 };
 function ambiente(ctx, M, camX, camY, vw, vh, t){
   const cfg = AMBIENTE[M.id];

@@ -88,17 +88,17 @@ const LIDERES = {
   saltamontes:{id:'saltamontes', titulo:'Líder', nombre:'Elsa Ltamontes', medalla:'panal', mov:'tabano', tipoGym:'bicho', premio:550, ropa:'#8DBF3A', pelo:'#3B2A22',
     equipo:[['grillito',12],['abejita',13],['mamboreta',13],['hormigon',14]],
     antes:['¡Shh! ¿Escuchás el zumbido?', 'Soy Elsa Ltamontes. Los bichos parecen chiquitos, pero pican fuerte.'],
-    despues:['¡Me dejaste patas para arriba!', 'Tomá la Medalla Panal. Seguí hacia Puerto Camalote, al este de Pueblo Ceibo.'],
+    despues:['¡Me dejaste patas para arriba!', 'Tomá la Medalla Panal. Con ella vas a poder iluminar la Cueva Oscura. Ahora seguí hacia Puerto Camalote, al este de Pueblo Ceibo.'],
     yaGano:'Ya tenés la Medalla Panal. ¡Zumbá para el puerto!'},
   tornado:{id:'tornado', titulo:'Líder', nombre:'Aitor Nado', medalla:'pampero', mov:'zonda', tipoGym:'viento', premio:850, ropa:'#9FD4F5', pelo:'#FFFFFF',
     equipo:[['picaflor',16],['barrilete',16],['condoralto',17],['hornero',18]],
     antes:['¿Sentís esa brisa? Soy yo calentando.', 'Soy Aitor Nado. Mis criaturas vuelan más alto que los barriletes.'],
-    despues:['¡Me dejaste sin aire!', 'La Medalla Pampero es tuya. Al norte del puerto está Cerro Tormenta.'],
-    yaGano:'Ya volaste conmigo. Cerro Tormenta queda al norte del puerto.'},
+    despues:['¡Me dejaste sin aire!', 'La Medalla Pampero es tuya. Al norte de Villa Barrilete está Cerro Tormenta.'],
+    yaGano:'Ya volaste conmigo. Cerro Tormenta queda al norte de Villa Barrilete.'},
   patinaje:{id:'patinaje', titulo:'Líder', nombre:'Paty Naje', medalla:'glaciar', mov:'helada', tipoGym:'hielo', premio:1200, ropa:'#BFE9FF', pelo:'#5A6B8C',
     equipo:[['escarchin',20],['pinguinazo',21],['huemul',21],['escarchon',22]],
     antes:['Cuidado, que el piso resbala.', 'Soy Paty Naje. Patino sobre el hielo y congelo a quien se me ponga adelante.'],
-    despues:['¡Me derretiste!', 'Te llevás la Medalla Glaciar. Monte Fogón queda al norte de Cerro Tormenta.'],
+    despues:['¡Me derretiste!', 'Te llevás la Medalla Glaciar. Al norte, pasando la Cueva Oscura, está Monte Fogón.'],
     yaGano:'Ya tenés la Medalla Glaciar. Monte Fogón queda al norte.'},
   tosca:{id:'tosca', titulo:'Líder', nombre:'Estela Gartija', medalla:'penasco', mov:'terremoto', tipoGym:'piedra', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
     equipo:[['fosilito',10],['morrito',11],['tatupiedra',12]],
@@ -222,7 +222,9 @@ function mapaVillaPiedra(){
     ['¡Desde acá arriba te vi venir! A ver qué tan fuerte sos.'], ['Bien ahí. Estela Gartija te va a costar, pero podés.'], '#E2574C'));
   M.zonas = [['villapiedra', 1, 12, 28, 24], ['serrania', 1, 1, 28, 11]];
   M.zonaBase = 'serrania';
-  M.edificio(18, 21, 7, 'gimnasio', {lider:'saltamontes'}, {color:'#8DBF3A', tipoGym:'bicho'});
+  // Desvío al este: el camino a Pueblo Panal.
+  M.camino(23, 8, 28, 8);
+  M.salida(29, 8, 'panal', 1, 14);
   return M;
 }
 
@@ -255,7 +257,7 @@ function mapaCamalote(){
   M.m[17][32] = 'A'; M.altares['32,17'] = 'yacura';
   for(let x = 1; x <= 34; x++) if(x !== 14) M.m[1][x] = 'T';
   M.camino(14, 1, 14, 2);
-  M.salida(14, 0, 'tormenta', 16, 26);
+  M.salida(14, 0, 'barrilete', 13, 22);
   // Un canal de agua separa el puerto del camino a Cerro Tormenta: hace falta Surf.
   for(let y = 3; y <= 4; y++) for(let x = 1; x <= 27; x++) M.m[y][x] = '~';
   M.npc({id:'nadador_cam', x:14, y:6, tipo:'vecino', nombre:'Bañero Esteban Ñadando', ropa:'#E2574C', pelo:'#C98A3C',
@@ -272,7 +274,6 @@ function mapaCamalote(){
     ['¡Todos a bordo! Primero tenés que pasar por mí.'], ['¡Hombre al agua! Bah, criatura al agua.'], '#E2574C'));
   M.zonas = [['camalote', 1, 11, 24, 22], ['costa', 1, 1, 34, 26]];
   M.zonaBase = 'costa';
-  M.edificio(2, 9, 7, 'gimnasio', {lider:'tornado'}, {color:'#7FC8EE', tipoGym:'viento'});
   return M;
 }
 
@@ -295,13 +296,13 @@ function mapaTormenta(){
     frases: ['Estudio las tormentas de este cerro hace cuarenta años.', 'Cuando truena fuerte, allá arriba se ve un ave enorme... Huracanto, le dicen.', 'Tomá, que lo vas a necesitar.']}});
   M.rect(13, 19, 15, 19, ':'); M.rect(17, 19, 19, 19, ':');
   M.borde('T');
-  M.salida(16, 27, 'camalote', 14, 1);
+  M.salida(16, 27, 'barrilete', 13, 1);
   M.m[3][5] = 'A'; M.altares['5,3'] = 'huracanto';
   for(let x = 1; x <= 30; x++) if(x !== 16) M.m[1][x] = 'T';
   M.camino(16, 1, 16, 2);
-  M.salida(16, 0, 'cueva', 13, 29);
+  M.salida(16, 0, 'escarcha', 13, 22);
   M.npc({id:'linterna_tor', x:18, y:3, tipo:'vecino', nombre:'Espeleólogo Armando Linterna', ropa:'#C98A3C', pelo:'#3B2A22',
-    frases:['Al norte arranca la Cueva Oscura. Del otro lado está Monte Fogón.', 'Adentro no se ve nada. Con Destello, que enseña Elsa Ltamontes en Villa Piedra, se ilumina todo.', 'Y llevá Fuerza: hay rocas que tapan el paso.']});
+    frases:['Al norte está Pueblo Escarcha y, pasándolo, la Cueva Oscura. Del otro lado está Monte Fogón.', 'Adentro de la cueva no se ve nada. Con Destello, que enseña Elsa Ltamontes en Pueblo Panal, se ilumina todo.', 'Y llevá Fuerza: hay rocas que tapan el paso.']});
   M.npc({id:'vecino_tor', x:12, y:20, tipo:'vecino', nombre:'Abuela Tere Moto', ropa:'#7A4FC9', pelo:'#E9E2D3', suelo:':',
     frases:['Aitor Menta usa criaturas de Rayo. Son rápidas como la luz.', 'Las de Piedra casi no sienten la electricidad. Pensalo.']});
   M.npc(entrenador('nieves', 26, 23, 'Esquiadora', 'Ivana Nieva', [['escarchin',17],['pinguinito',18]], 320,
@@ -314,7 +315,6 @@ function mapaTormenta(){
     ['¡Bzzz! ¡Te voy a dejar con los pelos parados!'], ['Me quedé sin chispa...'], '#FFD23F'));
   M.zonas = [['tormenta', 1, 12, 30, 20], ['cumbres', 1, 1, 30, 26]];
   M.zonaBase = 'cumbres';
-  M.edificio(2, 21, 5, 'gimnasio', {lider:'patinaje'}, {color:'#BFE9FF', tipoGym:'hielo'});
   return M;
 }
 
@@ -438,6 +438,66 @@ function repartirObjetos(M, cant){
     M.items.push({id: 'it_' + M.id + '_' + i, x, y});
   }
 }
+/* ---------------- Pueblos chicos con gimnasio propio ---------------- */
+// Arriba un tramo de ruta con pasto alto; abajo la plaza con Centro, Market, gimnasio y una casa.
+function pueblito(c){
+  const W = 28, H = 24;
+  const M = nuevoMapa(c.id, c.nombre, W, H, c.semilla, c.base || '.', c.tema);
+  M.mancha(1, 2, 26, 8, 9, ',', 1.3, 2.6);
+  M.salpicar(1, 1, 26, 8, .07, 'T', [c.base || '.']);
+  if(c.rocas) M.salpicar(1, 1, 26, 8, .04, '#', [c.base || '.']);
+  M.rect(3, 10, 24, 21, ':');
+  M.camino(13, 1, 13, 22);
+  M.camino(1, 14, 26, 14);
+  M.camino(6, 4, 22, 4);
+  M.edificio(4, 11, 5, 'centro', 'centro');
+  M.edificio(19, 11, 5, 'market', 'market');
+  M.edificio(10, 16, 7, 'gimnasio', {lider: c.lider}, {color: c.colorGym, tipoGym: LIDERES[c.lider].tipoGym});
+  casaConInterior(M, 19, 17, c.colorCasa, c.casa);
+  M.rect(13, 18, 13, 18, ':');
+  M.borde('T');
+  for(const [x, y, a, ax, ay] of c.salidas){ if(y === 0) M.camino(x, 1, x, 2); M.salida(x, y, a, ax, ay); }
+  if(!c.salidas.some(([, y]) => y === 0)) for(let x = 1; x < W - 1; x++) M.m[1][x] = 'T';
+  if(!c.salidas.some(([, y]) => y === H - 1)) M.m[H - 1][13] = 'T';
+  M.npc({id: c.id + '_vecino', x: 9, y: 13, tipo: 'vecino', suelo: ':', ...c.vecino});
+  c.entrenadores.forEach(([id, x, y, ...resto]) => M.npc(entrenador(id, x, y, ...resto)));
+  M.zonas = [[c.id, 3, 10, 24, 21], [c.ruta, 1, 1, W - 2, H - 2]];
+  M.zonaBase = c.ruta;
+  return M;
+}
+function mapaPanal(){
+  return pueblito({id: 'panal', nombre: 'Pueblo Panal', semilla: 5150, lider: 'saltamontes', colorGym: '#8DBF3A', colorCasa: '#E8B23A', ruta: 'bosquepanal',
+    tema: {pasto:'#9CCB6A', pastoAlto:'#5E9E45', brizna:'#3E7A2E', tierra:'#C9B07A', arbol:'normal', fondo:'#3E6B30'},
+    salidas: [[0, 14, 'villapiedra', 28, 8]],
+    casa: {nombre: 'Casa de la Apicultora', npc: {nombre: 'Apicultora Melisa Panal', ropa: '#FFD23F', pelo: '#3B2A22', regalo: true,
+      frases: ['Shh, que las abejas duermen la siesta.', 'Elsa Ltamontes entrena en el gimnasio de acá al lado. Sus bichos pican fuerte.', 'Tomá, un regalito con gusto a miel.']}},
+    vecino: {nombre: 'Don Abel Lota', ropa: '#8DBF3A', pelo: '#C9C9C9',
+      frases: ['Bienvenido a Pueblo Panal: acá hay más bichos que gente.', 'El Fuego y el Viento les ganan a los Bicho. La Planta, en cambio, sufre.']},
+    entrenadores: [['panal_t1', 6, 6, 'Cazabichos', 'Benito Zumbido', [['grillito', 11], ['vaquitita', 12]], 140, ['¡Mirá el bicho que encontré!'], ['Se me escapó volando.'], '#8DBF3A'],
+                   ['panal_t2', 21, 3, 'Jardinera', 'Rosa Polen', [['mariposita', 12], ['abejita', 12]], 150, ['Mis flores atraen a los bichos más lindos.'], ['Me marchitaste el jardín.'], '#FF8FB1']]});
+}
+function mapaBarrilete(){
+  return pueblito({id: 'barrilete', nombre: 'Villa Barrilete', semilla: 6262, lider: 'tornado', colorGym: '#7FC8EE', colorCasa: '#5AB4E8', ruta: 'lomasventosas',
+    tema: {pasto:'#A9D98E', pastoAlto:'#6FB36A', brizna:'#4A8F4E', tierra:'#D9C9A0', arbol:'normal', fondo:'#4A7A50'},
+    salidas: [[13, 23, 'camalote', 14, 1], [13, 0, 'tormenta', 16, 26]],
+    casa: {nombre: 'Casa del Barrilero', npc: {nombre: 'Barrilero Elio Cóptero', ropa: '#E2574C', pelo: '#2A2420', regalo: true,
+      frases: ['Acá el viento sopla tan fuerte que los barriletes vuelan solos.', 'Aitor Nado es el líder. Con su medalla, tus criaturas te llevan volando.', 'Tomá, para el viaje.']}},
+    vecino: {nombre: 'Doña Ventura Soplo', ropa: '#9FD4F5', pelo: '#E9E2D3',
+      frases: ['Al norte de Villa Barrilete está Cerro Tormenta.', 'Contra las criaturas de Viento, probá con Rayo, Hielo o Piedra.']},
+    entrenadores: [['barr_t1', 6, 6, 'Barrileteador', 'Cometa Pérez', [['barrilete', 15], ['hornerito', 15]], 200, ['¡Mirá cómo sube mi barrilete!'], ['Se me cortó el hilo.'], '#5AB4E8'],
+                   ['barr_t2', 21, 3, 'Ornitóloga', 'Paloma Mensajera', [['picaflorcito', 16], ['condorcito', 16]], 220, ['Conozco todas las aves de las lomas.'], ['Me volaron todas.'], '#FFD23F']]});
+}
+function mapaEscarcha(){
+  return pueblito({id: 'escarcha', nombre: 'Pueblo Escarcha', semilla: 7373, lider: 'patinaje', colorGym: '#9FD9F2', colorCasa: '#7FA9C9', ruta: 'vallehelado', rocas: true,
+    tema: {pasto:'#E6F2F8', pastoAlto:'#BCD9E8', brizna:'#8DB6CC', tierra:'#D9E6EE', arbol:'pino', fondo:'#4E6E80'},
+    salidas: [[13, 23, 'tormenta', 16, 1], [13, 0, 'cueva', 13, 29]],
+    casa: {nombre: 'Casa del Esquiador', npc: {nombre: 'Esquiador Copo de Nieve', ropa: '#3B82D6', pelo: '#F2B63D', regalo: true,
+      frases: ['Acá nieva todo el año. ¡Me encanta!', 'Paty Naje es la líder: congela todo lo que toca.', 'Tomá, para que no pases frío.']}},
+    vecino: {nombre: 'Abuelo Témpano', ropa: '#BFE9FF', pelo: '#FFFFFF',
+      frases: ['Al norte está la Cueva Oscura. Sin Destello, no vas a ver ni tus pies.', 'Contra el Hielo, el Fuego y la Piedra son lo mejor.']},
+    entrenadores: [['esc_t1', 6, 6, 'Patinador', 'Elmer Engue', [['pinguinito', 19], ['escarchin', 19]], 260, ['¡Una pirueta y peleamos!'], ['Me resbalé.'], '#BFE9FF'],
+                   ['esc_t2', 21, 3, 'Andinista', 'Nieves Eternas', [['huemulito', 20], ['pinguinazo', 20]], 290, ['Subí todas las montañas. Ahora te subo a vos.'], ['Me bajaste de la montaña.'], '#7FA9C9']]});
+}
 /* ---------------- Cueva Oscura: un laberinto entre Cerro Tormenta y Monte Fogón ---------------- */
 function mapaCueva(){
   const W = 27, H = 31;
@@ -485,7 +545,7 @@ function mapaCueva(){
     const x = 1 + Math.floor(r() * (W - 2)), y = 1 + Math.floor(r() * (H - 2));
     if(M.m[y][x] === '#' && ((x % 2 === 0 && y % 2 === 1) || (x % 2 === 1 && y % 2 === 0))) probar([[x, y]]);
   }
-  M.salida(13, 30, 'tormenta', 16, 1);
+  M.salida(13, 30, 'escarcha', 13, 1);
   M.salida(13, 0, 'fogon', 16, 24);
   M.m[30][13] = 'k'; M.m[0][13] = 'k';
   M.rocaCamino = roca;
@@ -503,7 +563,7 @@ function mapaCueva(){
   M.zonas = [['cueva', 0, 0, W - 1, H - 1]]; M.zonaBase = 'cueva';
   return M;
 }
-[mapaCeibo, mapaVillaPiedra, mapaCamalote, mapaTormenta, mapaFogon, mapaSupremo, mapaCueva].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
+[mapaCeibo, mapaVillaPiedra, mapaPanal, mapaCamalote, mapaBarrilete, mapaTormenta, mapaEscarcha, mapaFogon, mapaSupremo, mapaCueva].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
 INTERIORES.forEach((info, n) => { const M = mapaInterior(info, n); MAPAS[M.id] = M; });
 const SALIDA_CASA = {mapa: 'ceibo', x: 11, y: 24};
 

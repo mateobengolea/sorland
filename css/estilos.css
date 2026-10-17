@@ -462,3 +462,7 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .fo-acc .btn,#ver-ranking{border:2px solid var(--tinta);border-radius:10px;background:var(--sol);font-weight:800;cursor:pointer}
 #ver-ranking{padding:10px;width:100%}
 .fo-acc .btn:disabled{background:#E3E8EF;color:var(--tinta-suave)}
+.olvidar .mc-nuevo{display:flex;flex-direction:column;gap:1px;padding:8px 12px;border:2.5px dashed var(--tinta);border-left:8px solid var(--tipo);border-radius:12px;background:#FFF6D6;position:relative}
+.olvidar .mc-nuevo span{position:absolute;top:-9px;right:10px;background:#FFD23F;border:2px solid var(--tinta);border-radius:99px;padding:0 8px;font-size:.7rem;font-weight:800}
+.olvidar .mc-nuevo small{color:var(--tinta-suave);font-weight:700}
+.hoja .menu-combate.olvidar{display:flex;flex-direction:column;gap:6px;overflow-y:auto}

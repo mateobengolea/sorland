@@ -241,6 +241,12 @@ const ZONAS = {
   volcan:{nom:'Laderas del Volcán', niveles:[19,24], aparecen:[['zorrolumbre',16],['brasita',8],['brasero',8],['morro',10],['fogonero',10],['ajipicante',8],['tatupenon',8],['fosilon',6],['cuarzon',6],['hormigon',6],['luzmala',3]]},
   interior:{nom:'', niveles:[1,1], aparecen:[]},
   supremo:{nom:'Cumbre Suprema', niveles:[1,1], aparecen:[]},
+  panal:{nom:'Pueblo Panal', niveles:[1,1], aparecen:[]},
+  barrilete:{nom:'Villa Barrilete', niveles:[1,1], aparecen:[]},
+  escarcha:{nom:'Pueblo Escarcha', niveles:[1,1], aparecen:[]},
+  bosquepanal:{nom:'Bosque del Panal', niveles:[11,14], aparecen:[['grillito',20],['mariposita',18],['abejita',16],['vaquitita',16],['hormiguin',14],['mamboreta',8],['honguito',8]]},
+  lomasventosas:{nom:'Lomas Ventosas', niveles:[15,18], aparecen:[['barrilete',20],['picaflorcito',18],['hornerito',16],['condorcito',14],['bichofeo',10],['pampito',12],['picaflor',6]]},
+  vallehelado:{nom:'Valle Helado', niveles:[19,22], aparecen:[['pinguinito',22],['escarchin',20],['huemulito',18],['cuisito',10],['escarchon',8],['pinguinazo',6]]},
   cueva:{nom:'Cueva Oscura', niveles:[18,22], aparecen:[['cuarcito',22],['fosilon',14],['morro',14],['hormigon',14],['grillon',10],['chispon',10],['cuarzon',10],['geodon',3]]},
   victoria:{nom:'Camino de la Victoria', niveles:[24,30], aparecen:[['carpincho',8],['hornero',7],['chispon',7],['ceibal',6],['morro',7],['cardonal',6],['condoralto',5],['bagron',6],['tormenton',4],['pampero',7],['nandu',7],['ranacua',6],['yerbatin',6],['cuarzon',5],['pilon',6],['escarchon',5],['hormigon',6],['mariposon',5],['abejorro',5],['grillon',5],['vaquiton',5],['tormentin',2],['luzmala',2]]},
 };
@@ -249,11 +255,11 @@ const ZONAS = {
 const MEDALLAS = [
   {id:'ombu', nom:'Medalla Ombú', tipo:'planta', ciudad:'Pueblo Ceibo', color:'#5DB86A', color2:'#8A5A35'},
   {id:'penasco', nom:'Medalla Peñasco', tipo:'piedra', ciudad:'Villa Piedra', color:'#9AA3AE', color2:'#6E7884'},
-  {id:'panal', nom:'Medalla Panal', tipo:'bicho', ciudad:'Villa Piedra', color:'#FFD23F', color2:'#8A5A35'},
+  {id:'panal', nom:'Medalla Panal', tipo:'bicho', ciudad:'Pueblo Panal', color:'#FFD23F', color2:'#8A5A35'},
   {id:'camalote', nom:'Medalla Camalote', tipo:'agua', ciudad:'Puerto Camalote', color:'#5AB4E8', color2:'#7C5CC4'},
-  {id:'pampero', nom:'Medalla Pampero', tipo:'viento', ciudad:'Puerto Camalote', color:'#CFEBFA', color2:'#5AB4E8'},
+  {id:'pampero', nom:'Medalla Pampero', tipo:'viento', ciudad:'Villa Barrilete', color:'#CFEBFA', color2:'#5AB4E8'},
   {id:'relampago', nom:'Medalla Relámpago', tipo:'rayo', ciudad:'Cerro Tormenta', color:'#FFD23F', color2:'#4656A0'},
-  {id:'glaciar', nom:'Medalla Glaciar', tipo:'hielo', ciudad:'Cerro Tormenta', color:'#E4F6FF', color2:'#7FD3F7'},
+  {id:'glaciar', nom:'Medalla Glaciar', tipo:'hielo', ciudad:'Pueblo Escarcha', color:'#E4F6FF', color2:'#7FD3F7'},
   {id:'brasa', nom:'Medalla Brasa', tipo:'fuego', ciudad:'Monte Fogón', color:'#F47A45', color2:'#FFD23F'},
 ];
 const cantMedallas = () => S ? MEDALLAS.filter(m => S.medallas[m.id]).length : 0;
@@ -290,6 +296,21 @@ function poderesDe(esp, nivel, extra){
   const lista = [...new Set(def.aprende.filter(([n]) => n <= nivel).map(([, m]) => m))].filter(m => !ext.includes(m));
   return [...lista.slice(-(4 - ext.length)), ...ext];
 }
+// Los poderes de una criatura concreta: los que eligió (c.movs) o, si es vieja, los automáticos por nivel.
+function movsDe(c){
+  if(c && Array.isArray(c.movs) && c.movs.length) return c.movs.filter(m => MOVS[m]).slice(0, 4);
+  return poderesDe(c.esp, c.nivel, c.extra);
+}
+function asegurarMovs(c){
+  if(!Array.isArray(c.movs) || !c.movs.length) c.movs = poderesDe(c.esp, c.nivel, c.extra);
+  delete c.extra;
+  return c.movs;
+}
+// Poderes que la especie aprende al pasar de un nivel a otro.
+function nuevosEnNivel(esp, desde, hasta){
+  return [...new Set(ESPECIES[esp].aprende.filter(([n]) => n > desde && n <= hasta).map(([, m]) => m))];
+}
+function aprendiblesHasta(esp, nivel){ return new Set(ESPECIES[esp].aprende.filter(([n]) => n <= nivel).map(([, m]) => m)); }
 function tipoDe(esp){ return ESPECIES[esp].tipo; }
 function nombreEspecie(esp){ return ESPECIES[esp].nombre; }
 function vidaMax(stats, nivel){ return Math.round(14 + stats.vida * 1.2 + nivel * 4); }
@@ -310,7 +331,9 @@ function calcularDanio(atacante, defensor, mov, rnd = Math.random){
 const PROB_SHINY = 1 / 200;
 function nuevaCriatura(esp, nivel, extra = {}){
   const sp = ESPECIES[esp], stats = statsPorNivel(sp.base, nivel);
-  return {uid: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), esp, nombre: sp.nombre, nivel, xp: 0, stats, hp: null, shiny: false, ...extra};
+  const c = {uid: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), esp, nombre: sp.nombre, nivel, xp: 0, stats, hp: null, shiny: false, ...extra};
+  if(!c.movs) c.movs = poderesDe(esp, nivel);
+  return c;
 }
 function crearSalvaje(zonaId){
   const z = ZONAS[zonaId];

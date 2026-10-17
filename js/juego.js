@@ -79,6 +79,7 @@ function migrar(p){
   if(!p.casa) p.casa = [];
   if(!p.fondo) p.fondo = 'durazno';
   if(!p.discos) p.discos = {};
+  for(const c of [...(p.equipo || []), ...(p.reserva || [])]) if(c && ESPECIES[c.esp]) asegurarMovs(c);
   // Los iniciales de fuego y planta cambiaron de nombre: si no les pusiste apodo, se actualiza.
   const NOMBRES_VIEJOS = {Carosor: 'carosor', Carosaurio: 'carosaurio', 'Carotitán': 'carotitan', Matesor: 'matesor', Matesaurio: 'matesaurio', 'Matetitán': 'matetitan'};
   for(const c of [...p.equipo, ...p.reserva]) if(NOMBRES_VIEJOS[c.nombre] && ESPECIES[c.esp] && NOMBRES_VIEJOS[c.nombre] === c.esp) c.nombre = ESPECIES[c.esp].nombre;
@@ -319,7 +320,7 @@ function pintarHoja(){
         : '<div class="vacio">No tenés cápsulas ni jarabes. Pasá por un Market.</div>';
     } else if(t === 'movs'){
       const ids = Object.keys(S.discos || {}).filter(m => MOVS[m]);
-      cuerpo = ids.length ? ids.map(m => { const mv = MOVS[m], quien = [...S.equipo, ...S.reserva].filter(c => (c.extra || [])[0] === m).map(c => c.nombre);
+      cuerpo = ids.length ? ids.map(m => { const mv = MOVS[m], quien = [...S.equipo, ...S.reserva].filter(c => movsDe(c).includes(m)).map(c => c.nombre);
           return `<div class="item"><span class="em"><span class="disco-mov" style="--tipo:${TIPOS[mv.tipo].color}"></span></span><h3>${mv.nom}</h3><p>${TIPOS[mv.tipo].nom} · poder ${mv.poder}${quien.length ? `<br>Lo sabe: ${esc(quien.join(', '))}` : ''}</p><button class="btn" data-ensenar="${m}">Enseñar</button></div>`; }).join('')
         : '<div class="vacio">Ganale a un líder de gimnasio y te regala su movimiento.</div>';
     } else if(t === 'muebles'){
@@ -392,11 +393,22 @@ function usarObjeto(id){
     else if(o.usa === 'revivir'){ l.hp = Math.max(1, Math.round(l.max * o.revive)); guardarHp(l); avisar(`¡${c.nombre} se levantó!`); }
     else if(o.usa === 'stat'){ c.stats[o.stat] += o.mas; avisar(`${c.nombre}: +${o.mas} de ${o.stat === 'vida' ? 'Vida' : o.stat === 'fuerza' ? 'Fuerza' : 'Velocidad'}.`, 'nivel'); }
     else if(o.usa === 'nivel'){
+      asegurarMovs(c);
       c.nivel++; c.xp = 0; c.stats.vida += 2; c.stats.fuerza += 1; c.stats.velocidad += 1;
       avisar(`¡${c.nombre} subió a nivel ${c.nivel}!`, 'nivel');
-      const antes = c.nombre, esp = c.esp;
-      if(evolucionPendiente(c)){ evolucionar(c); if(c.esp !== esp) setTimeout(() => avisar(`¡${antes} evolucionó en ${ESPECIES[c.esp].nombre}!`, 'nivel'), 900);
-        S.album.vistos[c.esp] = true; S.album.capt[c.esp] = (S.album.capt[c.esp] || 0) + 1; }
+      cerrarHoja();
+      (async () => {
+        for(const m of nuevosEnNivel(c.esp, c.nivel - 1, c.nivel)) await aprenderPoder(c, m);
+        const antes = c.nombre, esp = c.esp;
+        if(evolucionPendiente(c)){
+          evolucionar(c);
+          if(c.esp !== esp) avisar(`¡${antes} evolucionó en ${ESPECIES[c.esp].nombre}!`, 'nivel');
+          S.album.vistos[c.esp] = true; S.album.capt[c.esp] = (S.album.capt[c.esp] || 0) + 1;
+          for(const m of nuevosEnNivel(c.esp, c.nivel - 1, c.nivel)) await aprenderPoder(c, m);
+        }
+        guardar(); if(vista === 'casa') pintarJuego(); else if(MW) MW.imgLider = null;
+      })();
+      return;
     }
     guardar(); cerrarHoja();
     if(vista === 'casa') pintarJuego();
@@ -411,20 +423,20 @@ function elegirAprendiz(mov){
   const todas = [...S.equipo, ...S.reserva];
   v.innerHTML = `<div class="hoja hoja-elegir" role="dialog" aria-label="Enseñar movimiento">
     <div class="hoja-cab"><h2>¿Quién aprende ${esc(mv.nom)}?</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
-    <p class="rotulo-chico">Tipo ${TIPOS[mv.tipo].nom} · poder ${mv.poder}. Cada criatura puede tener un movimiento de líder: si ya sabe otro, lo reemplaza. El disco queda en tu mochila para enseñarlo de nuevo.</p>
+    <p class="rotulo-chico">Tipo ${TIPOS[mv.tipo].nom} · poder ${mv.poder}. Si la criatura ya sabe 4 poderes, elegís cuál olvida. El disco queda en tu mochila para enseñarlo de nuevo.</p>
     <div class="grilla-elegir">${todas.map((c, i) => {
-      const ya = (c.extra || [])[0];
+      const ya = movsDe(c).includes(mov) ? mov : null;
       return `<button class="elegible${ya === mov ? ' elegida' : ''}${c.shiny ? ' es-shiny' : ''}" data-i="${i}" style="--tipo:${TIPOS[tipoDe(c.esp)].color}">
         <span class="el-img">${svgEspecie(c.esp, {humor: 'feliz', shiny: c.shiny})}</span><b data-nom="${i}"></b>
-        <small>${ya === mov ? 'Ya lo sabe' : ya ? 'Sabe ' + MOVS[ya].nom : 'Nv ' + c.nivel + ' · ' + TIPOS[tipoDe(c.esp)].nom}</small></button>`;
+        <small>${ya ? 'Ya lo sabe' : 'Nv ' + c.nivel + ' · ' + movsDe(c).length + ' poderes'}</small></button>`;
     }).join('')}</div>
     <div class="acciones-jugador"><button class="btn btn-2" id="ap-despues">Más tarde (queda en la Mochila)</button></div></div>`;
   todas.forEach((c, i) => { v.querySelector(`[data-nom="${i}"]`).textContent = c.nombre + (c.shiny ? ' ✦' : ''); });
   v.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
     const c = todas[+b.dataset.i];
-    if((c.extra || [])[0] === mov) return;
-    c.extra = [mov]; guardar(); cerrarHoja();
-    avisar(`¡${c.nombre} aprendió ${mv.nom}!`, 'nivel');
+    if(movsDe(c).includes(mov)) return;
+    cerrarHoja();
+    aprenderPoder(c, mov).then(() => { guardar(); if(vista === 'casa') pintarJuego(); });
   });
   v.querySelector('.cerrar').onclick = cerrarHoja;
   v.querySelector('#ap-despues').onclick = cerrarHoja;
