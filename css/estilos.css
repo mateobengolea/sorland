@@ -649,3 +649,7 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .confeti{position:fixed;inset:0;pointer-events:none;z-index:3300;overflow:hidden}
 .confeti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:confeti 2.4s ease-in forwards}
 @keyframes confeti{to{transform:translateY(105vh) rotate(720deg)}}
+.ficha-luch.sube-nivel{animation:subeNivel .9s ease-out}
+@keyframes subeNivel{0%{box-shadow:0 0 0 0 rgba(255,210,63,.9)}40%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,210,63,.5)}100%{transform:none;box-shadow:0 3px 0 var(--sombra)}}
+.bicho-combate.sube-nivel-bicho svg{animation:subeNivelB .9s ease-out}
+@keyframes subeNivelB{30%{filter:brightness(1.6) drop-shadow(0 0 12px #FFD23F)}}

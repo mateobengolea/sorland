@@ -400,12 +400,17 @@ async function darXP(l, xp){
   c.xp = (c.xp || 0) + xp;
   let subio = false;
   while(c.xp >= xpPara(c.nivel)){ c.xp -= xpPara(c.nivel); c.nivel++; c.stats.vida += 2; c.stats.fuerza += 1; c.stats.velocidad += 1; subio = true; }
-  if(B && activo() === l){ fichas(); await espera(450); }
   if(subio){
     const nuevoMax = vidaMax(c.stats, c.nivel);
     l.hp = Math.min(nuevoMax, l.hp + (nuevoMax - l.max)); l.max = nuevoMax; l.nivel = c.nivel;
-    await mensaje(`¡${l.nombre} subió a nivel ${c.nivel}!`);
   }
+  // La ficha se actualiza en el momento: nivel, vida máxima y experiencia.
+  if(B && activo() === l){
+    fichas();
+    if(subio){ animar('f-propio', 'sube-nivel', 900); animar('b-propio', 'sube-nivel-bicho', 900); }
+    await espera(450);
+  }
+  if(subio) await mensaje(`¡${l.nombre} subió a nivel ${c.nivel}!`);
   for(const m of nuevosEnNivel(c.esp, nivelAntes, c.nivel)) await aprenderPoder(c, m, l);
   if(evolucionPendiente(c)){
     await animarEvolucion(l);
