@@ -31,7 +31,7 @@ function empezarCombate(rivales, zona, ent){
   const salvaje = rivales[0];
   const lista = equipoLuchadores();
   const i = lista.findIndex(l => l.hp > 0);
-  B = {salvaje, rivales, ri: 0, ent: ent || null, zona, lista, i, ocupado: true, forzado: false, fin: false, legendaria: ESPECIES[salvaje.esp].legendaria ? salvaje.esp : null};
+  B = {salvaje, rivales, ri: 0, ent: ent || null, zona, lista, i, peleo: new Set([i]), ocupado: true, forzado: false, fin: false, legendaria: ESPECIES[salvaje.esp].legendaria ? salvaje.esp : null};
   S.album.vistos[salvaje.esp] = true;
   pintarCombate();
   (async () => {
@@ -115,6 +115,7 @@ function fichaHTML(l, propio){
 function fichas(){
   if(!$('#f-rival')) return;
   $('#f-rival').innerHTML = fichaHTML(B.salvaje, false); $('#f-rival b').textContent = B.salvaje.nombre + brillo(B.salvaje);
+  if(S.album.capt[B.salvaje.esp]) $('#f-rival .fl-cab b').insertAdjacentHTML('beforeend', `<span class="ya-tenes" title="Ya la atrapaste">${iconoObjeto(OBJETOS[0], 16)}</span>`);
   $('#f-propio').innerHTML = fichaHTML(activo(), true); $('#f-propio b').textContent = activo().nombre + brillo(activo());
   const cr = $('#cuenta-rivales');
   if(cr) cr.innerHTML = B.rivales.map(r => `<i class="pip ${r.hp > 0 ? '' : 'caido'}"></i>`).join('');
@@ -204,7 +205,7 @@ async function turno(acc){
       const vuelve = yo.nombre, forzado = B.forzado;
       if(!forzado){ mensaje(`¡Volvé, ${vuelve}!`, 600); await guardarCriatura('propio', false); }
       $('#b-propio').classList.remove('vuelve-propio', 'desmayo');
-      B.i = acc.i; pintarPropio(); fichas();
+      B.i = acc.i; B.peleo.add(B.i); pintarPropio(); fichas();
       const m3 = mensaje(`¡Dale, ${activo().nombre}!`, 900);
       await sacarCriatura('propio'); await m3;
       if(forzado){ B.forzado = false; return; }
@@ -312,10 +313,13 @@ async function ganarCombate(){
   await mensaje(`${nomRival()} se debilitó.`);
   fichas();
   const xp = Math.round((el.nivel * 12 + 8) * (B.ent ? 1.5 : 1));
-  await darXP(yo, xp);
+  // Gana experiencia toda criatura que peleó contra este rival y sigue en pie.
+  const ganan = [...B.peleo].map(i => B.lista[i]).filter(l => l && l.hp > 0);
+  if(!ganan.includes(yo) && yo.hp > 0) ganan.unshift(yo);
+  for(const l of ganan) await darXP(l, xp);
   // ¿El entrenador tiene otra criatura?
   if(B.ent && B.ri < B.rivales.length - 1){
-    B.ri++; B.salvaje = B.rivales[B.ri];
+    B.ri++; B.salvaje = B.rivales[B.ri]; B.peleo = new Set([B.i]);
     S.album.vistos[B.salvaje.esp] = true;
     const br = $('#b-rival'); br.classList.add('oculto'); br.classList.remove('desmayo');
     br.innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
@@ -449,18 +453,47 @@ function elegirOlvido(c, nuevo){
   });
 }
 async function animarEvolucion(l){
-  const c = l.ref, antes = c.nombre;
-  await mensaje(`¿Eh? ¡${antes} está evolucionando!`, 1300);
-  animar('b-propio', 'evoluciona', 1800);
-  await espera(900);
+  const c = l.ref, antes = c.nombre, espAntes = c.esp;
+  await mensaje(`¿Eh? ¡${antes} está evolucionando!`, 900);
   const nueva = evolucionar(c);
+  await escenaEvolucion(espAntes, c.esp, antes, c.shiny);
   Object.assign(l, comoLuchador(c), {hp: l.hp});
   l.max = vidaMax(c.stats, c.nivel); l.hp = Math.min(l.max, l.hp + 10);
   S.album.vistos[c.esp] = true; S.album.capt[c.esp] = (S.album.capt[c.esp] || 0) + 1;
   if(c.shiny) S.album.shiny[c.esp] = true;
-  pintarPropio(); fichas();
-  await espera(900);
-  await mensaje(`¡${antes} evolucionó en ${nueva.nombre}!`, 1700);
+  if(activo() === l){ pintarPropio(); animar('b-propio', 'sale-propio', 450); }
+  fichas();
+  await mensaje(`¡${antes} ahora es ${nueva.nombre}!`, 1200);
+}
+/* ---------------- Escena de evolución (pantalla completa, estilo clásico) ---------------- */
+function escenaEvolucion(espA, espB, nombre, shiny){
+  return new Promise(async res => {
+    const d = document.createElement('div');
+    d.className = 'evo-escena';
+    d.innerHTML = `<div class="evo-rayos"></div><div class="evo-cr"><div class="evo-a">${svgEspecie(espA, {humor: 'bien', shiny, aura: false})}</div>
+      <div class="evo-b">${svgEspecie(espB, {humor: 'feliz', shiny, aura: false})}</div></div>
+      <div class="evo-chispas">${Array.from({length: 14}, (_, i) => `<i style="--a:${i * 360 / 14}deg;--d:${(i % 3) * .12}s"></i>`).join('')}</div>
+      <p class="evo-texto"></p><button class="evo-seguir" hidden>Seguir</button>`;
+    document.body.appendChild(d);
+    const t = d.querySelector('.evo-texto'), a = d.querySelector('.evo-a'), b = d.querySelector('.evo-b');
+    t.textContent = `¿Eh? ¡${nombre} está evolucionando!`;
+    await espera(1300);
+    d.classList.add('brillando');
+    await espera(900);
+    // Alterna entre la forma vieja y la nueva cada vez más rápido.
+    let ms = 520;
+    let nueva = false;
+    while(ms > 55){ nueva = !nueva; a.classList.toggle('fuera', nueva); b.classList.toggle('dentro', nueva); await espera(ms); ms *= .8; }
+    a.classList.add('fuera'); b.classList.add('dentro');
+    d.classList.add('destello');
+    await espera(350);
+    d.classList.remove('brillando'); d.classList.add('listo');
+    t.textContent = `¡Felicitaciones! ¡${nombre} evolucionó en ${ESPECIES[espB].nombre}!`;
+    const btn = d.querySelector('.evo-seguir'); btn.hidden = false; btn.focus();
+    let hecho = false;
+    const cerrar = () => { if(hecho) return; hecho = true; d.classList.add('cierra'); setTimeout(() => { d.remove(); res(); }, 300); };
+    btn.onclick = cerrar; setTimeout(cerrar, 4500);
+  });
 }
 
 async function propioCaido(){

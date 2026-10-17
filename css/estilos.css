@@ -560,3 +560,37 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .arena .ficha-luch{z-index:5}
 .velo{z-index:3000!important}
 .avisos{z-index:3100!important}
+
+/* ======================= Usos abajo a la derecha ======================= */
+.mc-mov .usos{position:static;display:block;width:fit-content;margin:3px 0 0 auto}
+
+/* ======================= Ya la tenés ======================= */
+.ya-tenes{display:inline-flex;vertical-align:-3px;margin-left:5px}
+.ya-tenes svg{width:16px;height:16px}
+
+/* ======================= Escena de evolución ======================= */
+.evo-escena{position:fixed;inset:0;z-index:3200;display:grid;place-items:center;align-content:center;gap:14px;background:radial-gradient(circle at 50% 42%,#3B4A8C 0%,#1B2244 55%,#0C1022 100%);overflow:hidden;animation:evoEntra .35s ease-out}
+@keyframes evoEntra{from{opacity:0}to{opacity:1}}
+.evo-escena.cierra{animation:evoSale .3s ease-in forwards}
+@keyframes evoSale{to{opacity:0}}
+.evo-rayos{position:absolute;left:50%;top:42%;width:900px;height:900px;margin:-450px 0 0 -450px;background:repeating-conic-gradient(rgba(255,255,255,.07) 0 10deg,transparent 10deg 20deg);animation:evoGira 14s linear infinite;opacity:.5}
+.evo-escena.brillando .evo-rayos{opacity:1;animation-duration:5s}
+@keyframes evoGira{to{transform:rotate(360deg)}}
+.evo-cr{position:relative;width:min(62vw,260px);aspect-ratio:1}
+.evo-cr > div{position:absolute;inset:0;transition:opacity .08s,transform .12s}
+.evo-cr svg{width:100%;height:100%}
+.evo-b{opacity:0;transform:scale(.85)}
+.evo-a.fuera{opacity:0;transform:scale(1.1)}
+.evo-b.dentro{opacity:1;transform:scale(1)}
+.evo-escena.brillando .evo-cr > div{filter:brightness(0) invert(1) drop-shadow(0 0 18px #BFE6FB) drop-shadow(0 0 30px #FFFFFF)}
+.evo-escena.destello::after{content:'';position:absolute;inset:0;background:#fff;pointer-events:none;animation:evoFlash .6s ease-out forwards}
+@keyframes evoFlash{from{opacity:1}to{opacity:0}}
+.evo-escena.listo .evo-b{animation:evoSalta .6s ease-out}
+@keyframes evoSalta{0%{transform:scale(.9)}50%{transform:scale(1.08) translateY(-10px)}100%{transform:scale(1)}}
+.evo-chispas{position:absolute;left:50%;top:42%;width:0;height:0}
+.evo-chispas i{position:absolute;width:10px;height:10px;margin:-5px;border-radius:50%;background:#FFE45C;box-shadow:0 0 10px #FFE45C;opacity:0}
+.evo-escena.listo .evo-chispas i{animation:evoChispa 1.1s ease-out var(--d) forwards}
+@keyframes evoChispa{0%{opacity:1;transform:rotate(var(--a)) translateX(0)}100%{opacity:0;transform:rotate(var(--a)) translateX(170px)}}
+.evo-texto{position:relative;margin:0 16px;max-width:420px;padding:12px 16px;background:#FFFDF8;border:3px solid var(--tinta);border-radius:14px;font-weight:800;text-align:center;color:var(--tinta)}
+.evo-seguir{position:relative;padding:10px 26px;border-radius:99px;border:3px solid var(--tinta);background:#FFD23F;font-weight:900;font-size:1rem;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.evo-rayos,.evo-escena.listo .evo-b{animation:none}}

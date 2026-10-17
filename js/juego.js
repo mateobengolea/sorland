@@ -408,7 +408,7 @@ function usarObjeto(id){
         const antes = c.nombre, esp = c.esp;
         if(evolucionPendiente(c)){
           evolucionar(c);
-          if(c.esp !== esp) avisar(`¡${antes} evolucionó en ${ESPECIES[c.esp].nombre}!`, 'nivel');
+          if(c.esp !== esp) await escenaEvolucion(esp, c.esp, antes, c.shiny);
           S.album.vistos[c.esp] = true; S.album.capt[c.esp] = (S.album.capt[c.esp] || 0) + 1;
           for(const m of nuevosEnNivel(c.esp, c.nivel - 1, c.nivel)) await aprenderPoder(c, m);
         }
