@@ -400,64 +400,122 @@ function svgMedalla(m, tam = 64, apagada = false){
 const T_ = '#22304A';
 const st = (w = 3.5) => `stroke="${T_}" stroke-width="${w}"`;
 
+/* =====================================================================
+   Formas de cuerpo v2: siluetas orgánicas con curvas, patas con dedos,
+   garras, colas que se afinan y pelaje. La etapa cambia la postura:
+   las evoluciones son más grandes, más estilizadas y con más filo.
+   ===================================================================== */
+const S3 = st(3), S4 = st(4);
+// Pata con tres dedos y garritas.
+function pataDedos(x, y, w, col, garra = '#F4E8D2'){
+  const h = w * .55;
+  return `<path d="M${x - w / 2} ${y} C${x - w / 2} ${y - h * 1.3} ${x + w / 2} ${y - h * 1.3} ${x + w / 2} ${y} C${x + w / 2} ${y + h * .5} ${x - w / 2} ${y + h * .5} ${x - w / 2} ${y}Z" fill="${col}" ${S3} stroke-linejoin="round"/>`
+    + [-1, 0, 1].map(k => `<path d="M${x + k * w * .28 - 2.5} ${y + h * .32} l2.5 5 l2.5 -5Z" fill="${garra}" ${st(1.6)} stroke-linejoin="round"/>`).join('');
+}
+// Mechón de pelo en zigzag sobre una curva (para cabezas y pechos peludos).
+function mechon(x, y, ancho, alto, col, picos = 4){
+  let d = `M${x - ancho / 2} ${y}`;
+  for(let i = 0; i < picos; i++){ const x0 = x - ancho / 2 + ancho * i / picos, x1 = x0 + ancho / picos; d += ` L${x0 + ancho / picos / 2} ${y - alto * (i % 2 ? .75 : 1)} L${x1} ${y}`; }
+  return `<path d="${d} Q${x} ${y + alto * .5} ${x - ancho / 2} ${y}Z" fill="${col}" ${S3} stroke-linejoin="round"/>`;
+}
 const FORMAS = {
-  bipedo: c => ({
-    cuerpo: `<ellipse cx="76" cy="178" rx="16" ry="9" fill="${c[1]}" ${st()}/><ellipse cx="124" cy="178" rx="16" ry="9" fill="${c[1]}" ${st()}/>
-      <ellipse cx="100" cy="142" rx="46" ry="38" fill="${c[0]}" ${st(4)}/><ellipse cx="100" cy="150" rx="28" ry="24" fill="${c[2]}"/>
-      <ellipse cx="54" cy="138" rx="9" ry="14" fill="${c[0]}" ${st()} transform="rotate(30 54 138)"/><ellipse cx="146" cy="138" rx="9" ry="14" fill="${c[0]}" ${st()} transform="rotate(-30 146 138)"/>`,
-    cabeza: `<ellipse cx="100" cy="86" rx="46" ry="40" fill="${c[0]}" ${st(4)}/>`,
-    cara: [100, 86, 1], a: {top: [100, 48], izq: [58, 70], der: [142, 70], cola: [146, 160], cuerpo: [100, 142], ancho: 46},
+  bipedo: (c, e = 1) => {
+    const k = e >= 3 ? 1.08 : 1, yb = e >= 3 ? 4 : 0;
+    return {
+    cuerpo: `<path d="M126 150 C150 150 162 136 170 ${118 - yb * 2} C176 108 186 110 182 122 C178 142 160 168 128 170Z" fill="${c[0]}" ${S4} stroke-linejoin="round"/>
+      ${pataDedos(78, 178, 30 * k, c[1])}${pataDedos(122, 178, 30 * k, c[1])}
+      <path d="M100 ${100 - yb} C${132 * k} ${100 - yb} 146 128 144 150 C142 172 124 182 100 182 C76 182 58 172 56 150 C54 128 ${68 / k} ${100 - yb} 100 ${100 - yb}Z" fill="${c[0]}" ${S4} stroke-linejoin="round"/>
+      <path d="M100 118 C120 118 128 136 126 152 C124 168 112 176 100 176 C88 176 76 168 74 152 C72 136 80 118 100 118Z" fill="${c[2]}"/>
+      <path d="M86 130 Q100 136 114 130 M84 146 Q100 152 116 146 M86 162 Q100 167 114 162" fill="none" stroke="${c[1]}" stroke-width="2" opacity=".55"/>
+      <path d="M68 122 C54 126 46 140 50 152 C52 158 60 160 64 154 C66 146 70 138 78 132Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>
+      <path d="M132 122 C146 126 154 140 150 152 C148 158 140 160 136 154 C134 146 130 138 122 132Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>
+      ${e >= 2 ? `<path d="M52 150 l-5 7 M56 156 l-2 8 M148 150 l5 7 M144 156 l2 8" stroke="${T_}" stroke-width="2.5" stroke-linecap="round"/>` : ''}`,
+    cabeza: `<path d="M100 ${42 - yb} C134 ${42 - yb} 152 62 150 88 C148 112 128 124 100 124 C72 124 52 112 50 88 C48 62 66 ${42 - yb} 100 ${42 - yb}Z" fill="${c[0]}" ${S4}/>
+      <path d="M100 98 C118 98 128 106 126 114 C124 121 112 124 100 124 C88 124 76 121 74 114 C72 106 82 98 100 98Z" fill="${c[2]}" opacity=".9"/>`,
+    cara: [100, 84 - yb, 1], a: {cuello: [100, 122], top: [100, 46 - yb], izq: [58, 66], der: [142, 66], cola: [172, 120], cuerpo: [100, 146], ancho: 46},
+  }; },
+  redondo: (c, e = 1) => ({
+    cuerpo: `${pataDedos(76, 180, 28, c[1])}${pataDedos(124, 180, 28, c[1])}`,
+    cabeza: `<path d="M100 58 C146 58 166 92 164 124 C162 158 136 182 100 182 C64 182 38 158 36 124 C34 92 54 58 100 58Z" fill="${c[0]}" ${S4}/>
+      ${mechon(100, 64, 44, 18, c[0], 4)}
+      <path d="M100 124 C128 124 140 140 138 156 C136 172 120 180 100 180 C80 180 64 172 62 156 C60 140 72 124 100 124Z" fill="${c[2]}"/>
+      <path d="M44 136 C34 140 30 152 36 160 C40 164 48 162 50 154Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>
+      <path d="M156 136 C166 140 170 152 164 160 C160 164 152 162 150 154Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>`,
+    cara: [100, 106, 1], a: {cuello: [100, 150], top: [100, 62], izq: [48, 88], der: [152, 88], cola: [162, 152], cuerpo: [100, 140], ancho: 58},
   }),
-  redondo: c => ({
-    cuerpo: `<ellipse cx="78" cy="180" rx="14" ry="8" fill="${c[1]}" ${st()}/><ellipse cx="122" cy="180" rx="14" ry="8" fill="${c[1]}" ${st()}/>`,
-    cabeza: `<ellipse cx="100" cy="122" rx="62" ry="58" fill="${c[0]}" ${st(4)}/><ellipse cx="100" cy="146" rx="36" ry="26" fill="${c[2]}"/>`,
-    cara: [100, 108, 1], a: {top: [100, 66], izq: [46, 92], der: [154, 92], cola: [160, 150], cuerpo: [100, 140], ancho: 58},
+  cuadrupedo: (c, e = 1) => ({
+    cuerpo: `<path d="M150 128 C172 112 188 96 184 82 C192 88 194 104 184 118 C176 132 162 140 150 142Z" fill="${c[0]}" ${S4} stroke-linejoin="round"/>
+      <path d="M146 150 C144 166 146 176 148 182 L162 182 C164 170 164 160 162 150Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>
+      <path d="M90 112 C112 104 150 108 166 124 C178 136 172 158 152 162 C126 168 100 164 86 154 C72 144 72 120 90 112Z" fill="${c[0]}" ${S4}/>
+      <path d="M96 150 C110 158 132 160 150 156 C140 164 112 166 96 160Z" fill="${c[2]}"/>
+      <path d="M150 152 C150 168 150 176 152 184 L168 184 C168 172 168 160 166 150Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>${pataDedos(160, 184, 20, c[1])}
+      <path d="M92 148 C92 164 92 174 94 184 L108 184 C108 172 108 160 108 150Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>${pataDedos(101, 184, 20, c[1])}
+      <path d="M112 152 C112 166 114 176 116 184 L128 184 C128 172 128 162 126 152Z" fill="${c[0]}" ${S3} stroke-linejoin="round"/>${pataDedos(122, 184, 18, c[1])}
+      ${mechon(98, 126, 30, 14, c[2], 3).replace('M83 126', 'M83 126')}`,
+    cabeza: `<path d="M72 58 C98 58 112 76 110 96 C108 114 94 126 74 126 C54 126 40 112 40 94 C40 74 50 58 72 58Z" fill="${c[0]}" ${S4}/>
+      <path d="M40 104 C30 106 24 114 28 122 C32 130 48 130 60 126 C70 122 74 112 66 106 C58 100 48 102 40 104Z" fill="${c[2]}" ${S3}/>
+      <ellipse cx="30" cy="112" rx="5.5" ry="4" fill="${T_}"/><path d="M36 124 Q46 128 56 124" fill="none" stroke="${T_}" stroke-width="2.5" stroke-linecap="round"/>`,
+    cara: [76, 88, .82], sinBoca: true, a: {cuello: [94, 124], top: [74, 62], izq: [50, 70], der: [100, 66], cola: [186, 92], cuerpo: [124, 136], ancho: 50},
   }),
-  cuadrupedo: c => ({
-    cuerpo: `<ellipse cx="146" cy="176" rx="11" ry="9" fill="${c[1]}" ${st()}/><ellipse cx="166" cy="168" rx="10" ry="8" fill="${c[1]}" ${st()}/>
-      <ellipse cx="122" cy="138" rx="58" ry="34" fill="${c[0]}" ${st(4)}/><ellipse cx="118" cy="152" rx="36" ry="15" fill="${c[2]}"/>
-      <ellipse cx="88" cy="178" rx="12" ry="9" fill="${c[1]}" ${st()}/><ellipse cx="112" cy="180" rx="12" ry="9" fill="${c[1]}" ${st()}/>`,
-    cabeza: `<circle cx="72" cy="98" r="38" fill="${c[0]}" ${st(4)}/><ellipse cx="66" cy="116" rx="18" ry="12" fill="${c[2]}" ${st(3)}/><ellipse cx="66" cy="110" rx="5" ry="3.5" fill="${T_}"/>`,
-    cara: [72, 90, .85], a: {top: [72, 62], izq: [44, 76], der: [100, 70], cola: [176, 124], cuerpo: [124, 136], ancho: 50},
+  ave: (c, e = 1) => ({
+    cuerpo: `<path d="M84 168 v14 M76 186 l8 -4 l8 4 M84 182 v6 M116 168 v14 M108 186 l8 -4 l8 4 M116 182 v6" stroke="#E59A3B" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+      <path d="M140 140 C160 146 176 160 182 176 C170 172 164 176 158 170 C154 178 146 176 142 170 C138 162 134 152 140 140Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>`,
+    cabeza: `<path d="M100 54 C140 54 160 86 158 120 C156 152 132 172 100 172 C68 172 44 152 42 120 C40 86 60 54 100 54Z" fill="${c[0]}" ${S4}/>
+      <path d="M100 112 C124 112 136 128 134 146 C132 162 118 170 100 170 C82 170 68 162 66 146 C64 128 76 112 100 112Z" fill="${c[2]}"/>
+      <path d="M78 130 q4 5 8 0 q4 5 8 0 M106 130 q4 5 8 0 q4 5 8 0 M86 146 q4 5 8 0 q4 5 8 0 q4 5 8 0" fill="none" stroke="${c[1]}" stroke-width="1.8" opacity=".6"/>
+      <path d="M48 106 C30 116 24 140 34 160 C38 152 42 156 46 148 C50 154 54 150 56 142 C62 130 60 116 48 106Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>
+      <path d="M152 106 C170 116 176 140 166 160 C162 152 158 156 154 148 C150 154 146 150 144 142 C138 130 140 116 152 106Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>
+      ${mechon(100, 60, 30, 16, c[1], 3)}`,
+    cara: [100, 96, 1], pico: true, a: {cuello: [100, 128], top: [100, 58], izq: [60, 76], der: [140, 76], cola: [176, 168], cuerpo: [100, 136], ancho: 54},
   }),
-  ave: c => ({
-    cuerpo: `<path d="M86 172 v14 M80 186 h12 M114 172 v14 M108 186 h12" stroke="#E59A3B" stroke-width="4" stroke-linecap="round"/>`,
-    cabeza: `<circle cx="100" cy="120" r="56" fill="${c[0]}" ${st(4)}/><ellipse cx="100" cy="140" rx="34" ry="30" fill="${c[2]}"/>
-      <ellipse cx="48" cy="128" rx="13" ry="26" fill="${c[1]}" ${st()} transform="rotate(16 48 128)"/><ellipse cx="152" cy="128" rx="13" ry="26" fill="${c[1]}" ${st()} transform="rotate(-16 152 128)"/>`,
-    cara: [100, 102, 1], pico: true, a: {top: [100, 66], izq: [58, 80], der: [142, 80], cola: [150, 166], cuerpo: [100, 140], ancho: 54},
+  pez: (c, e = 1) => ({
+    cuerpo: `<path d="M150 118 C164 102 178 86 192 82 C186 100 184 108 188 118 C184 128 186 136 192 154 C178 150 164 134 150 118Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>
+      <path d="M160 100 L184 90 M162 118 L186 118 M160 136 L184 146" stroke="${c[0]}" stroke-width="2" opacity=".7"/>
+      <path d="M76 82 C82 60 104 48 124 52 C116 62 114 72 118 82Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>
+      <path d="M86 152 C88 170 100 180 112 182 C108 172 110 162 116 154Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>`,
+    cabeza: `<path d="M44 118 C44 86 72 72 100 74 C128 76 156 94 158 118 C156 142 128 160 100 162 C72 164 44 150 44 118Z" fill="${c[0]}" ${S4}/>
+      <path d="M52 132 C66 150 96 156 128 150 C116 158 100 162 86 160 C68 158 56 148 52 132Z" fill="${c[2]}"/>
+      <g fill="none" stroke="${c[1]}" stroke-width="1.8" opacity=".55">${[0, 1, 2, 3].map(i => `<path d="M${110 + i * 10} 100 q5 6 0 12 M${115 + i * 10} 112 q5 6 0 12 M${110 + i * 10} 124 q5 6 0 12"/>`).join('')}</g>
+      <path d="M122 124 C134 120 144 126 146 134 C138 136 128 134 122 124Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>
+      <path d="M50 124 Q58 128 66 124" fill="none" stroke="${T_}" stroke-width="2.5" stroke-linecap="round"/>`,
+    cara: [80, 108, .9], sinBoca: true, a: {cuello: [96, 144], top: [96, 76], izq: [52, 94], der: [128, 88], cola: [170, 118], cuerpo: [96, 120], ancho: 56},
   }),
-  pez: c => ({
-    cuerpo: `<path d="M150 118 L188 92 L182 118 L188 146Z" fill="${c[1]}" ${st()} stroke-linejoin="round"/>
-      <path d="M78 80 L96 50 L116 80Z" fill="${c[1]}" ${st()} stroke-linejoin="round"/><path d="M84 156 L96 178 L110 156Z" fill="${c[1]}" ${st()} stroke-linejoin="round"/>`,
-    cabeza: `<ellipse cx="96" cy="118" rx="62" ry="44" fill="${c[0]}" ${st(4)}/><ellipse cx="92" cy="136" rx="40" ry="18" fill="${c[2]}"/>
-      <ellipse cx="120" cy="128" rx="12" ry="7" fill="${c[1]}" ${st(3)} transform="rotate(-25 120 128)"/>`,
-    cara: [82, 108, .95], a: {top: [96, 76], izq: [50, 94], der: [128, 88], cola: [168, 118], cuerpo: [96, 120], ancho: 56},
+  bicho: (c, e = 1) => ({
+    cuerpo: `<g stroke="${T_}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M76 120 L56 110 L44 122"/><path d="M76 132 L50 138 L42 154"/><path d="M80 144 L62 162 L64 178"/>
+      <path d="M124 120 L144 110 L156 122"/><path d="M124 132 L150 138 L158 154"/><path d="M120 144 L138 162 L136 178"/></g>
+      <g stroke="${c[1]}" stroke-width="1.6" stroke-linecap="round" fill="none"><path d="M76 120 L56 110 L44 122"/><path d="M76 132 L50 138 L42 154"/><path d="M80 144 L62 162 L64 178"/><path d="M124 120 L144 110 L156 122"/><path d="M124 132 L150 138 L158 154"/><path d="M120 144 L138 162 L136 178"/></g>
+      <path d="M100 128 C128 128 144 144 142 160 C140 176 122 184 100 184 C78 184 60 176 58 160 C56 144 72 128 100 128Z" fill="${c[1]}" ${S4}/>
+      <path d="M64 152 Q100 164 136 152 M66 168 Q100 180 134 168" fill="none" stroke="${c[2]}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M100 104 C120 104 132 114 130 126 C128 138 116 142 100 142 C84 142 72 138 70 126 C68 114 80 104 100 104Z" fill="${c[0]}" ${S4}/>
+      <path d="M86 112 C92 108 108 108 114 112" fill="none" stroke="#fff" stroke-width="3" opacity=".6" stroke-linecap="round"/>`,
+    cabeza: `<path d="M100 48 C126 48 140 64 138 84 C136 102 120 112 100 112 C80 112 64 102 62 84 C60 64 74 48 100 48Z" fill="${c[0]}" ${S4}/>
+      <path d="M84 110 C80 118 84 124 90 122 M116 110 C120 118 116 124 110 122" fill="none" stroke="${T_}" stroke-width="3" stroke-linecap="round"/>`,
+    cara: [100, 82, .92], a: {cuello: [100, 108], top: [100, 50], izq: [68, 62], der: [132, 62], cola: [100, 184], cuerpo: [100, 152], ancho: 38},
   }),
-  bicho: c => ({
-    cuerpo: `<g stroke="${T_}" stroke-width="4" stroke-linecap="round" fill="none"><path d="M78 118 L52 108 L42 124"/><path d="M76 128 L48 136 L42 154"/><path d="M80 138 L60 160 L62 178"/>
-      <path d="M122 118 L148 108 L158 124"/><path d="M124 128 L152 136 L158 154"/><path d="M120 138 L140 160 L138 178"/></g>
-      <ellipse cx="100" cy="154" rx="40" ry="30" fill="${c[1]}" ${st(4)}/><path d="M68 150 Q100 160 132 150 M72 166 Q100 176 128 166" fill="none" stroke="${c[2]}" stroke-width="4"/>
-      <ellipse cx="100" cy="120" rx="30" ry="22" fill="${c[0]}" ${st(4)}/>`,
-    cabeza: `<circle cx="100" cy="82" r="36" fill="${c[0]}" ${st(4)}/>`,
-    cara: [100, 84, .95], a: {top: [100, 48], izq: [68, 62], der: [132, 62], cola: [100, 184], cuerpo: [100, 152], ancho: 38},
+  planta: (c, e = 1) => ({
+    cuerpo: `<path d="M78 160 C72 172 64 178 58 186 M88 166 C88 176 84 182 82 188 M112 166 C112 176 116 182 118 188 M122 160 C128 172 136 178 142 186" fill="none" stroke="${T_}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M78 160 C72 172 64 178 58 186 M88 166 C88 176 84 182 82 188 M112 166 C112 176 116 182 118 188 M122 160 C128 172 136 178 142 186" fill="none" stroke="${c[3] || '#C97B4A'}" stroke-width="4" stroke-linecap="round"/>`,
+    cabeza: `<path d="M100 62 C138 62 152 92 150 120 C148 150 128 170 100 170 C72 170 52 150 50 120 C48 92 62 62 100 62Z" fill="${c[0]}" ${S4}/>
+      <path d="M100 126 C120 126 130 138 128 152 C126 164 114 170 100 170 C86 170 74 164 72 152 C70 138 80 126 100 126Z" fill="${c[2]}"/>
+      <path d="M56 104 C40 98 28 104 26 116 C38 118 48 116 58 112Z M144 104 C160 98 172 104 174 116 C162 118 152 116 142 112Z" fill="${c[3] || '#7CC46A'}" ${S3} stroke-linejoin="round"/>`,
+    cara: [100, 104, 1], a: {cuello: [100, 140], top: [100, 66], izq: [56, 96], der: [144, 96], cola: [140, 150], cuerpo: [100, 126], ancho: 46},
   }),
-  planta: c => ({
-    cuerpo: `<path d="M66 150 H134 L126 186 H74Z" fill="${c[3] || '#C97B4A'}" ${st(4)} stroke-linejoin="round"/><rect x="60" y="144" width="80" height="12" rx="4" fill="${c[3] || '#C97B4A'}" ${st()}/>`,
-    cabeza: `<ellipse cx="100" cy="108" rx="46" ry="42" fill="${c[0]}" ${st(4)}/><ellipse cx="100" cy="124" rx="24" ry="14" fill="${c[2]}"/>`,
-    cara: [100, 104, 1], a: {top: [100, 68], izq: [56, 96], der: [144, 96], cola: [140, 140], cuerpo: [100, 120], ancho: 46},
+  cristal: (c, e = 1) => ({
+    cuerpo: `${pataDedos(78, 182, 26, c[1])}${pataDedos(122, 182, 26, c[1])}
+      <path d="M50 108 L24 122 L34 150 L54 136Z M150 108 L176 122 L166 150 L146 136Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>`,
+    cabeza: `<path d="M100 32 L148 70 L156 128 L128 178 H72 L44 128 L52 70Z" fill="${c[0]}" ${S4} stroke-linejoin="round"/>
+      <path d="M100 32 L120 84 L100 178 L80 84Z" fill="${c[2]}" opacity=".45"/><path d="M52 70 L80 84 L44 128Z M148 70 L120 84 L156 128Z" fill="#fff" opacity=".22"/>
+      <path d="M100 32 L80 84 L52 70 M100 32 L120 84 L148 70 M80 84 L120 84 M44 128 L80 84 M156 128 L120 84 M72 178 L80 84 M128 178 L120 84" fill="none" stroke="${c[1]}" stroke-width="2.5" opacity=".75"/>
+      <path d="M70 136 L100 124 L130 136 L120 170 H80Z" fill="${c[2]}" opacity=".7"/>`,
+    cara: [100, 106, .95], a: {cuello: [100, 142], top: [100, 36], izq: [54, 92], der: [146, 92], cola: [150, 160], cuerpo: [100, 140], ancho: 50},
   }),
-  cristal: c => ({
-    cuerpo: `<ellipse cx="80" cy="180" rx="13" ry="8" fill="${c[1]}" ${st()}/><ellipse cx="120" cy="180" rx="13" ry="8" fill="${c[1]}" ${st()}/>`,
-    cabeza: `<path d="M100 36 L154 98 L134 176 H66 L46 98Z" fill="${c[0]}" ${st(4)} stroke-linejoin="round"/>
-      <path d="M100 36 L84 98 L100 176 L116 98Z M46 98 H154" fill="none" stroke="${c[1]}" stroke-width="3" opacity=".7"/>
-      <path d="M72 130 L100 118 L128 130 L118 164 H82Z" fill="${c[2]}" opacity=".8"/>`,
-    cara: [100, 112, .95], a: {top: [100, 38], izq: [54, 96], der: [146, 96], cola: [150, 160], cuerpo: [100, 140], ancho: 50},
-  }),
-  llama: c => ({
-    cuerpo: '',
-    cabeza: `<path class="llama-salvaje" d="M100 30 C130 60 160 84 156 128 C152 168 124 184 100 184 C76 184 48 168 44 128 C40 96 70 82 76 50 C88 68 96 60 100 30Z" fill="${c[0]}" ${st(4)} stroke-linejoin="round"/>
-      <path d="M100 96 C116 112 130 124 126 148 C122 168 112 174 100 174 C88 174 76 166 74 148 C72 130 90 120 100 96Z" fill="${c[2]}"/>`,
-    cara: [100, 126, .95], a: {top: [100, 40], izq: [56, 110], der: [144, 110], cola: [150, 160], cuerpo: [100, 150], ancho: 50},
+  llama: (c, e = 1) => ({
+    cuerpo: `<path class="llama-salvaje" d="M60 150 C40 140 34 118 44 98 C48 112 56 116 60 112 C58 126 62 140 70 148Z M140 150 C160 140 166 118 156 98 C152 112 144 116 140 112 C142 126 138 140 130 148Z" fill="${c[1]}" ${S3} stroke-linejoin="round"/>`,
+    cabeza: `<path class="llama-salvaje" d="M100 24 C108 44 122 46 128 36 C130 56 146 64 150 54 C158 80 162 104 156 132 C150 164 126 184 100 184 C74 184 50 164 44 132 C38 104 44 80 52 60 C58 70 70 66 72 46 C80 56 92 52 100 24Z" fill="${c[0]}" ${S4} stroke-linejoin="round"/>
+      <path d="M100 88 C110 104 128 112 128 140 C128 162 114 176 100 176 C86 176 72 162 72 140 C72 116 92 108 100 88Z" fill="${c[2]}"/>
+      <path d="M100 130 C104 140 112 146 110 158 C108 166 104 170 100 170 C96 170 92 166 90 158 C88 146 96 140 100 130Z" fill="#FFF6C8" opacity=".9"/>`,
+    cara: [100, 118, .95], a: {cuello: [100, 152], top: [100, 34], izq: [56, 104], der: [144, 104], cola: [150, 160], cuerpo: [100, 150], ancho: 50},
   }),
 };
 
@@ -510,7 +568,7 @@ const RASGOS = {
   pinchos: (a, c) => ({atras: [-40, -20, 0, 20, 40].map(dx => `<path d="M${a.cuerpo[0]+dx-9} ${a.cuerpo[1]-a.ancho*.55} L${a.cuerpo[0]+dx} ${a.cuerpo[1]-a.ancho*.55-26} L${a.cuerpo[0]+dx+9} ${a.cuerpo[1]-a.ancho*.55}Z" fill="${c[3] || c[1]}" ${st(3)} stroke-linejoin="round"/>`).join('')}),
   cristales: (a, c) => ({atras: cristalito(a.top[0], a.top[1] + 8, 0, 1.2, c[3]) + cristalito(a.top[0] - 22, a.top[1] + 12, -30, .9, c[3]) + cristalito(a.top[0] + 22, a.top[1] + 12, 30, .9, c[3])}),
   bigotes: (a) => ({frente: `<path d="M${a.izq[0]-2} ${a.izq[1]+36} h-22 M${a.izq[0]-2} ${a.izq[1]+42} h-18 M${a.der[0]+2} ${a.der[1]+36} h22 M${a.der[0]+2} ${a.der[1]+42} h18" stroke="${T_}" stroke-width="2" stroke-linecap="round"/>`}),
-  collar: (a, c) => ({frente: `<path d="M${a.cuerpo[0]-40} ${a.cuerpo[1]-36} C${a.cuerpo[0]-30} ${a.cuerpo[1]-50} ${a.cuerpo[0]-16} ${a.cuerpo[1]-40} ${a.cuerpo[0]-8} ${a.cuerpo[1]-48} C${a.cuerpo[0]} ${a.cuerpo[1]-38} ${a.cuerpo[0]+12} ${a.cuerpo[1]-48} ${a.cuerpo[0]+20} ${a.cuerpo[1]-40} C${a.cuerpo[0]+30} ${a.cuerpo[1]-50} ${a.cuerpo[0]+40} ${a.cuerpo[1]-36} ${a.cuerpo[0]+40} ${a.cuerpo[1]-30} C${a.cuerpo[0]+10} ${a.cuerpo[1]-20} ${a.cuerpo[0]-10} ${a.cuerpo[1]-20} ${a.cuerpo[0]-40} ${a.cuerpo[1]-30}Z" fill="${c[3] || '#fff'}" ${st(3)} stroke-linejoin="round"/>`}),
+  collar: (a, c) => { const q = a.cuello ? [a.cuello[0], a.cuello[1] + 40] : a.cuerpo; return {frente: `<path d="M${q[0]-40} ${q[1]-36} C${q[0]-30} ${q[1]-50} ${q[0]-16} ${q[1]-40} ${q[0]-8} ${q[1]-48} C${q[0]} ${q[1]-38} ${q[0]+12} ${q[1]-48} ${q[0]+20} ${q[1]-40} C${q[0]+30} ${q[1]-50} ${q[0]+40} ${q[1]-36} ${q[0]+40} ${q[1]-30} C${q[0]+10} ${q[1]-20} ${q[0]-10} ${q[1]-20} ${q[0]-40} ${q[1]-30}Z" fill="${c[3] || '#fff'}" ${st(3)} stroke-linejoin="round"/>`}; },
   enchufe: (a) => ({atras: `<rect x="${a.top[0]-14}" y="${a.top[1]-26}" width="7" height="22" rx="2" fill="#C9C9C9" ${st(3)}/><rect x="${a.top[0]+7}" y="${a.top[1]-26}" width="7" height="22" rx="2" fill="#C9C9C9" ${st(3)}/>`}),
   nube: (a) => ({atras: `<path d="M${a.top[0]-40} ${a.top[1]+6} c-12 0 -14 -20 2 -22 c0 -16 22 -20 30 -8 c6 -14 30 -12 32 4 c16 -2 22 22 6 26Z" fill="#E6EAF5" ${st(3)}/>`}),
   burbujas: (a) => ({frente: `<g fill="#DFF4FF" ${st(2.5)}><circle cx="${a.der[0]+26}" cy="${a.der[1]-6}" r="7"/><circle cx="${a.der[0]+38}" cy="${a.der[1]-22}" r="4.5"/><circle cx="${a.izq[0]-26}" cy="${a.izq[1]+4}" r="5"/></g>`}),
@@ -537,7 +595,7 @@ const RASGOS_EVO = {
 };
 
 function dibujoGenerado(d, o, etapa){
-  const f = FORMAS[d.forma](d.col);
+  const f = FORMAS[d.forma](d.col, etapa);
   const lista = [...(d.rasgos || [])];
   if(f.pico) lista.push('pico');
   let atras = '', frente = '';
@@ -548,7 +606,7 @@ function dibujoGenerado(d, o, etapa){
   }
   const [cx, cy, esc] = f.cara;
   const ceno = etapa >= 3 ? `<path d="M${cx-30*esc} ${cy-16*esc} l14 5 M${cx+30*esc} ${cy-16*esc} l-14 5" stroke="${T_}" stroke-width="3.5" stroke-linecap="round"/>` : '';
-  return atras + f.cuerpo + f.cabeza + frente + ceno + carita(cx, cy, {...o, esc: esc * (etapa >= 3 ? .9 : 1), sinBoca: !!f.pico});
+  return atras + f.cuerpo + f.cabeza + frente + ceno + carita(cx, cy, {...o, esc: esc * (etapa >= 3 ? .9 : 1), sinBoca: !!f.pico || !!f.sinBoca});
 }
 
 // Evolución de una especie dibujada a mano: el mismo dibujo, más grande y con rasgos nuevos.
@@ -564,6 +622,7 @@ function dibujoEvolucionado(interior, tipo, etapa, col){
 /* ---------------- Dibujo de cualquier especie ---------------- */
 function interiorEspecie(esp, o = {}){
   const e = ESPECIES[esp]; if(!e) return '';
+  if(typeof INICIALES_V2 !== 'undefined' && INICIALES_V2[esp]) return INICIALES_V2[esp](o);
   const d = e.dib;
   if(d.mano){
     const base = d.mano;
@@ -609,12 +668,60 @@ function auraTipo(tipo){
   };
   return `<g class="aura" aria-hidden="true">${A[tipo] || ''}</g>`;
 }
+/* ---------------- Sombreado tipo anime (cel shading) ----------------
+   Cada pieza con contorno se separa en: color base, una franja de sombra abajo a la derecha
+   y una de luz arriba a la izquierda, con bordes definidos como en las ilustraciones de anime. */
+function mezclar(hex, con, k){
+  const a = parseInt(hex.slice(1), 16), b = parseInt(con.slice(1), 16);
+  const c = (x, y) => Math.round(x + (y - x) * k);
+  const r = c(a >> 16 & 255, b >> 16 & 255), g = c(a >> 8 & 255, b >> 8 & 255), bl = c(a & 255, b & 255);
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1);
+}
+function tamPieza(tag, attrs){
+  const num = n => { const m = attrs.match(new RegExp('\\s' + n + '="([-\\d.]+)"')); return m ? +m[1] : null; };
+  if(tag === 'circle'){ const r = num('r'); return r == null ? 0 : r * 2; }
+  if(tag === 'ellipse'){ const rx = num('rx'), ry = num('ry'); return rx == null ? 0 : Math.min(rx, ry) * 2; }
+  if(tag === 'rect'){ const w = num('width'), h = num('height'); return w == null ? 0 : Math.min(w, h); }
+  const dm = attrs.match(/\sd="([^"]+)"/) || attrs.match(/\spoints="([^"]+)"/); if(!dm) return 0;
+  if(/[a-ln-z]/.test(dm[1].replace(/e-?\d/g, ''))) return 30; // con comandos relativos: se asume mediana
+  const ns = (dm[1].match(/-?\d+(\.\d+)?/g) || []).map(Number); if(ns.length < 4) return 0;
+  const xs = ns.filter((_, i) => i % 2 === 0), ys = ns.filter((_, i) => i % 2 === 1);
+  return Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+}
+function sombrear(svg, base){
+  let n = 0;
+  return svg.replace(/<(ellipse|circle|path|rect|polygon)\b([^>]*?)\/>/g, (todo, tag, attrs) => {
+    const f = attrs.match(/\sfill="(#[0-9A-Fa-f]{6})"/), s = /stroke="#22304A"/.test(attrs);
+    if(!f || !s) return todo;
+    const col = f[1].toUpperCase();
+    if(col === '#22304A' || col === '#FFFFFF') return todo;
+    const tam = tamPieza(tag, attrs); if(tam < 16) return todo;
+    const id = base + '-' + (n++);
+    const forma = attrs.replace(/\s(stroke|stroke-width|stroke-linejoin|stroke-linecap|fill|opacity|class|style)="[^"]*"/g, '');
+    const desp = Math.max(3, Math.min(9, tam * .11)), dl = desp * .7;
+    const sombra = mezclar(mezclar(col, '#000000', .28), '#4B3A8C', .25), luz = mezclar(col, '#FFFFFF', .5);
+    const op = (attrs.match(/\sopacity="([^"]+)"/) || [])[1];
+    return `<g${op ? ` opacity="${op}"` : ''}><mask id="ms${id}" maskUnits="userSpaceOnUse" x="-50" y="-50" width="300" height="300"><${tag}${forma} fill="#fff"/><g transform="translate(${-desp} ${-desp * 1.25})"><${tag}${forma} fill="#000"/></g></mask>`
+      + `<mask id="ml${id}" maskUnits="userSpaceOnUse" x="-50" y="-50" width="300" height="300"><${tag}${forma} fill="#fff"/><g transform="translate(${dl} ${dl * 1.25})"><${tag}${forma} fill="#000"/></g></mask>`
+      + `<${tag}${forma} fill="${col}"/><rect x="-50" y="-50" width="300" height="300" fill="${luz}" opacity=".55" mask="url(#ml${id})"/>`
+      + `<rect x="-50" y="-50" width="300" height="300" fill="${sombra}" opacity=".85" mask="url(#ms${id})"/>`
+      + `<${tag}${forma} fill="none"${(attrs.match(/\sstroke(-width|-linejoin|-linecap)?="[^"]*"/g) || []).join('')}/></g>`;
+  });
+}
 function hashTexto(t){ let h = 0; for(const ch of t) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
+const _sombreadoCache = {};
+function sombrearEspecie(esp, op){
+  const interior = interiorEspecie(esp, op);
+  const k = interior.length + ':' + hashTexto(interior);
+  if(!_sombreadoCache[k]) _sombreadoCache[k] = sombrear(interior, 'k' + hashTexto(interior).toString(36));
+  return _sombreadoCache[k];
+}
 // o.vista: 'frente' (por defecto), 'espalda' o 'lado' (mirando a la derecha).
 function svgEspecie(esp, o = {}){
   const e = ESPECIES[esp];
   if(!e) return '';
-  const esc = (e.legendaria ? 1.08 : ESCALA_ETAPA[e.etapa] || 1) * (o.escala || 1);
+  const propio = typeof INICIALES_V2 !== 'undefined' && INICIALES_V2[esp];
+  const esc = (propio ? 1 : e.legendaria ? 1.08 : ESCALA_ETAPA[e.etapa] || 1) * (o.escala || 1);
   const shiny = o.shiny ? ' style="filter:hue-rotate(155deg) saturate(1.35)"' : '';
   const brillos = o.shiny ? `<g fill="#FFE45C" ${st(2)}><path d="M28 40 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/><path d="M168 30 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M172 150 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/></g>` : '';
   const vista = o.vista || 'frente';
@@ -622,7 +729,7 @@ function svgEspecie(esp, o = {}){
   const escX = vista === 'lado' ? esc * .9 : esc;
   const aura = o.aura === false ? '' : auraTipo(e.tipo);
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${DEFS_VOLUMEN}${SOMBRA}${aura}
-    <g transform="translate(100 188) scale(${escX} ${esc}) translate(-100 -188)"><g class="cuerpo vivo"${shiny}><g filter="url(#sl-vol)">${interiorEspecie(esp, op)}</g></g></g>${brillos}</svg>`;
+    <g transform="translate(100 188) scale(${escX} ${esc}) translate(-100 -188)"><g class="cuerpo vivo"${shiny}>${sombrearEspecie(esp, op)}</g></g>${brillos}</svg>`;
 }
 // La Enfermera Carosor: una princesita de diseño propio que atiende los centros.
 function svgEnfermera(){
@@ -683,7 +790,14 @@ const NOMBRES_PEINADO = {corto: 'Corto', largo: 'Largo', colita: 'Colita', rulos
 function aspectoPorDefecto(){ return {piel: ASPECTO.piel[0], pelo: ASPECTO.pelo[1], peinado: 'corto', ropa: ASPECTO.ropa[0], gorra: ASPECTO.gorra[1]}; }
 
 // dir: 'abajo' (de frente), 'arriba' (de espaldas) o 'lado' (perfil mirando a la derecha). paso: 0 quieto, 1 y 2 caminando.
+// Entrenadores con el mismo sombreado tipo anime que las criaturas (se guarda para no recalcular).
+const _entCache = {};
 function svgEntrenador(e, tam, dir = 'abajo', paso = 0){
+  const k = JSON.stringify([e || null, tam || 0, dir, paso]);
+  if(!_entCache[k]) _entCache[k] = svgEntrenadorPlano(e, tam, dir, paso).replace(/(<svg[^>]*>)([\s\S]*)(<\/svg>)$/, (t, a, b, c) => a + sombrear(b, 'e' + hashTexto(k).toString(36)) + c);
+  return _entCache[k];
+}
+function svgEntrenadorPlano(e, tam, dir = 'abajo', paso = 0){
   e = e || aspectoPorDefecto();
   const T = '#22304A', s = 'stroke="#22304A" stroke-width="3"', pelo = e.pelo, piel = e.piel, ropa = e.ropa;
   const pantalon = '#3B4A6B', mochila = '#8A5A35';

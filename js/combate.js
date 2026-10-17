@@ -80,6 +80,7 @@ function pintarCombate(){
     <section class="combate">
       ${B.ent ? `<div class="banda-ent">${B.ent.lider ? 'Gimnasio · ' : ''}${B.ent.titulo} <b></b> · <span id="cuenta-rivales"></span></div>` : ''}
       <div class="arena arena-${ARENAS[z] || 'ciudad'}">
+        ${svgFondoArena(ARENAS[z] || 'ciudad')}
         <div class="nube n1"></div><div class="nube n2"></div>
         <div class="plataforma rival"></div><div class="plataforma propio"></div>
         <div class="ficha-luch rival" id="f-rival"></div>
