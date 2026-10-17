@@ -7,7 +7,7 @@
 // Cara estándar: mejillas + ojos + boca, con soporte de vista (espalda / costado).
 function caraArte(cx, cy, o, s = 1, {enojo = false, boca = 10, colmillo = false, dy = 22, sinMejillas = false, dx = 20} = {}){
   return envolverCara(`${sinMejillas ? '' : `<ellipse cx="${cx - dx - 14 * s}" cy="${cy + 13 * s}" rx="${7 * s}" ry="${4.5 * s}" fill="#FF8FAE" opacity=".7"/><ellipse cx="${cx + dx + 14 * s}" cy="${cy + 13 * s}" rx="${7 * s}" ry="${4.5 * s}" fill="#FF8FAE" opacity=".7"/>`}
-    ${ojosPar(cx - dx * s, cx + dx * s, cy, s, o, enojo)}${bocaCaricatura(cx, cy + dy * s, o, boca * s, colmillo)}`, cx, cy, o);
+    ${ojosPar(cx - dx * s, cx + dx * s, cy, s, o, enojo)}${boca ? bocaCaricatura(cx, cy + dy * s, o, boca * s, colmillo) : ''}`, cx, cy, o);
 }
 const oval = (cx, cy, rx, ry, fill, extra = '') => `<path d="M${cx} ${cy - ry} C${cx + rx * 1.1} ${cy - ry} ${cx + rx} ${cy + ry} ${cx} ${cy + ry} C${cx - rx} ${cy + ry} ${cx - rx * 1.1} ${cy - ry} ${cx} ${cy - ry}Z" fill="${fill}" ${L4} ${extra}/>`;
 const pie = (x, y, w, col, g = '#FFFDF8') => `<path d="M${x - w / 2} ${y} C${x - w / 2} ${y - w * .8} ${x + w / 2} ${y - w * .8} ${x + w / 2} ${y} C${x + w / 3} ${y + w * .22} ${x - w / 3} ${y + w * .22} ${x - w / 2} ${y}Z" fill="${col}" ${L3}/>${garras([[x - w * .25, y + 1], [x, y + 2], [x + w * .25, y + 1]], g)}`;
