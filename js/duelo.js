@@ -197,12 +197,15 @@ function pintarDuelo(){
   $('#app').innerHTML = `
     <section class="combate">
       <div class="banda-ent">Duelo contra <b id="du-rival"></b> <span id="cuenta-rivales"></span></div>
-      <div class="arena arena-ciudad">
-        <div class="nube n1"></div><div class="nube n2"></div>
-        <div class="plataforma rival"></div><div class="plataforma propio"></div>
+      <div class="arena arena-ciudad con-estadio">
+        <div class="escena cam-intro">
+          ${svgFondoArena('ciudad')}${svgTribuna('#7A4FC9')}${svgCampo('ciudad', true)}
+          <div class="nube n1"></div><div class="nube n2"></div>
+          <div class="plataforma rival"></div><div class="plataforma propio"></div>
+          <div class="bicho-combate rival" id="b-rival"></div>
+          <div class="bicho-combate propio" id="b-propio"></div>
+        </div>
         <div class="ficha-luch rival" id="f-rival"></div>
-        <div class="bicho-combate rival" id="b-rival"></div>
-        <div class="bicho-combate propio" id="b-propio"></div>
         <div class="ficha-luch propio" id="f-propio"></div>
       </div>
       <div class="panel texto-combate" id="t-combate" aria-live="polite"></div>
@@ -210,10 +213,11 @@ function pintarDuelo(){
     </section>`;
   $('#du-rival').textContent = DU.rival.apodo;
   dibujarBichosDuelo();
+  requestAnimationFrame(() => requestAnimationFrame(() => { const e = $('.arena .escena'); if(e) e.classList.remove('cam-intro'); }));
 }
 function dibujarBichosDuelo(){
   $('#b-rival').innerHTML = svgEspecie(actDu(DU.otro).esp, {humor: 'bien', shiny: actDu(DU.otro).shiny});
-  $('#b-propio').innerHTML = svgEspecie(actDu(DU.lado).esp, {humor: 'bien', shiny: actDu(DU.lado).shiny});
+  $('#b-propio').innerHTML = svgEspecie(actDu(DU.lado).esp, {humor: 'bien', shiny: actDu(DU.lado).shiny, vista: 'lado'});
   fichasDuelo();
 }
 function fichasDuelo(){

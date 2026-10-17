@@ -710,6 +710,7 @@ function transitable(M, x, y){
   if(x < 0 || y < 0 || x >= M.w || y >= M.h || npcEn(M, x, y)) return false;
   const c = M.m[y][x];
   if(OBSTACULO[c]) return quitado(M, x, y);
+  if(c === 'Y' && typeof bloqueoSecreto === 'function' && bloqueoSecreto(M, x, y)) return false;
   if(c === '~') return tieneHab('surf') && !M.tema.interior;
   return !BLOQUEA.has(c);
 }

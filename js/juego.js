@@ -103,6 +103,9 @@ function migrar(p){
     p.entrenador = p.entrenador || null;
     p.monedas = (p.monedas || 0) + 150;
   }
+  // Los iniciales recuperaron sus nombres originales.
+  const VIEJOS = {Tizoncito: 'Carosor', Tizonazo: 'Carosaurio', 'Tizontitán': 'Carotitán', Ombucito: 'Matesor', 'Ombuzón': 'Matesaurio', 'Ombutitán': 'Matetitán'};
+  for(const c of [...p.equipo, ...p.reserva]) if(VIEJOS[c.nombre]) c.nombre = VIEJOS[c.nombre];
   // Evoluciones pendientes (por si una criatura subió de nivel en una versión vieja)
   for(const c of [...p.equipo, ...p.reserva]) while(ESPECIES[c.esp] && evolucionPendiente(c)) evolucionar(c);
   p.v = 3;

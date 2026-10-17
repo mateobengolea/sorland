@@ -153,6 +153,7 @@ function cuadro(ahora){
           MW.avisoAgua = performance.now(); MW.teclas.clear();
           dialogo('', ['El agua es muy honda para cruzar a pie.', 'Con Surf, que enseña la Capitana Elsa Lado en Puerto Camalote, se puede nadar.']);
         }
+        else if(typeof tocarSecreto === 'function' && tocarSecreto(M, nx, ny)){ MW.teclas.clear(); }
         else if(M.altares[nx + ',' + ny]){ MW.teclas.clear(); visitarAltar(M.altares[nx + ',' + ny]); }
         else if(typeof jugadorEn === 'function'){ const j = jugadorEn(nx, ny); if(j){ MW.teclas.clear(); abrirInteraccion(j); } }
       }
@@ -207,6 +208,7 @@ function alLlegar(){
   MW.pasos++;
   if(MW.pasos % 12 === 0) guardar();
   mostrarZona();
+  if(typeof alPisarSecreto === 'function' && alPisarSecreto(M, x, y)) return false;
   // Salidas a otros mapas
   const sal = M.salidas[x + ',' + y];
   if(sal){
@@ -218,10 +220,10 @@ function alLlegar(){
   const it = itemEn(M, x, y);
   if(it){
     S.recogidos[it.id] = true;
-    const txt = darPremio(premioAleatorio());
+    const txt = darPremio(it.premio || premioAleatorio());
     guardar();
     MW.teclas.clear();
-    dialogo('¡Encontraste algo!', [`En el piso había ${txt}.`]);
+    dialogo(it.cofre ? '¡Un cofre!' : '¡Encontraste algo!', [it.cofre ? `Abriste el cofre: adentro había ${txt}.` : `En el piso había ${txt}.`]);
     return false;
   }
   // Puertas
@@ -274,6 +276,7 @@ function alLlegar(){
       if(!hayLuchadorEnPie()){ avisar('Tu equipo está agotado. Andá a un Centro de Rehabilitación o a tu casa.'); return false; }
       MW.teclas.clear();
       const salvaje = crearSalvaje(z);
+      if(typeof suerteSalvaje === 'function') suerteSalvaje(salvaje);
       salirDelMundo(); guardar();
       empezarCombate([salvaje], z, null);
       return true;
@@ -289,6 +292,7 @@ async function hablarCon(n){
   n.mira = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'der' : 'izq') : (dy > 0 ? 'abajo' : 'arriba');
   MW.mira = OPUESTA[n.mira];
   if(n.tipo === 'vecino'){
+    if(typeof charlaSecreta === 'function' && await charlaSecreta(n)) return;
     if(n.regalo && !S.regalos[n.id]){
       await dialogo(n.nombre, n.frases);
       S.regalos[n.id] = true;
@@ -479,12 +483,13 @@ function dibujar(ahora){
     if(c === '~') orilla(ctx, M, sx, sy, x, y, ahora);
     if(c === 'W') pared(ctx, sx, sy, x, y, M);
     if(c === 'x'){ ctx.fillStyle = '#B5452B'; ctx.fillRect(sx + 4, sy + 6, TS - 8, TS - 12); }
-    if(M.salidas[x + ',' + y] && c !== 'x') flecha(ctx, sx, sy, x, y, M, ahora);
+    if(M.salidas[x + ',' + y] && c !== 'x' && c !== 'Y' && c !== 'V') flecha(ctx, sx, sy, x, y, M, ahora);
   }
   for(const mb of M.muebles) if(mb.tipo === 'podio'){ ctx.fillStyle = mb.col; ctx.globalAlpha = .35; ctx.fillRect(mb.x * TS - camX - TS, mb.y * TS - camY - TS, TS * 3, TS * 2 + 4); ctx.globalAlpha = 1; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2; ctx.strokeRect(mb.x * TS - camX - TS + 1, mb.y * TS - camY - TS + 1, TS * 3 - 2, TS * 2 + 2); }
   for(const mb of M.muebles) if(mb.tipo === 'alfombra'){ ctx.fillStyle = '#E2574C'; ctx.fillRect(mb.x * TS - camX - 12, mb.y * TS - camY + 4, TS * 2, TS - 8); ctx.strokeStyle = '#FFD23F'; ctx.lineWidth = 2; ctx.strokeRect(mb.x * TS - camX - 8, mb.y * TS - camY + 8, TS * 2 - 8, TS - 16); }
   for(const e of M.edificios){ ctx.fillStyle = 'rgba(34,48,74,.16)'; ctx.fillRect(e.x * TS - camX + 4, (e.y + 2) * TS - camY, e.ancho * TS, 8); }
-  for(const it of M.items) if(!S.recogidos[it.id]) brilloItem(ctx, it.x * TS - camX, it.y * TS - camY, ahora);
+  for(const it of M.items) if(!S.recogidos[it.id] && !it.cofre) brilloItem(ctx, it.x * TS - camX, it.y * TS - camY, ahora);
+  if(typeof dibujarSecretos === 'function') dibujarSecretos(ctx, M, camX, camY, ahora);
   const otros = typeof jugadoresVisibles === 'function' ? jugadoresVisibles() : [];
   for(let y = y0; y <= y1; y++){
     for(let x = x0; x <= x1; x++){
@@ -497,7 +502,7 @@ function dibujar(ahora){
     }
     for(const mb of M.muebles) if(mb.y === y && mb.tipo !== 'alfombra' && mb.tipo !== 'podio') muebleInterior(ctx, mb.x * TS - camX, mb.y * TS - camY, mb.tipo, mb, ahora);
     if(MW.seg && y === Math.floor(segY() + .5)) seguidor(ctx, ahora, camX, camY);
-    for(let x = x0; x <= x1; x++) if(M.m[y][x] === 'T') arbol(ctx, Math.round(x * TS - camX), Math.round(y * TS - camY), x, y, M);
+    for(let x = x0; x <= x1; x++) if(M.m[y][x] === 'T' || M.m[y][x] === 'Y') arbol(ctx, Math.round(x * TS - camX), Math.round(y * TS - camY), x, y, M);
     for(const n of M.npcs) if(n.y === y && !(n.tipo === 'guardia' && guardiaAbierto(n))) persona(ctx, (n.x + .5) * TS - camX, (n.y + 1) * TS - camY, n, ahora);
     for(const o of otros) if(Math.floor(o.py + .5) === y) otroJugador(ctx, (o.px + .5) * TS - camX, (o.py + 1) * TS - camY, o, ahora);
     if(y === Math.floor(py + .5)) jugador(ctx, (px + .5) * TS - camX, (py + 1) * TS - camY, ahora);
@@ -1099,7 +1104,7 @@ function pintarMinimapa(){
   cv.width = M.w * t; cv.height = M.h * t;
   cv.style.width = cv.width + 'px'; cv.style.height = cv.height + 'px';
   const ctx = cv.getContext('2d');
-  const col = c => ({T: '#3E7A44', '#': '#7C8592', '~': '#5AB4E8', b: '#C98A52', '=': '#E9D3A0', ':': '#D9D0C1', R: '#E2574C', H: '#F4E8D2', D: '#8A5A35', W: '#C9B08E', '!': '#E2492E', m: '#B5835A', k: '#7A6B5D', c: '#7CC56A', O: '#9AA2AD', A: '#FFD23F', x: '#B5452B'}[c]);
+  const col = c => ({T: '#3E7A44', '#': '#7C8592', '~': '#5AB4E8', b: '#C98A52', '=': '#E9D3A0', ':': '#D9D0C1', R: '#E2574C', H: '#F4E8D2', D: '#8A5A35', W: '#C9B08E', '!': '#E2492E', m: '#B5835A', k: '#7A6B5D', c: '#7CC56A', O: '#9AA2AD', A: '#FFD23F', x: '#B5452B', Y: '#3E7A44', P: '#9AA2AD', V: '#1B2244'}[c]);
   for(let y = 0; y < M.h; y++) for(let x = 0; x < M.w; x++){
     const c = M.m[y][x];
     ctx.fillStyle = (c === 'c' || c === 'O') && quitado(M, x, y) ? colorSuelo(M, '.', x, y) : col(c) || colorSuelo(M, c, x, y);

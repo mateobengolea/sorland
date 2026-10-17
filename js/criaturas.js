@@ -113,9 +113,9 @@ function linea(o){
 }
 
 // --- Iniciales
-linea({ids:['carosor','carosaurio','carotitan'], nombres:['Tizoncito','Tizonazo','Tizontitán'], tipo:'fuego', niveles:[16,32], base:[20,7,5], mano:'carosor', col:['#F47A45','#D85A2A','#FFD98A','#FFD23F'], inicial:true,
+linea({ids:['carosor','carosaurio','carotitan'], nombres:['Carosor','Carosaurio','Carotitán'], tipo:'fuego', niveles:[16,32], base:[20,7,5], mano:'carosor', col:['#F47A45','#D85A2A','#FFD98A','#FFD23F'], inicial:true,
   descs:['Cabeza dura y cola encendida. Le encanta entrenar.', 'Ya no cabe en la mochila. Cuando se emociona, le salen llamas de la cabeza.', 'Dicen que una vez prendió una parrilla con solo mirarla.']});
-linea({ids:['matesor','matesaurio','matetitan'], nombres:['Ombucito','Ombuzón','Ombutitán'], tipo:'planta', niveles:[16,32], base:[24,6,5], mano:'matesor', col:['#72C25B','#4FA03C','#E5F5C6','#9BDB6E'], inicial:true,
+linea({ids:['matesor','matesaurio','matetitan'], nombres:['Matesor','Matesaurio','Matetitán'], tipo:'planta', niveles:[16,32], base:[24,6,5], mano:'matesor', col:['#72C25B','#4FA03C','#E5F5C6','#9BDB6E'], inicial:true,
   descs:['Tiene un brote de yerba en la cabeza. Tranquilo y compañero.', 'Le florece la espalda y huele a mate recién cebado.', 'Un bosque entero le crece encima. Aguanta lo que le tiren.']});
 linea({ids:['rufisor','rufisaurio','rufititan'], nombres:['Rufisor','Rufisaurio','Rufititán'], tipo:'agua', niveles:[16,32], base:[20,6,7], mano:'rufisor', col:['#4EA8E3','#2E86C4','#D6EFFF','#8FD3F7'], inicial:true,
   descs:['Un perrito yorkie de agua: chiquito, peinado con moño y con más carácter que un perro grande.', 'Se sacude al salir del agua y moja a todos. Su flequillo nunca se despeina.', 'Cuando ladra, el río sube un metro.']});
