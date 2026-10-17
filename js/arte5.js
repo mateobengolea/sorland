@@ -34,19 +34,6 @@ const ARTE5 = {
     <path d="M100 58 C122 58 132 72 130 88 C128 104 116 112 100 112 C84 112 72 104 70 88 C68 72 78 58 100 58Z" fill="${W}" ${L4}/>
     ${caraArte(100, 82, o, .78, {dy: 22, dx: 16, boca: 8})}`;
   },
-  barriletazo: o => {
-    const A = '#3E96D0', R = '#C42E26', Y = '#FFD23F', W = '#FFFDF8', V = '#BFE6FB';
-    return `
-    <path d="M20 40 C34 32 46 36 52 44 M150 30 C164 24 176 28 182 36 M10 150 C24 144 36 146 42 154" fill="none" stroke="${V}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M100 168 C80 178 120 184 96 196" fill="none" stroke="${TK}" stroke-width="3.5"/>
-    ${[[80, 176, R], [108, 184, Y], [88, 194, A]].map(([x, y, c]) => `<path d="M${x} ${y} l10 -8 l0 16Z" fill="${c}" ${L3}/>`).join('')}
-    <path d="M100 2 L188 84 L100 172 L12 84Z" fill="${A}" ${L4}/>
-    <path d="M100 2 L188 84 L100 84Z" fill="${Y}" ${L3}/><path d="M12 84 L100 172 L100 84Z" fill="${R}" ${L3}/>
-    <path d="M100 2 V172 M12 84 H188" stroke="${TK}" stroke-width="3"/>
-    <path d="M12 84 L0 64 L22 76Z M188 84 L200 64 L178 76Z M12 84 L0 104 L22 92Z M188 84 L200 104 L178 92Z" fill="${W}" ${L3}/>
-    <path d="M100 50 C126 50 138 66 136 86 C134 104 120 114 100 114 C80 114 66 104 64 86 C62 66 74 50 100 50Z" fill="${W}" ${L4}/>
-    ${caraArte(100, 80, o, .85, {dy: 22, dx: 18, boca: 9, enojo: true, colmillo: true})}`;
-  },
   /* ---------- Pingüinito → Pingüinazo ---------- */
   pinguinito: o => {
     const K = '#2E3A50', W = '#FFFDF8', Y = '#F2B53A';
@@ -58,19 +45,6 @@ const ARTE5 = {
     <path d="M60 52 C70 44 84 42 94 44" fill="none" stroke="#5A6A88" stroke-width="5" stroke-linecap="round"/>
     ${envolverCara(`<path d="M90 106 L110 106 L100 118Z" fill="${Y}" ${L3}/>`, 100, 96, o)}
     ${caraArte(100, 92, o, .9, {boca: 0, dx: 20})}`;
-  },
-  pinguinazo: o => {
-    const K = '#24304A', W = '#FFFDF8', Y = '#F2B53A', H = '#BFE6FB';
-    return `
-    ${pie(74, 188, 32, Y)}${pie(126, 188, 32, Y)}
-    <path d="M100 24 C150 24 174 70 170 118 C166 166 138 190 100 190 C62 190 34 166 30 118 C26 70 50 24 100 24Z" fill="${K}" ${L4}/>
-    <path d="M100 56 C132 56 148 90 146 128 C144 164 126 184 100 184 C74 184 56 164 54 128 C52 90 68 56 100 56Z" fill="${W}"/>
-    <path d="M34 92 C8 110 2 140 10 156 C24 150 34 134 40 118Z M166 92 C192 110 198 140 190 156 C176 150 166 134 160 118Z" fill="${K}" ${L4}/>
-    <path d="M70 24 L76 4 L88 22 L100 0 L112 22 L124 4 L130 24Z" fill="${H}" ${L3}/>
-    <path d="M60 140 C80 150 120 150 140 140" fill="none" stroke="${H}" stroke-width="4" stroke-linecap="round"/>
-    ${copo5(24, 60, 1, H)}${copo5(178, 52, .9, H)}
-    ${envolverCara(`<path d="M86 100 L114 100 L100 116Z" fill="${Y}" ${L3}/>`, 100, 88, o)}
-    ${caraArte(100, 84, o, .95, {boca: 0, dx: 22, enojo: true})}`;
   },
   /* ---------- Escarchín → Escarchón → Glaciaro ---------- */
   escarchin: o => {
@@ -122,21 +96,6 @@ const ARTE5 = {
     ${envolverCara(`<ellipse cx="67" cy="96" rx="6" ry="4" fill="${TK}"/>`, 67, 80, o)}
     ${caraArte(67, 70, o, .82, {dy: 34, dx: 16, boca: 7})}`;
   },
-  huemul: o => {
-    const C = '#9C7448', D = '#6E5030', B = '#F2E2C8', A = '#E6D2B0';
-    return `
-    <path d="M62 140 C60 160 62 178 64 190 L80 190 C80 176 80 160 80 148Z M136 146 C136 162 138 178 140 190 L156 190 C156 174 156 160 152 144Z M90 152 C90 166 92 180 94 190 L110 190 C110 178 110 166 108 154Z" fill="${D}" ${L4}/>
-    <path d="M58 108 C92 92 150 98 166 124 C176 144 158 162 128 164 C98 166 66 160 56 142 C50 128 50 116 58 108Z" fill="${C}" ${L4}/>
-    <path d="M62 140 C86 154 120 158 150 152 C130 162 96 162 70 154Z" fill="${B}"/>
-    <path d="M162 114 C172 106 180 110 178 120 C176 126 170 126 164 124Z" fill="${B}" ${L3}/>
-    <path d="M48 36 C40 20 26 12 16 14 M40 24 L28 6 M30 18 L14 2 M80 36 C88 20 102 12 112 14 M88 24 L100 6 M98 18 L114 2" fill="none" stroke="${TK}" stroke-width="10" stroke-linecap="round"/>
-    <path d="M48 36 C40 20 26 12 16 14 M40 24 L28 6 M30 18 L14 2 M80 36 C88 20 102 12 112 14 M88 24 L100 6 M98 18 L114 2" fill="none" stroke="${A}" stroke-width="5.5" stroke-linecap="round"/>
-    <path d="M30 56 C14 46 12 32 22 30 C32 32 38 46 40 58Z M98 56 C114 46 116 32 106 30 C96 32 90 46 88 58Z" fill="${C}" ${L3}/>
-    <path d="M64 38 C94 38 108 60 106 84 C104 108 88 122 64 122 C40 122 24 108 22 84 C20 60 34 38 64 38Z" fill="${C}" ${L4}/>
-    <path d="M64 88 C82 88 90 98 88 110 C86 118 76 122 64 122 C52 122 42 118 40 110 C38 98 46 88 64 88Z" fill="${B}" ${L3}/>
-    ${envolverCara(`<ellipse cx="64" cy="102" rx="7" ry="4.5" fill="${TK}"/>`, 64, 84, o)}
-    ${caraArte(64, 74, o, .82, {dy: 36, dx: 16, boca: 7, enojo: true})}`;
-  },
   /* ---------- Vaquitita → Vaquitón: la vaquita de San Antonio ---------- */
   vaquitita: o => {
     const R = '#E2392E', K = '#2E2E3A';
@@ -149,19 +108,6 @@ const ARTE5 = {
     ${antenas5(86, 114, 52, 22, K)}
     <path d="M100 40 C126 40 138 56 136 74 C134 92 120 100 100 100 C80 100 66 92 64 74 C62 56 74 40 100 40Z" fill="${K}" ${L4}/>
     ${envolverCara(`${ojosPar(88, 112, 72, .72, o, false)}${o.humor === 'feliz' ? `<path d="M94 86 Q100 92 106 86" fill="#E58AA0" stroke="#FFFDF8" stroke-width="2"/>` : `<path d="M94 88 Q100 90 106 88" fill="none" stroke="#FFFDF8" stroke-width="2"/>`}`, 100, 72, o)}`;
-  },
-  vaquiton: o => {
-    const R = '#C42E26', K = '#24242E', Y = '#FFD23F';
-    return `
-    ${patitas5([[56, 160, 34, 186], [100, 170, 100, 192], [144, 160, 166, 186], [60, 130, 22, 136], [140, 130, 178, 136]])}
-    <path d="M100 56 C156 56 182 98 178 138 C174 172 144 188 100 188 C56 188 26 172 22 138 C18 98 44 56 100 56Z" fill="${R}" ${L4}/>
-    <path d="M100 62 V186" stroke="${TK}" stroke-width="3.5"/>
-    ${[[62, 106, 14], [138, 106, 14], [56, 148, 11], [144, 148, 11], [82, 172, 8], [118, 172, 8]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${K}"/>`).join('')}
-    <path d="M48 82 C58 70 74 64 86 66" fill="none" stroke="#FF8A7E" stroke-width="6" stroke-linecap="round"/>
-    ${antenas5(82, 118, 34, 2, Y)}
-    <path d="M100 18 C132 18 146 38 144 60 C142 82 124 92 100 92 C76 92 58 82 56 60 C54 38 68 18 100 18Z" fill="${K}" ${L4}/>
-    <path d="M66 40 L52 28 L72 32Z M134 40 L148 28 L128 32Z" fill="${Y}" ${L3}/>
-    ${envolverCara(`${ojosPar(84, 116, 52, .8, o, true)}${o.humor === 'feliz' ? `<path d="M90 70 Q100 80 110 70" fill="#E58AA0" stroke="#FFFDF8" stroke-width="2"/>` : `<path d="M90 72 Q100 74 110 72" fill="none" stroke="#FFFDF8" stroke-width="2"/>`}`, 100, 54, o)}`;
   },
   /* ---------- Hormiguín → Hormigón → Hormigazo ---------- */
   hormiguin: o => {
@@ -289,21 +235,6 @@ const ARTE5 = {
     ${antenas5(86, 114, 52, 22, K)}
     <path d="M100 42 C130 42 144 62 142 86 C140 108 122 120 100 120 C78 120 60 108 58 86 C56 62 70 42 100 42Z" fill="${Y}" ${L4}/>
     ${caraArte(100, 82, o, .88, {dy: 20})}`;
-  },
-  abejorro: o => {
-    const Y = '#F2B53A', K = '#24242E', W = '#DCEEFF', F = '#FFE7A8';
-    return `
-    ${alaBicho5(46, 70, 40, 22, -30, W)}${alaBicho5(154, 70, 40, 22, 30, W)}
-    ${alaBicho5(40, 110, 28, 14, 20, W, .7)}${alaBicho5(160, 110, 28, 14, -20, W, .7)}
-    <path d="M100 182 L90 200 L110 200Z" fill="${K}" ${L3}/>
-    <path d="M100 90 C142 90 164 120 162 150 C160 176 136 190 100 190 C64 190 40 176 38 150 C36 120 58 90 100 90Z" fill="${Y}" ${L4}/>
-    <path d="M42 126 Q100 140 158 126 L162 146 Q100 162 38 146Z M48 168 Q100 182 152 168 L140 182 Q100 194 60 182Z" fill="${K}"/>
-    <path d="M70 100 C82 94 120 94 130 100" fill="none" stroke="${F}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M40 140 C20 140 12 156 18 168 C26 170 34 164 40 158Z M160 140 C180 140 188 156 182 168 C174 170 166 164 160 158Z" fill="${K}" ${L3}/>
-    ${antenas5(82, 118, 36, 4, Y)}
-    <path d="M100 26 C136 26 152 50 150 76 C148 100 128 112 100 112 C72 112 52 100 50 76 C48 50 64 26 100 26Z" fill="${Y}" ${L4}/>
-    <path d="M60 40 L100 30 L140 40 C130 50 70 50 60 40Z" fill="${K}"/>
-    ${caraArte(100, 72, o, .95, {dy: 22, enojo: true, colmillo: true})}`;
   },
 };
 Object.assign(INICIALES_V2, ARTE5);

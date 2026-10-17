@@ -16,19 +16,6 @@ const ARTE4 = {
     <path d="M40 104 Q100 122 160 104" fill="none" stroke="#B5302A" stroke-width="3"/>
     ${caraArte(100, 136, o, .82, {dy: 20, dx: 16, boca: 8})}`;
   },
-  hongazo: o => {
-    const R = '#C42E26', B = '#F4E8D8', D = '#B89E80', V = '#7CC56A';
-    return `
-    ${pie(72, 188, 30, D)}${pie(128, 188, 30, D)}
-    <path d="M42 140 C26 140 18 154 24 166 C32 168 40 160 46 154Z M158 140 C174 140 182 154 176 166 C168 168 160 160 154 154Z" fill="${B}" ${L3}/>
-    <path d="M100 96 C138 96 154 124 152 154 C150 178 130 190 100 190 C70 190 50 178 48 154 C46 124 62 96 100 96Z" fill="${B}" ${L4}/>
-    <path d="M70 120 Q100 132 130 120 M66 150 Q100 162 134 150" fill="none" stroke="${D}" stroke-width="2.5"/>
-    <path d="M6 96 C0 42 46 8 100 8 C154 8 200 42 194 96 C170 116 30 116 6 96Z" fill="${R}" ${L4}/>
-    ${lunares4([[44, 56, 12], [100, 34, 14], [156, 56, 12], [70, 88, 8], [130, 88, 8], [20, 84, 6], [180, 84, 6]])}
-    <path d="M12 98 Q100 128 188 98" fill="none" stroke="#8E1E18" stroke-width="3"/>
-    <path d="M30 104 C26 116 34 120 40 112 M164 106 C166 118 174 118 172 106" fill="${V}" ${L3}/>
-    ${caraArte(100, 140, o, .9, {dy: 22, dx: 18, boca: 10, enojo: true, colmillo: true})}`;
-  },
   /* ---------- Renacuajín → Ranacuá → Sapucay ---------- */
   renacuajin: o => {
     const C = '#5A9C7A', B = '#C8EAD4', A = '#7FC8F0';
@@ -82,19 +69,6 @@ const ARTE4 = {
     <path d="M86 140 C78 154 84 166 96 164 L100 148Z" fill="${F}" ${L3}/>
     ${caraArte(68, 110, o, .82, {dy: 22, dx: 16, boca: 8})}`;
   },
-  pejerrey: o => {
-    const C = '#7AB2DC', D = '#3E7AAC', S = '#E6F2FA', F = '#3E7AAC', Y = '#FFD23F';
-    return `
-    <path d="M160 108 L200 62 C194 104 194 128 200 168Z" fill="${F}" ${L4}/>
-    <path d="M60 60 L82 18 L96 40 L110 14 L126 64Z" fill="${F}" ${L4}/>
-    <path d="M90 56 C146 50 182 90 176 120 C170 152 136 174 90 174 C44 174 10 150 10 116 C10 82 44 58 90 56Z" fill="${C}" ${L4}/>
-    <path d="M18 124 C40 158 104 170 154 150" fill="none" stroke="${S}" stroke-width="12" stroke-linecap="round"/>
-    <path d="M24 114 C70 106 124 108 170 116" fill="none" stroke="#D0E2F0" stroke-width="6"/>
-    ${[[100, 82], [122, 86], [144, 94], [110, 136], [134, 138], [156, 130]].map(([x, y]) => `<path d="M${x} ${y} q6 7 12 0" fill="none" stroke="${D}" stroke-width="2.4"/>`).join('')}
-    <path d="M84 150 C70 170 78 186 96 184 L102 160Z M140 140 C140 160 150 172 162 168 L156 148Z" fill="${F}" ${L3}/>
-    <path d="M28 80 L16 66 L36 72Z" fill="${Y}" ${L3}/>
-    ${caraArte(56, 104, o, .9, {dy: 24, dx: 18, boca: 10, enojo: true, colmillo: true})}`;
-  },
   /* ---------- Tortuguín → Tortugón ---------- */
   tortuguin: o => {
     const C = '#8CCB7A', D = '#5E9E4E', Ca = '#C98A4A', Cd = '#9C6430';
@@ -137,22 +111,6 @@ const ARTE4 = {
     ${rayo4(150, 40, .8)}${rayo4(32, 80, .7)}
     ${caraArte(100, 104, o, .95, {dy: 24})}`;
   },
-  enchufon: o => {
-    const C = '#E8E8E2', D = '#B9BEC6', M = '#E6C35A', K = '#3A3A48', Y = '#FFE45C';
-    return `
-    <circle cx="100" cy="100" r="86" fill="${Y}" opacity=".12"/>
-    ${pie(70, 188, 30, '#7E8794')}${pie(130, 188, 30, '#7E8794')}
-    <path d="M150 140 C182 140 196 120 190 96 C186 82 172 84 172 98" fill="none" stroke="${TK}" stroke-width="11" stroke-linecap="round"/>
-    <path d="M150 140 C182 140 196 120 190 96 C186 82 172 84 172 98" fill="none" stroke="${K}" stroke-width="6" stroke-linecap="round"/>
-    <rect x="164" y="84" width="18" height="14" rx="3" fill="${K}" ${L3}/><rect x="168" y="72" width="4" height="12" fill="${M}" ${L3}/><rect x="176" y="72" width="4" height="12" fill="${M}" ${L3}/>
-    <rect x="66" y="0" width="16" height="40" rx="4" fill="${M}" ${L3}/><rect x="118" y="0" width="16" height="40" rx="4" fill="${M}" ${L3}/><rect x="92" y="6" width="16" height="30" rx="4" fill="${M}" ${L3}/>
-    <path d="M50 34 H150 C166 34 174 44 174 60 V148 C174 172 150 188 100 188 C50 188 26 172 26 148 V60 C26 44 34 34 50 34Z" fill="${C}" ${L4}/>
-    <path d="M38 58 V150" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
-    <path d="M30 120 C12 116 4 132 10 144 C18 146 26 140 30 134Z M170 120 C188 116 196 132 190 144 C182 146 174 140 170 134Z" fill="${C}" ${L3}/>
-    <circle cx="100" cy="150" r="16" fill="${D}" ${L3}/><rect x="93" y="142" width="4" height="10" rx="1" fill="${K}"/><rect x="103" y="142" width="4" height="10" rx="1" fill="${K}"/>
-    ${rayo4(10, 60, 1)}${rayo4(184, 40, .9)}
-    ${caraArte(100, 92, o, 1, {dy: 22, enojo: true, colmillo: true})}`;
-  },
   /* ---------- Pilita → Pilón → Voltazo: la pila ---------- */
   pilita: o => {
     const C = '#F2B53A', K = '#3A3A48', M = '#C9CED6';
@@ -165,36 +123,6 @@ const ARTE4 = {
     <path d="M90 140 h20 M100 130 v20" stroke="${C}" stroke-width="5" stroke-linecap="round"/>
     <path d="M52 110 C40 108 34 118 38 126 C44 126 50 122 52 118Z M148 110 C160 108 166 118 162 126 C156 126 150 122 148 118Z" fill="${K}" ${L3}/>
     ${caraArte(100, 82, o, .85, {dy: 20, dx: 18, boca: 8})}`;
-  },
-  pilon: o => {
-    const C = '#F2B53A', K = '#2E2E3A', M = '#C9CED6', Y = '#FFE45C';
-    return `
-    ${pie(74, 188, 28, K)}${pie(126, 188, 28, K)}
-    <rect x="84" y="14" width="32" height="18" rx="4" fill="${M}" ${L3}/>
-    <path d="M58 28 H142 C156 28 162 36 162 48 V168 C162 182 150 188 100 188 C50 188 38 182 38 168 V48 C38 36 44 28 58 28Z" fill="${K}" ${L4}/>
-    <path d="M38 48 C38 36 44 28 58 28 H142 C156 28 162 36 162 48 V108 H38Z" fill="${C}" ${L4}/>
-    <path d="M50 44 V100" stroke="#FFE7A8" stroke-width="6" stroke-linecap="round"/>
-    <path d="M76 148 h48 M100 124 v48" stroke="${C}" stroke-width="7" stroke-linecap="round"/>
-    <path d="M40 112 C18 108 10 128 18 140 C26 142 34 136 40 128Z M160 112 C182 108 190 128 182 140 C174 142 166 136 160 128Z" fill="${K}" ${L4}/>
-    ${garras([[16, 140], [184, 140]], Y)}
-    ${rayo4(14, 72, .9)}${rayo4(176, 60, .9)}
-    ${caraArte(100, 70, o, .95, {dy: 22, enojo: true})}`;
-  },
-  voltazo: o => {
-    const C = '#F2B53A', K = '#24242E', M = '#C9CED6', Y = '#FFE45C', E = '#7FD4FF';
-    return `
-    <circle cx="100" cy="100" r="92" fill="${Y}" opacity=".14"/>
-    ${pie(70, 190, 34, K)}${pie(130, 190, 34, K)}
-    <path d="M100 -2 L112 18 L104 18 L114 34 L90 14 L98 14Z" fill="${Y}" ${L3}/>
-    <rect x="80" y="26" width="40" height="16" rx="4" fill="${M}" ${L3}/>
-    <path d="M52 40 H148 C164 40 172 50 172 64 V170 C172 184 156 190 100 190 C44 190 28 184 28 170 V64 C28 50 36 40 52 40Z" fill="${K}" ${L4}/>
-    <path d="M28 64 C28 50 36 40 52 40 H148 C164 40 172 50 172 64 V116 H28Z" fill="${C}" ${L4}/>
-    <path d="M28 116 H172" stroke="${E}" stroke-width="5"/><path d="M28 112 H172 M28 120 H172" stroke="${TK}" stroke-width="2"/>
-    <path d="M40 56 V108" stroke="#FFE7A8" stroke-width="7" stroke-linecap="round"/>
-    <path d="M78 156 h44 M100 134 v44" stroke="${E}" stroke-width="8" stroke-linecap="round"/>
-    <path d="M30 112 C2 104 -6 132 4 148 C14 152 24 144 30 134Z M170 112 C198 104 206 132 196 148 C186 152 176 144 170 134Z" fill="${K}" ${L4}/>
-    ${rayo4(0, 92, 1.1, E)}${rayo4(184, 78, 1.1, E)}${rayo4(40, 30, .8)}${rayo4(152, 26, .8)}
-    ${caraArte(100, 80, o, 1.05, {dy: 24, enojo: true, colmillo: true})}`;
   },
   /* ---------- Tormentín: espíritu del viento eléctrico (etapa única) ---------- */
   tormentin: o => {
@@ -222,22 +150,6 @@ const ARTE4 = {
     <path d="M70 40 L64 24 L82 34Z M100 34 L100 16 L112 32Z M130 40 L138 24 L120 34Z" fill="${D}" ${L3}/>
     ${caraArte(100, 78, o, .92, {dy: 22, colmillo: true})}`;
   },
-  fosilon: o => {
-    const P = '#B8A584', D = '#8A7756', H = '#F4ECDC', A = '#E6A23A';
-    return `
-    ${pie(70, 188, 32, D)}${pie(130, 188, 32, D)}
-    <path d="M148 140 C178 140 196 118 196 92 C206 112 200 152 168 170 C156 176 146 170 144 160Z" fill="${P}" ${L4}/>
-    ${[[176, 128], [188, 108]].map(([x, y]) => `<path d="M${x - 6} ${y + 4} L${x + 4} ${y - 10} L${x + 8} ${y + 6}Z" fill="${H}" ${L3}/>`).join('')}
-    <path d="M100 86 C140 86 160 116 158 148 C156 174 134 190 100 190 C66 190 44 174 42 148 C40 116 60 86 100 86Z" fill="${P}" ${L4}/>
-    <path d="M70 118 Q100 128 130 118 M66 140 Q100 152 134 140 M70 162 Q100 172 130 162 M100 100 V180" fill="none" stroke="${H}" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="100" cy="140" r="10" fill="${A}" ${L3}/><circle cx="96" cy="136" r="3" fill="#FFE7A8"/>
-    <path d="M44 108 C22 104 12 122 20 136 C30 138 38 132 44 124Z M156 108 C178 104 188 122 180 136 C170 138 162 132 156 124Z" fill="${P}" ${L3}/>
-    ${garras([[18, 136], [26, 140], [174, 140], [182, 136]], H)}
-    <path d="M100 18 C142 18 162 42 160 72 C158 98 134 112 100 112 C66 112 42 98 40 72 C38 42 58 18 100 18Z" fill="${P}" ${L4}/>
-    <path d="M48 44 L30 18 L62 32Z M80 24 L76 0 L96 20Z M120 24 L124 0 L104 20Z M152 44 L170 18 L138 32Z" fill="${D}" ${L3}/>
-    <path d="M52 40 C58 30 70 26 80 28 M120 28 C130 26 142 30 148 40" fill="none" stroke="${H}" stroke-width="4" stroke-linecap="round"/>
-    ${caraArte(100, 68, o, .98, {dy: 24, enojo: true, colmillo: true, boca: 12})}`;
-  },
   /* ---------- Cuarcito → Cuarzón → Geodón ---------- */
   cuarcito: o => {
     const C = '#E8B4E8', D = '#B47AC8', P = '#A9A094';
@@ -249,17 +161,6 @@ const ARTE4 = {
     <path d="M100 76 C134 76 148 98 146 124 C144 146 126 158 100 158 C74 158 56 146 54 124 C52 98 66 76 100 76Z" fill="${P}" ${L4}/>
     <path d="M66 96 C72 88 82 84 90 86" fill="none" stroke="#CFC7BA" stroke-width="4" stroke-linecap="round"/>
     ${caraArte(100, 118, o, .92, {dy: 22})}`;
-  },
-  cuarzon: o => {
-    const C = '#D89AE0', D = '#A060B8', P = '#958C80';
-    return `<g transform="translate(8 14) scale(.92)">
-    ${pie(70, 188, 30, '#6E675D')}${pie(130, 188, 30, '#6E675D')}
-    ${cristal4(40, 104, 44, 22, C, -40)}${cristal4(160, 104, 44, 22, C, 40)}
-    ${cristal4(64, 60, 52, 24, C, -18)}${cristal4(100, 48, 66, 28, C)}${cristal4(136, 60, 52, 24, C, 18)}
-    <path d="M100 66 C144 66 164 96 162 132 C160 164 136 188 100 188 C64 188 40 164 38 132 C36 96 56 66 100 66Z" fill="${P}" ${L4}/>
-    <path d="M56 92 C64 80 78 74 90 76" fill="none" stroke="#C3BBAD" stroke-width="5" stroke-linecap="round"/>
-    ${cristal4(64, 170, 18, 12, C, -10)}${cristal4(146, 160, 16, 10, C, 20)}
-    ${caraArte(100, 118, o, 1, {dy: 24, enojo: true})}</g>`;
   },
   geodon: o => {
     const C = '#C47ADC', L = '#F0C8FA', P = '#7E766B', In = '#6A3A90';
@@ -284,20 +185,6 @@ const ARTE4 = {
     <path d="M92 66 C92 52 104 48 110 56 C104 58 104 62 106 66Z" fill="${D}" ${L3}/>
     ${caraArte(100, 86, o, .82, {boca: 0, dx: 20})}
     ${envolverCara(`<path d="M104 98 C120 96 144 96 168 98 C144 100 120 104 104 106Z" fill="#3A3A48" ${L3}/>`, 100, 90, o)}`;
-  },
-  picaflor: o => {
-    const C = '#2AAA88', D = '#1E7A62', B = '#E6F8F0', R = '#E2393C', V = '#7A58C0', W = '#CDEFFB';
-    return `
-    <path d="M62 96 C20 56 -4 76 6 106 C16 130 50 128 72 114Z M138 96 C180 56 204 76 194 106 C184 130 150 128 128 114Z" fill="${W}" opacity=".9" ${L3}/>
-    <path d="M24 82 L60 104 M14 104 L58 112 M176 82 L140 104 M186 104 L142 112" stroke="#8ED4E8" stroke-width="2"/>
-    <path d="M100 140 L78 190 L94 176 L100 192 L106 176 L122 190Z" fill="${D}" ${L4}/>
-    <path d="M100 52 C134 52 152 82 150 114 C148 144 128 162 100 162 C72 162 52 144 50 114 C48 82 66 52 100 52Z" fill="${C}" ${L4}/>
-    <path d="M100 106 C118 106 128 122 126 140 C124 152 112 160 100 160 C88 160 76 152 74 140 C72 122 82 106 100 106Z" fill="${B}"/>
-    <path d="M76 96 C86 108 114 108 124 96 C122 114 78 114 76 96Z" fill="${R}" ${L3}/>
-    <path d="M90 104 C96 112 104 112 110 104" fill="none" stroke="${V}" stroke-width="3"/>
-    <path d="M86 56 C80 34 96 24 110 32 C120 22 136 30 128 44 C120 48 112 50 108 56Z" fill="${V}" ${L3}/>
-    ${caraArte(100, 76, o, .85, {boca: 0, dx: 20, enojo: true})}
-    ${envolverCara(`<path d="M104 88 C124 86 160 86 190 88 C160 90 124 94 104 96Z" fill="#3A3A48" ${L3}/>`, 100, 80, o)}`;
   },
 };
 Object.assign(INICIALES_V2, ARTE4);

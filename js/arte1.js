@@ -29,22 +29,6 @@ const ARTE1 = {
     ${envolverCara(`<path d="M94 99 Q98 103 102 99" fill="${R}" ${L3}/><path d="M76 104 h-24 M76 110 h-20 M120 104 h24 M120 110 h20" stroke="${TK}" stroke-width="2" stroke-linecap="round"/>`, 98, 90, o)}
     ${caraArte(98, 82, o, .9, {dy: 26, boca: 7})}`;
   },
-  pampero: o => {
-    const C = '#C9AE86', D = '#9C7F5A', B = '#F4E8D2', R = '#F5B9C6', V = '#BFE6FB';
-    return `
-    <path d="M14 110 C30 100 44 104 52 112 M8 132 C28 124 46 128 56 136 M16 154 C30 148 42 150 50 156" fill="none" stroke="${V}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M150 126 C168 120 178 132 170 144 C164 152 150 150 146 142Z" fill="#FFFDF8" ${L3}/>
-    <path d="M138 150 C160 158 176 172 170 184 L146 186 C144 176 136 168 124 164Z" fill="${D}" ${L4}/>${garras([[150, 186], [158, 187], [166, 186]])}
-    <path d="M64 116 C92 98 140 104 152 130 C162 152 146 170 120 172 C94 174 68 166 58 148 C50 134 52 124 64 116Z" fill="${C}" ${L4}/>
-    <path d="M70 146 C88 160 116 164 138 160 C120 168 92 168 74 158Z" fill="${B}"/>
-    <path d="M70 152 C62 164 56 174 58 186 L76 186 C76 176 80 166 86 158Z" fill="${D}" ${L4}/>${garras([[62, 187], [70, 187]])}
-    <path d="M60 50 C48 22 50 0 62 -4 C76 0 78 26 74 52Z" fill="${C}" ${L3}/><path d="M63 46 C56 26 58 10 64 6 C70 10 72 28 69 44Z" fill="${R}"/>
-    <path d="M84 50 C92 22 106 2 120 8 C126 18 112 38 96 58Z" fill="${C}" ${L3}/><path d="M88 48 C96 28 106 14 114 16 C116 24 106 38 94 52Z" fill="${R}"/>
-    <path d="M72 46 C102 46 116 64 114 86 C112 106 96 118 72 118 C50 118 34 106 34 86 C34 64 48 46 72 46Z" fill="${C}" ${L4}/>
-    <path d="M44 94 C34 94 26 100 28 108 C30 116 44 118 56 114 C62 110 60 100 52 96Z" fill="${B}" ${L3}/>
-    ${envolverCara(`<path d="M28 100 Q32 104 36 100" fill="${R}" ${L3}/><path d="M34 106 h-22 M36 112 h-18" stroke="${TK}" stroke-width="2" stroke-linecap="round"/>`, 60, 84, o)}
-    ${caraArte(68, 78, o, .82, {enojo: true, dy: 26, boca: 7, dx: 16})}`;
-  },
   /* ---------- Hornerito → Hornero → Hornerón: el pájaro del nido de barro ---------- */
   hornerito: o => {
     const C = '#B5703E', D = '#8A5229', B = '#F2C79A';
@@ -58,36 +42,6 @@ const ARTE1 = {
     <path d="M86 72 C88 58 96 52 104 56 C100 60 102 66 106 70Z" fill="${D}" ${L3}/>
     ${envolverCara(`<path d="M88 104 L112 104 L100 120Z" fill="#F0A93B" ${L3}/><path d="M64 88 Q78 82 92 88 M108 88 Q122 82 136 88" fill="none" stroke="#F4E2C8" stroke-width="4" stroke-linecap="round"/>`, 100, 96, o)}
     ${caraArte(100, 96, o, .95, {boca: 0, dy: -40})}`;
-  },
-  hornero: o => {
-    const C = '#A8622F', D = '#7A4520', B = '#F2C79A', Ba = '#B5835A';
-    return `
-    <path d="M84 170 v14 M76 188 l8 -4 l8 4 M116 170 v14 M108 188 l8 -4 l8 4" stroke="#E59A3B" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-    <path d="M138 136 C160 134 182 144 190 160 C176 160 168 166 158 160 C154 170 144 168 138 160Z" fill="${D}" ${L3}/>
-    <path d="M100 54 C140 54 160 86 158 120 C156 152 132 176 100 176 C68 176 44 152 42 120 C40 86 60 54 100 54Z" fill="${C}" ${L4}/>
-    <path d="M100 104 C124 104 136 122 134 142 C132 160 118 172 100 172 C82 172 68 160 66 142 C64 122 76 104 100 104Z" fill="${B}" ${L3}/>
-    <path d="M44 96 C20 104 10 132 20 160 C26 150 32 154 36 144 C42 152 48 144 50 134 C58 120 56 104 44 96Z" fill="${D}" ${L3}/>
-    <path d="M156 96 C176 104 182 126 172 150 C166 142 162 146 158 138 C156 130 152 120 150 110Z" fill="${D}" ${L3}/>
-    <path d="M162 150 C176 140 194 146 194 160 C194 172 180 178 168 174 C158 170 156 158 162 150Z" fill="${Ba}" ${L4}/>
-    <path d="M168 156 q6 -4 12 0 M172 166 q6 -3 12 1" fill="none" stroke="#8A5A35" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M84 62 C84 44 96 36 106 42 C102 48 104 54 110 58Z" fill="${D}" ${L3}/>
-    ${envolverCara(`<path d="M86 96 L114 96 L100 116Z" fill="#F0A93B" ${L3}/><path d="M60 80 Q76 72 92 80 M108 80 Q124 72 140 80" fill="none" stroke="#F4E2C8" stroke-width="4" stroke-linecap="round"/>`, 100, 88, o)}
-    ${caraArte(100, 88, o, .95, {boca: 0, dy: -40, enojo: true})}`;
-  },
-  horneron: o => {
-    const C = '#9C5A2A', D = '#6E3E1C', B = '#F2C79A', Ba = '#C08A5A', Bo = '#8A5A35';
-    return `
-    <path d="M60 64 C60 30 80 12 100 12 C120 12 140 30 140 64Z" fill="${Ba}" ${L4}/>
-    <path d="M76 40 q8 -6 16 0 M108 34 q8 -5 16 1 M86 56 q8 -5 16 0" fill="none" stroke="${Bo}" stroke-width="3" stroke-linecap="round"/>
-    <path d="M86 64 C86 50 94 42 100 42 C106 42 114 50 114 64Z" fill="#3B2A22" ${L3}/>
-    <path d="M30 104 C0 106 -4 140 12 168 C20 158 26 162 30 150 C38 160 46 150 48 138 C58 120 50 104 30 104Z" fill="${D}" ${L4}/>
-    <path d="M170 104 C200 106 204 140 188 168 C180 158 174 162 170 150 C162 160 154 150 152 138 C142 120 150 104 170 104Z" fill="${D}" ${L4}/>
-    <path d="M82 172 v14 M72 190 l10 -5 l10 5 M118 172 v14 M108 190 l10 -5 l10 5" stroke="#E59A3B" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M100 60 C142 60 164 92 162 126 C160 158 134 180 100 180 C66 180 40 158 38 126 C36 92 58 60 100 60Z" fill="${C}" ${L4}/>
-    <path d="M100 112 C126 112 140 130 138 150 C136 168 120 178 100 178 C80 178 64 168 62 150 C60 130 74 112 100 112Z" fill="${B}" ${L3}/>
-    <path d="M70 138 L100 128 L130 138 L124 156 L100 150 L76 156Z" fill="${Ba}" ${L3}/>
-    ${envolverCara(`<path d="M84 100 L116 100 L100 122Z" fill="#F0A93B" ${L3}/>`, 100, 92, o)}
-    ${caraArte(100, 90, o, .95, {boca: 0, dy: -40, enojo: true})}`;
   },
   /* ---------- Chispulo → Chispón: luciérnaga eléctrica ---------- */
   chispulo: o => {
@@ -103,21 +57,6 @@ const ARTE1 = {
     <path d="M100 30 C130 30 146 50 144 78 C142 102 124 118 100 118 C76 118 58 102 56 78 C54 50 70 30 100 30Z" fill="${N}" ${L4}/>
     <path d="M78 44 C86 38 96 38 102 42" fill="none" stroke="#7E8CD8" stroke-width="4" stroke-linecap="round"/>
     ${caraArte(100, 74, o, .95, {dy: 20})}`;
-  },
-  chispon: o => {
-    const N = '#2E3A8C', D = '#1E2766', Y = '#FFE45C', W = '#DCEEFF';
-    return `
-    <circle cx="100" cy="148" r="52" fill="${Y}" opacity=".22"/>
-    <path d="M66 100 C26 64 0 86 10 112 C20 134 54 132 76 116Z" fill="${W}" opacity=".85" ${L3}/><path d="M24 92 L54 110 M14 112 L50 118" stroke="#9FB6E8" stroke-width="2"/>
-    <path d="M134 100 C174 64 200 86 190 112 C180 134 146 132 124 116Z" fill="${W}" opacity=".85" ${L3}/><path d="M176 92 L146 110 M186 112 L150 118" stroke="#9FB6E8" stroke-width="2"/>
-    <g stroke="${TK}" stroke-width="3.5" stroke-linecap="round" fill="none"><path d="M74 150 L54 160 L50 178"/><path d="M126 150 L146 160 L150 178"/></g>
-    <path d="M100 110 C132 110 150 132 148 156 C146 176 126 190 100 190 C74 190 54 176 52 156 C50 132 68 110 100 110Z" fill="${N}" ${L4}/>
-    <path d="M100 124 C120 124 132 140 130 158 C128 174 116 184 100 184 C84 184 72 174 70 158 C68 140 80 124 100 124Z" fill="${Y}" ${L3}/>
-    <path d="M86 140 l12 -8 l-4 12 l12 -2 l-16 20 l4 -12 l-10 2Z" fill="#FFFDF8" ${L3}/>
-    <path d="M80 24 L66 0 L84 12 L88 -6 L96 20Z M120 24 L134 0 L116 12 L112 -6 L104 20Z" fill="${Y}" ${L3}/>
-    <path d="M100 22 C134 22 150 44 148 72 C146 98 126 114 100 114 C74 114 54 98 52 72 C50 44 66 22 100 22Z" fill="${N}" ${L4}/>
-    <path d="M70 40 C82 32 96 32 104 36" fill="none" stroke="#6E7CD0" stroke-width="4" stroke-linecap="round"/>
-    ${caraArte(100, 68, o, .95, {dy: 20, enojo: true, colmillo: true})}`;
   },
   /* ---------- Ceibín → Ceibal: la flor del ceibo ---------- */
   ceibin: o => {
@@ -211,21 +150,6 @@ const ARTE1 = {
     <path d="M40 112 C30 114 24 120 26 128 C30 134 42 134 52 130Z" fill="${C}" ${L3}/><ellipse cx="28" cy="124" rx="3.5" ry="2.5" fill="${TK}"/>
     ${caraArte(76, 100, o, .8, {dy: 20, dx: 16, boca: 7})}`;
   },
-  tatupenon: o => {
-    const P = '#8A929E', Po = '#5E6874', C = '#D9B88E', D = '#B08452', Pu = '#C9CED6';
-    return `
-    ${pie(56, 186, 24, D)}${pie(82, 188, 24, D)}${pie(130, 188, 24, D)}${pie(156, 186, 24, D)}
-    <path d="M176 156 C192 152 200 162 196 172 C186 170 176 170 168 166Z" fill="${C}" ${L3}/>
-    <path d="M26 162 C22 100 64 64 108 64 C154 64 190 100 186 162Z" fill="${P}" ${L4}/>
-    ${[[50, 100], [80, 76], [108, 68], [136, 76], [164, 100]].map(([x, y]) => `<path d="M${x - 10} ${y + 6} L${x} ${y - 22} L${x + 10} ${y + 6}Z" fill="${Pu}" ${L3}/>`).join('')}
-    <path d="M50 162 C50 116 70 88 108 80 M80 162 C80 116 92 92 108 80 M136 162 C136 116 124 92 108 80 M164 162 C164 116 146 88 108 80" fill="none" stroke="${Po}" stroke-width="3"/>
-    <path d="M26 162 H186" ${L4}/>
-    <path d="M44 66 L30 30 L62 56Z" fill="${C}" ${L3}/><path d="M80 60 L88 22 L98 56Z" fill="${C}" ${L3}/>
-    <path d="M64 56 C92 56 108 76 106 102 C104 124 88 138 64 138 C40 138 24 124 22 102 C20 76 36 56 64 56Z" fill="${C}" ${L4}/>
-    <path d="M26 108 C14 110 6 118 8 128 C12 136 28 136 40 130Z" fill="${C}" ${L3}/><ellipse cx="10" cy="122" rx="4" ry="3" fill="${TK}"/>
-    <path d="M44 72 L56 66 L70 70 L84 64" fill="none" stroke="${Po}" stroke-width="3" stroke-linecap="round"/>
-    ${caraArte(70, 96, o, .78, {dy: 22, dx: 16, boca: 7, enojo: true})}`;
-  },
   /* ---------- Brasita → Brasero: salamandra de brasas ---------- */
   brasita: o => {
     const C = '#E2493C', D = '#B5302A', B = '#FFB36B', E = '#FFD23F';
@@ -240,21 +164,6 @@ const ARTE1 = {
     <path d="M100 42 C136 42 152 62 150 88 C148 112 128 124 100 124 C72 124 52 112 50 88 C48 62 64 42 100 42Z" fill="${C}" ${L4}/>
     <path d="M70 50 C74 40 84 38 88 44 M112 44 C116 38 126 40 130 50" fill="none" stroke="${E}" stroke-width="4" stroke-linecap="round"/>
     ${caraArte(100, 82, o, .95, {colmillo: true})}`;
-  },
-  brasero: o => {
-    const C = '#C9372B', D = '#962520', B = '#FFB36B', E = '#FFD23F', H = '#5A4A40';
-    return `
-    <path d="M128 156 C154 162 172 150 176 124 C180 108 190 114 188 130 C182 168 156 184 126 178Z" fill="${C}" ${L4}/>
-    ${llamaG(184, 112, .8)}
-    ${pie(68, 186, 30, D)}${pie(128, 186, 30, D)}
-    <path d="M100 96 C138 96 156 124 154 152 C152 176 130 188 100 188 C70 188 48 176 46 152 C44 124 62 96 100 96Z" fill="${C}" ${L4}/>
-    <path d="M100 116 C120 116 130 134 128 154 C126 170 114 180 100 180 C86 180 74 170 72 154 C70 134 80 116 100 116Z" fill="${B}" ${L3}/>
-    <path d="M60 116 C44 122 38 140 44 152 C48 158 56 156 58 150 C60 142 64 136 70 132Z M140 116 C156 122 162 140 156 152 C152 158 144 156 142 150 C140 142 136 136 130 132Z" fill="${C}" ${L3}/>
-    <path d="M100 30 C138 30 154 52 152 80 C150 104 130 118 100 118 C70 118 50 104 48 80 C46 52 62 30 100 30Z" fill="${C}" ${L4}/>
-    <path d="M66 40 C70 30 82 28 86 34 M114 34 C118 28 130 30 134 40" fill="none" stroke="${E}" stroke-width="4" stroke-linecap="round"/>
-    <path d="M62 48 L46 22 L76 38Z M88 36 L86 8 L104 32Z M112 36 L114 8 L96 32Z M138 48 L154 22 L124 38Z" fill="${H}" ${L3}/>
-    ${llamaG(46, 24, .42)}${llamaG(86, 10, .48)}${llamaG(114, 10, .48)}${llamaG(154, 24, .42)}
-    ${caraArte(100, 72, o, .95, {colmillo: true, enojo: true})}`;
   },
 };
 Object.assign(INICIALES_V2, ARTE1);

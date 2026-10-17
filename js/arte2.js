@@ -35,19 +35,6 @@ const ARTE2 = {
     <path d="M86 52 C88 40 98 36 104 42 C100 44 100 48 102 52Z" fill="#7CC56A" ${L3}/>
     ${caraArte(100, 108, o, .95, {dy: 24})}`;
   },
-  morro: o => {
-    const P = '#9A9184', D = '#6E675D', L = '#C9C1B3';
-    return `
-    ${pie(70, 186, 30, D)}${pie(130, 186, 30, D)}
-    <path d="M100 30 L150 44 L174 92 L170 150 L140 184 L60 184 L30 150 L26 92 L50 44Z" fill="${P}" ${L4}/>
-    <path d="M50 44 L74 70 L100 30 M150 44 L126 70 L100 30 M74 70 L126 70 M30 150 L58 136 L60 184 M170 150 L142 136 L140 184" fill="none" stroke="${D}" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M60 54 L90 42 L80 62Z" fill="${L}"/>
-    <path d="M28 96 C6 98 -2 120 8 138 C14 150 30 152 36 140 C40 130 38 116 32 106Z" fill="${P}" ${L4}/>
-    <path d="M172 96 C194 98 202 120 192 138 C186 150 170 152 164 140 C160 130 162 116 168 106Z" fill="${P}" ${L4}/>
-    <path d="M70 34 L64 12 L84 28Z M130 34 L136 12 L116 28Z" fill="${L}" ${L3}/>
-    <path d="M60 160 Q100 172 140 160" fill="none" stroke="${D}" stroke-width="3"/>
-    ${caraArte(100, 100, o, 1, {dy: 26, enojo: true, colmillo: true})}`;
-  },
   cerrazo: o => {
     const P = '#8C8377', D = '#5E584F', L = '#C3BBAD', N = '#F4F7FB', V = '#7CC56A';
     return `
@@ -134,19 +121,6 @@ const ARTE2 = {
     ${envolverCara(`<path d="M50 126 C34 130 22 144 18 160 M56 130 C46 140 42 152 44 164 M70 128 C80 140 82 152 76 164" fill="none" stroke="${TK}" stroke-width="3" stroke-linecap="round"/>`, 70, 110, o)}
     ${caraArte(70, 104, o, .85, {dy: 20, dx: 18, boca: 9})}`;
   },
-  bagron: o => {
-    const C = '#6E8296', D = '#465A6E', B = '#D8E3EC', Y = '#E6C35A';
-    return `
-    <path d="M162 116 L198 78 C200 110 200 140 196 168Z" fill="${D}" ${L4}/>
-    <path d="M80 48 L108 14 L124 58Z" fill="${D}" ${L4}/><path d="M92 40 L106 24 M100 50 L112 32" stroke="#8CA0B4" stroke-width="2.5"/>
-    <path d="M96 50 C148 50 176 88 170 126 C164 166 132 186 92 186 C46 186 14 160 14 118 C14 78 46 50 96 50Z" fill="${C}" ${L4}/>
-    <path d="M22 128 C34 166 84 182 134 176 C102 190 50 184 28 158Z" fill="${B}"/>
-    <path d="M96 158 C82 176 88 190 104 190 L112 170Z M140 150 C134 164 140 176 150 176 L156 158Z" fill="${D}" ${L3}/>
-    <path d="M60 60 C80 50 112 50 132 60" fill="none" stroke="${Y}" stroke-width="4" stroke-linecap="round"/>
-    ${[[110, 80], [132, 92], [120, 114], [146, 120], [150, 100]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.4" fill="${D}"/>`).join('')}
-    ${envolverCara(`<path d="M24 126 C6 128 -4 146 0 168 M32 134 C20 146 18 164 24 180 M54 134 C64 150 64 166 56 180 M70 130 C86 140 92 156 88 170" fill="none" stroke="${TK}" stroke-width="3.4" stroke-linecap="round"/>`, 56, 100, o)}
-    ${caraArte(56, 96, o, .9, {dy: 24, dx: 18, boca: 12, enojo: true, colmillo: true})}`;
-  },
   /* ---------- Nubarrón → Tormentón: nube de tormenta ---------- */
   nubarron: o => {
     const C = '#8F9BB8', L = '#C9D3E8', Y = '#FFE45C';
@@ -156,15 +130,6 @@ const ARTE2 = {
     <path d="M52 140 C26 140 18 112 38 100 C34 74 60 60 80 72 C88 50 124 46 136 70 C160 62 180 84 170 104 C188 114 182 142 160 142Z" fill="${C}" ${L4}/>
     <path d="M56 86 C62 76 74 74 80 80 M94 64 C104 56 120 58 126 66" fill="none" stroke="${L}" stroke-width="5" stroke-linecap="round"/>
     ${caraArte(104, 106, o, .9, {dy: 20})}`;
-  },
-  tormenton: o => {
-    const C = '#5E6A8C', L = '#94A3C6', Y = '#FFE45C', D = '#3E4866';
-    return `
-    ${rayoA(50, 168, 1.3, Y)}${rayoA(100, 180, 1.1, Y)}${rayoA(146, 168, 1.3, Y)}
-    <path d="M28 120 C4 116 -2 90 16 78 C12 54 38 42 54 54 C58 30 92 20 108 40 C124 18 162 26 164 52 C190 50 202 78 188 96 C204 112 194 140 170 140 C164 152 140 156 128 148 C116 160 84 160 74 148 C60 156 36 150 34 136Z" fill="${C}" ${L4}/>
-    <path d="M34 72 C42 60 56 58 64 66 M90 42 C102 32 120 32 128 42 M150 56 C160 52 170 56 172 64" fill="none" stroke="${L}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M16 96 C0 104 -4 122 4 132 C12 128 18 120 22 112Z M184 96 C200 104 204 122 196 132 C188 128 182 120 178 112Z" fill="${D}" ${L3}/>
-    ${caraArte(100, 96, o, 1.05, {dy: 24, enojo: true, colmillo: true})}`;
   },
   /* ---------- Zorrolumbre → Zorrofogón: zorro con cola de fuego ---------- */
   zorrolumbre: o => {
@@ -180,23 +145,6 @@ const ARTE2 = {
     <path d="M100 82 C80 82 64 96 70 110 C80 120 120 120 130 110 C136 96 120 82 100 82Z" fill="${B}" ${L3}/>
     ${envolverCara(`<ellipse cx="100" cy="100" rx="6" ry="4" fill="${TK}"/>`, 100, 84, o)}
     ${caraArte(100, 78, o, .9, {dy: 34, boca: 7})}`;
-  },
-  zorrofogon: o => {
-    const C = '#D9582A', D = '#A63E16', B = '#FFF1DE', N = '#3A2A24';
-    return `
-    <path d="M144 150 C176 154 196 126 186 92 C198 98 206 120 202 142 C194 176 160 188 134 178Z" fill="${C}" ${L4}/>
-    <path d="M150 166 C172 164 186 148 190 130" fill="none" stroke="${B}" stroke-width="5" stroke-linecap="round"/>
-    ${llamaG(186, 92, 1)}${llamaG(200, 118, .55)}
-    <path d="M62 110 C92 96 142 100 156 126 C166 148 152 168 126 170 C98 172 72 166 58 150 C50 138 50 120 62 110Z" fill="${C}" ${L4}/>
-    <path d="M66 150 C86 162 116 166 140 160 C120 170 90 170 70 160Z" fill="${B}"/>
-    <path d="M132 156 C134 170 136 180 138 188 L156 188 C154 176 152 164 148 154Z M64 148 C62 162 62 176 64 188 L82 188 C82 176 82 164 80 152Z" fill="${N}" ${L4}/>
-    <path d="M94 160 C94 172 94 180 96 188 L114 188 C114 178 112 168 110 160Z" fill="${N}" ${L4}/>
-    <path d="M38 50 L28 8 L64 38Z M100 50 L112 8 L76 38Z" fill="${C}" ${L4}/><path d="M40 42 L34 20 L56 38Z M98 42 L106 20 L84 38Z" fill="${N}"/>
-    ${llamaG(28, 10, .4)}${llamaG(112, 10, .4)}
-    <path d="M70 30 C104 30 120 52 118 78 C116 102 96 116 70 116 C44 116 24 102 22 78 C20 52 36 30 70 30Z" fill="${C}" ${L4}/>
-    <path d="M70 76 C48 76 30 90 36 106 C46 118 94 118 104 106 C110 90 92 76 70 76Z" fill="${B}" ${L3}/>
-    ${envolverCara(`<ellipse cx="70" cy="96" rx="7" ry="4.5" fill="${TK}"/>`, 70, 78, o)}
-    ${caraArte(70, 70, o, .88, {dy: 36, boca: 8, enojo: true, colmillo: true, dx: 18})}`;
   },
 };
 Object.assign(INICIALES_V2, ARTE2);
