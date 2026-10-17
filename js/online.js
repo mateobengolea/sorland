@@ -113,15 +113,19 @@ function dondeEstoy(){
   const M = S && S.mundo && MAPAS[S.mundo.mapa];
   return M ? (M.tema.interior ? 'De visita en ' + M.nombre : M.nombre) : 'Paseando';
 }
-function presenciaGlobal(){ return {apodo, donde: dondeEstoy(), medallas: cantMedallas(), campeon: !!(S && S.campeon), ent: S && S.entrenador, puntos: RK.ficha ? RK.ficha.puntos : null}; }
+function presenciaGlobal(){ return {apodo, nivel: S && S.equipo ? nivelEntrenador() : 1, donde: dondeEstoy(), medallas: cantMedallas(), campeon: !!(S && S.campeon), ent: S && S.entrenador, puntos: RK.ficha ? RK.ficha.puntos : null}; }
 function conectarGlobal(){
   if(!onlineListo() || ONG.canal) return;
   const canal = db.channel('sl:global', {config: {private: true, presence: {key: usuarioId}}});
   ONG.canal = canal;
   canal.on('presence', {event: 'sync'}, () => { ONG.estado = canal.presenceState(); actualizarOnline(); })
+       // Solicitudes de amistad e invitaciones a duelo llegan por acá, estés en el mapa que estés.
+       .on('broadcast', {event: 'amistad'}, ({payload: p}) => { if(typeof alRecibirAmistad === 'function') alRecibirAmistad(p); })
+       .on('broadcast', {event: 'duelo'}, ({payload: p}) => { if(p.para === usuarioId && typeof recibirDuelo === 'function') recibirDuelo(p); })
        .subscribe(async estado => {
          if(estado === 'SUBSCRIBED'){
            ONG.listo = true; ONG.ultimo = Date.now();
+           if(typeof cargarAmigos === 'function') cargarAmigos();
            const p = presenciaGlobal(); ONG.firma = JSON.stringify([p.donde, p.medallas, p.campeon, p.puntos, p.ent]);
            await canal.track(p);
          } else if(estado === 'CHANNEL_ERROR' || estado === 'TIMED_OUT' || estado === 'CLOSED'){
@@ -154,8 +158,10 @@ function actualizarOnline(){
   b.innerHTML = `<i class="punto-online"></i>${n} online`;
   b.setAttribute('aria-label', `${n} jugador${n > 1 ? 'es' : ''} online`);
   if(hojaActual === 'online') pintarOnline();
+  if(hojaActual === 'amigos' && typeof pintarAmigos === 'function') pintarAmigos();
 }
 function abrirOnline(){
+  if(typeof abrirAmigos === 'function') return abrirAmigos(AM.lista.some(a => a.estado === 'aceptada' && presenciaDe(a.id)) || solicitudesRecibidas().length ? 'amigos' : 'online');
   hojaActual = 'online';
   nuevoVelo();
   pintarOnline();
@@ -272,12 +278,14 @@ function abrirInteraccion(o){
     <div class="frases">${FRASES.map(f => `<button data-f="${esc(f)}">${esc(f)}</button>`).join('')}</div>
     <div class="acciones-jugador">
       ${o.pelea ? `<button class="grande" id="j-duelo" disabled>Está ${o.pelea.tipo === 'duelo' ? 'en un duelo' : 'en batalla'}</button>` : '<button class="grande" id="j-duelo">Desafiar a duelo</button>'}
+      <button class="btn" id="j-perfil">${typeof estadoAmistad === 'function' && estadoAmistad(o.id) === 'amigos' ? 'Ver perfil · son amigos' : typeof estadoAmistad === 'function' && estadoAmistad(o.id) === 'enviada' ? 'Ver perfil · solicitud enviada' : 'Ver perfil y agregar a amigos'}</button>
       <button class="btn btn-2" id="j-silenciar">${sil ? 'Dejar de silenciar' : 'Silenciar sus mensajes'}</button>
     </div></div>`;
   $('#j-nom').textContent = o.apodo;
   velo.querySelector('.cerrar').onclick = cerrarHoja;
   velo.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { decir(b.dataset.f); cerrarHoja(); });
   $('#j-duelo').onclick = () => { cerrarHoja(); pedirDuelo(o); };
+  $('#j-perfil').onclick = () => abrirPerfil(o.id, o);
   $('#j-silenciar').onclick = () => {
     if(sil) ON.silenciados.delete(o.id); else ON.silenciados.add(o.id);
     try { localStorage.setItem('sorlandia-silenciados', JSON.stringify([...ON.silenciados])); } catch(e){}

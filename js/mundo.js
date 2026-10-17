@@ -14,7 +14,10 @@ function pintarMundo(){
   cerrarHoja();
   if(!S.mundo || !MAPAS[S.mundo.mapa]) S.mundo = {...SALIDA_CASA};
   const M = mapaActual();
-  if(!transitable(M, S.mundo.x, S.mundo.y)) S.mundo = {...SALIDA_CASA};
+  // Se puede aparecer parado sobre un obstáculo (así nadie queda encerrado del otro lado).
+  const cel = M.m[S.mundo.y] && M.m[S.mundo.y][S.mundo.x];
+  if(!transitable(M, S.mundo.x, S.mundo.y) && !OBSTACULO[cel] && !(cel === '~' && tieneHab('surf'))) S.mundo = {...SALIDA_CASA};
+  if(!M.tema.interior && !M.tema.cueva){ S.visitados = S.visitados || {}; S.visitados[M.id] = true; }
   $('#app').innerHTML = `
     ${cabeceraHTML()}
     <section class="mundo" id="mundo">
@@ -23,6 +26,7 @@ function pintarMundo(){
       <div class="mundo-botones">
         <button id="m-equipo">Criaturas</button>
         <button id="m-mochila">Mochila</button>
+        ${tieneHab('vuelo') && !M.tema.interior && !M.tema.cueva ? '<button id="m-volar">Volar</button>' : ''}
       </div>
       <div class="dpad" aria-label="Moverse">
         <button data-d="up" aria-label="Arriba">▲</button>
@@ -38,6 +42,7 @@ function pintarMundo(){
   if(typeof prepararBadge === 'function') prepararBadge();
   $('#m-equipo').onclick = () => abrirEquipo();
   $('#m-mochila').onclick = () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); };
+  if($('#m-volar')) $('#m-volar').onclick = abrirVuelo;
   $('#dialogo').onclick = avanzarDialogo;
 
   const canvas = $('#lienzo');
@@ -57,6 +62,13 @@ function pintarMundo(){
   });
   mostrarZona(true);
   MW.raf = requestAnimationFrame(cuadro);
+  if(M.tema.oscuro && !MW.avisoCueva){
+    MW.avisoCueva = true;
+    const quien = S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura';
+    setTimeout(() => { if(MW) dialogo(M.nombre, tieneHab('destello')
+      ? [`${quien} usó Destello. ¡La cueva se iluminó!`]
+      : ['Está oscurísimo: casi no ves tus propios pies.', 'Con Destello, que enseña Elsa Ltamontes en Villa Piedra, se vería todo.']); }, 400);
+  }
   if(S.ensenar){ const mov = S.ensenar; delete S.ensenar; setTimeout(() => { if(MW) elegirAprendiz(mov); }, 600); }
   if(S.cuartel && S.cuartel.continuar){ S.cuartel.continuar = false; setTimeout(() => { if(MW) siguienteCuartel(); }, 500); }
   if(typeof alEntrarAlMapa === 'function') alEntrarAlMapa();
@@ -138,7 +150,13 @@ function cuadro(ahora){
         let n = npcEn(M, nx, ny);
         // Por encima del mostrador también se puede hablar con quien atiende.
         if(!n && M.muebles.some(mb => mb.x === nx && mb.y === ny && (mb.tipo === 'mostrador' || mb.tipo === 'caja'))) n = npcEn(M, nx + dx, ny + dy);
+        const obs = !n && obstaculoEn(M, nx, ny);
         if(n){ MW.teclas.clear(); hablarCon(n); }
+        else if(obs){ MW.teclas.clear(); usarHabilidad(obs, M, nx, ny); }
+        else if(M.m[ny] && M.m[ny][nx] === '~' && !tieneHab('surf') && !M.tema.interior && performance.now() - (MW.avisoAgua || 0) > 8000){
+          MW.avisoAgua = performance.now(); MW.teclas.clear();
+          dialogo('', ['El agua es muy honda para cruzar a pie.', 'Con Surf, que enseña la Capitana Elsa Lado en Puerto Camalote, se puede nadar.']);
+        }
         else if(M.altares[nx + ',' + ny]){ MW.teclas.clear(); visitarAltar(M.altares[nx + ',' + ny]); }
         else if(typeof jugadorEn === 'function'){ const j = jugadorEn(nx, ny); if(j){ MW.teclas.clear(); abrirInteraccion(j); } }
       }
@@ -147,6 +165,45 @@ function cuadro(ahora){
   if(!MW) return;
   dibujar(ahora);
   MW.raf = requestAnimationFrame(cuadro);
+}
+
+/* ---------------- Habilidades de campo ---------------- */
+async function usarHabilidad(h, M, x, y){
+  const H = HABILIDADES[h], L = LIDERES[H.lider], quien = S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura';
+  const que = h === 'cortar' ? 'Un arbolito finito tapa el camino.' : 'Una roca enorme tapa el paso.';
+  if(!tieneHab(h)){
+    await dialogo('', [que, `Con ${H.nom} se podría ${h === 'cortar' ? 'cortar' : 'correr'}. Lo enseña ${L.nombre}, la líder de ${MEDALLAS.find(m => m.id === H.medalla).ciudad}.`]);
+    return;
+  }
+  await dialogo('', [que, `${quien} usó ${H.nom}. ${h === 'cortar' ? '¡Zas! El arbolito cayó.' : '¡Uff! Corrió la roca a un costado.'}`]);
+  S.quitados = S.quitados || {};
+  S.quitados[M.id + ':' + x + ',' + y] = true;
+  MW.polvo = {x, y, desde: performance.now(), tipo: h};
+  guardar();
+}
+// Vuelo: a cualquier pueblo que ya visitaste, en la puerta del Centro.
+function destinoVuelo(id){
+  const M = MAPAS[id]; if(!M) return null;
+  for(const k of Object.keys(M.puertas)){ const a = M.puertas[k]; if(a && a.interior && String(a.interior).startsWith('centro_')){ const [x, y] = k.split(',').map(Number); return {mapa: id, x, y: y + 1}; } }
+  return null;
+}
+function abrirVuelo(){
+  if(!tieneHab('vuelo') || !MW || MW.ocupado) return;
+  hojaActual = 'vuelo';
+  const v = nuevoVelo();
+  const pueblos = ['ceibo', 'villapiedra', 'camalote', 'tormenta', 'fogon', 'supremo'].filter(id => MAPAS[id]);
+  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Volar"><div class="hoja-cab"><h2>¿A dónde volás?</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <p class="rotulo-chico">${esc(S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura')} te lleva volando hasta el Centro de Rehabilitación de un pueblo que ya visitaste.</p>
+    <div class="lista-online">${pueblos.map(id => { const ok = S.visitados && S.visitados[id] && destinoVuelo(id), aca = S.mundo.mapa === id;
+      return `<button class="fila-online destino-vuelo" data-volar="${id}" ${ok && !aca ? '' : 'disabled'}><span class="fo-txt"><b>${MAPAS[id].nombre}</b><small>${aca ? 'Estás acá' : ok ? 'Tocá para volar' : 'Todavía no lo visitaste'}</small></span></button>`; }).join('')}</div></div>`;
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelectorAll('[data-volar]').forEach(b => b.onclick = () => {
+    const d = destinoVuelo(b.dataset.volar); if(!d) return;
+    cerrarHoja();
+    if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; avisar('Saliste del Cuartel: vuelve a empezar.'); }
+    const lienzo = $('#mundo'); if(lienzo) lienzo.classList.add('volando');
+    setTimeout(() => { salirDelMundo(); S.mundo = {...d, mira: 'abajo'}; guardar(); pintarMundo(); avisar(`¡Llegaste volando a ${MAPAS[d.mapa].nombre}!`); }, 650);
+  });
 }
 
 function alLlegar(){
@@ -213,8 +270,8 @@ function alLlegar(){
       return false;
     }
   }
-  // Pasto alto
-  if(c === ','){
+  // Pasto alto (y el piso de la cueva, donde salen menos seguido)
+  if(c === ',' || (c === 'k' && Math.random() < .5)){
     const z = zonaEn(M, x, y);
     if(S.repelente > 0){ S.repelente--; if(!S.repelente) avisar('Se terminó el repelente.'); }
     else if(ZONAS[z] && ZONAS[z].aparecen.length && Math.random() < .13){
@@ -382,6 +439,8 @@ function colorSuelo(M, c, x, y){
   const t = M.tema;
   switch(c){
     case ',': return t.pastoAlto;
+    case 'k': return (x + y) % 2 ? '#7A6B5D' : '#74655A';
+    case 'c': case 'O': return M.base === 's' ? t.tierra : M.id === 'cueva' ? '#7A6B5D' : t.pasto;
     case '~': case 'b': return '#5AB4E8';
     case '=': return M.id === 'fogon' ? '#B49A7A' : '#E9D3A0';
     case ':': return '#D9D0C1';
@@ -414,6 +473,7 @@ function dibujar(ahora){
     ctx.fillStyle = colorSuelo(M, c, x, y); ctx.fillRect(sx, sy, TS + 1, TS + 1);
     if(c === '.' || c === 'f' || c === 'v' || c === 's' || c === 'T' || c === '#') detalleSuelo(ctx, M, c, sx, sy, x, y);
     if(c === ',') pastoAlto(ctx, sx, sy, x, y, ahora, M.tema.brizna);
+    if(c === 'k') pisoCueva(ctx, sx, sy, x, y);
     if(c === 'f') flores(ctx, sx, sy, x, y);
     if(c === '~' || c === 'b') agua(ctx, sx, sy, x, y, ahora);
     if(c === 'b') puente(ctx, sx, sy);
@@ -436,6 +496,8 @@ function dibujar(ahora){
       if(c === '#') roca(ctx, sx, sy, x, y, M);
       if(c === 'R' || c === 'H' || c === 'D') edificioTile(ctx, sx, sy, x, y, c, M);
       if(c === 'A') altar(ctx, sx, sy, x, y, ahora, M);
+      if(c === 'c'){ if(quitado(M, x, y)) tocon(ctx, sx, sy); else arbolito(ctx, sx, sy, ahora); }
+      if(c === 'O'){ if(!quitado(M, x, y)) rocaGrande(ctx, sx, sy, M); }
     }
     for(const mb of M.muebles) if(mb.y === y && mb.tipo !== 'alfombra' && mb.tipo !== 'podio') muebleInterior(ctx, mb.x * TS - camX, mb.y * TS - camY, mb.tipo, mb, ahora);
     if(MW.seg && y === Math.floor(segY() + .5)) seguidor(ctx, ahora, camX, camY);
@@ -445,6 +507,7 @@ function dibujar(ahora){
     if(y === Math.floor(py + .5)) jugador(ctx, (px + .5) * TS - camX, (py + 1) * TS - camY, ahora);
   }
   for(const e of M.edificios) cartelEdificio(ctx, e, camX, camY);
+  ambiente(ctx, M, camX, camY, vw, vh, ahora);
   if(M.tema.tinte){ ctx.fillStyle = M.tema.tinte; ctx.fillRect(0, 0, vw, vh); }
   // Luz cálida arriba y viñeta suave en los bordes
   const luz = ctx.createLinearGradient(0, 0, 0, vh);
@@ -456,6 +519,21 @@ function dibujar(ahora){
     MW.vigneta = {w: vw, h: vh, g};
   }
   ctx.fillStyle = MW.vigneta.g; ctx.fillRect(0, 0, vw, vh);
+  if(MW.polvo){
+    const p = MW.polvo, k = (ahora - p.desde) / 600;
+    if(k > 1) MW.polvo = null;
+    else for(let i = 0; i < 9; i++){ const a = i / 9 * Math.PI * 2, r = 6 + k * 22;
+      ctx.fillStyle = p.tipo === 'cortar' ? `rgba(110,180,90,${1 - k})` : `rgba(160,150,140,${1 - k})`;
+      ctx.beginPath(); ctx.arc((p.x + .5) * TS - camX + Math.cos(a) * r, (p.y + .5) * TS - camY + Math.sin(a) * r * .7, 4 * (1 - k) + 2, 0, 7); ctx.fill(); }
+  }
+  if(M.tema.oscuro){
+    const cx = (px + .5) * TS - camX, cy = (py + .4) * TS - camY;
+    const r = (tieneHab('destello') ? 5.2 : 1.35) * TS, parpadeo = Math.sin(ahora / 160) * 2;
+    const g = ctx.createRadialGradient(cx, cy, r * .35, cx, cy, r + parpadeo);
+    g.addColorStop(0, 'rgba(8,6,14,0)'); g.addColorStop(.75, 'rgba(8,6,14,.55)'); g.addColorStop(1, 'rgba(8,6,14,.97)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, vw, vh);
+    if(tieneHab('destello')){ const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * .6); g2.addColorStop(0, 'rgba(255,236,170,.10)'); g2.addColorStop(1, 'rgba(255,236,170,0)'); ctx.fillStyle = g2; ctx.fillRect(0, 0, vw, vh); }
+  }
   if(MW.alerta && MW.alerta.hasta > ahora){
     const n = MW.alerta.n, ax = (n.x + .5) * TS - camX, ay = n.y * TS - camY - 26;
     ctx.fillStyle = '#fff'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
@@ -622,8 +700,9 @@ function arbol(ctx, sx, sy, x, y, M){
 }
 
 function roca(ctx, sx, sy, x, y, M){
+  if(M.tema.cueva) return paredCueva(ctx, sx, sy, x, y, M);
   ctx.fillStyle = 'rgba(20,30,40,.22)'; ctx.beginPath(); ctx.ellipse(sx + 17, sy + 27, 14, 4.5, 0, 0, 7); ctx.fill();
-  const osc = M.id === 'fogon', h = hashXY(x, y);
+  const osc = M.id === 'fogon' || M.id === 'cueva', h = hashXY(x, y);
   const base = osc ? '#4E423D' : '#9AA2AD', luz = osc ? '#6A5A52' : '#BCC3CC', sombra = osc ? '#3A302C' : '#7C8592';
   ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
   ctx.fillStyle = base;
@@ -726,8 +805,21 @@ function etiqueta(ctx, texto, cx, y, fondo){
 function jugador(ctx, cx, piso, t){
   const moviendo = !!MW.hacia && MW.t > .1 && MW.t < .9;
   const paso = moviendo ? (MW.paso ? 1 : 2) : 0;
-  ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
-  dibujarEntrenador(ctx, MW.sprites, cx, piso, MW.mira, paso, 48);
+  const M = mapaActual(), enAgua = M.m[MW.pos.y][MW.pos.x] === '~' || (MW.hacia && M.m[MW.hacia.y][MW.hacia.x] === '~');
+  if(enAgua){
+    // Nadando: la criatura del equipo hace de tabla y se ven ondas alrededor.
+    const ola = Math.sin(t / 300) * 1.5;
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(cx, piso - 3, 18 + ola, 6, 0, 0, 7); ctx.stroke();
+    ctx.fillStyle = S.equipo[0] ? TIPOS[tipoDe(S.equipo[0].esp)].color : '#5AB4E8'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(cx, piso - 6 + ola * .5, 16, 6, 0, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.save(); ctx.translate(0, ola * .5 - 4);
+    dibujarEntrenador(ctx, MW.sprites, cx, piso, MW.mira, 0, 48);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = 'rgba(34,48,74,.22)'; ctx.beginPath(); ctx.ellipse(cx, piso - 3, 11, 4, 0, 0, 7); ctx.fill();
+    dibujarEntrenador(ctx, MW.sprites, cx, piso, MW.mira, paso, 48);
+  }
   etiqueta(ctx, apodo || 'Vos', cx, piso - 62);
   if(typeof ON !== 'undefined' && ON.miBurbuja && ON.miBurbuja.hasta > t) burbuja(ctx, ON.miBurbuja.txt, cx, piso - 68);
 }
@@ -737,7 +829,9 @@ function segY(){ return MW.hacia ? MW.segDesde.y + (MW.seg.y - MW.segDesde.y) * 
 function seguidor(ctx, t, camX, camY){
   const c = S.equipo[0]; if(!c) return;
   const img = imagenCriatura(c.esp, c.shiny);
-  const x = segX(), y = segY();
+  const x = segX(), y = segY(), Mx = mapaActual();
+  // Mientras nadás, tu criatura va de tabla: no camina atrás.
+  if(Mx.m[MW.pos.y][MW.pos.x] === '~' || Mx.m[Math.round(y)][Math.round(x)] === '~') return;
   if(x === MW.pos.x && y === MW.pos.y && !MW.hacia) return;
   const cx = (x + .5) * TS - camX, piso = (y + 1) * TS - camY, tam = 36;
   const salto = MW.hacia ? Math.abs(Math.sin(MW.t * Math.PI)) * 3 : Math.abs(Math.sin(t / 380)) * 1.5;
@@ -799,4 +893,118 @@ function muebleInterior(ctx, sx, sy, tipo, mb = {}, t = 0){
   else if(tipo === 'hielo'){ ctx.fillStyle = 'rgba(191,233,255,.9)'; ctx.beginPath(); ctx.moveTo(sx + 4, sy + 28); ctx.lineTo(sx + 2, sy + 6); ctx.lineTo(sx + 12, sy - 6); ctx.lineTo(sx + 24, sy - 2); ctx.lineTo(sx + 30, sy + 10); ctx.lineTo(sx + 28, sy + 28); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx + 9, sy + 4); ctx.lineTo(sx + 13, sy - 1); ctx.stroke(); }
   else if(tipo === 'antorcha'){ rr(sx + 13, sy + 6, 6, 20, '#8A5A35'); const f = Math.sin(t / 120 + mb.y) * 2; ctx.fillStyle = mb.col || '#FF9F2E'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 1 + f * .3, 6, 9 + f, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFF6B0'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 4, 2.5, 4, 0, 0, 7); ctx.fill(); }
   else if(tipo === 'estandarte'){ rr(sx + 14, sy - 14, 4, 42, '#8A5A35'); ctx.fillStyle = mb.col || '#999'; ctx.beginPath(); ctx.moveTo(sx + 4, sy - 10); ctx.lineTo(sx + 28, sy - 10); ctx.lineTo(sx + 28, sy + 16); ctx.lineTo(sx + 16, sy + 10); ctx.lineTo(sx + 4, sy + 16); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#FFFDF8'; ctx.beginPath(); ctx.arc(sx + 16, sy + 1, 5, 0, 7); ctx.fill(); }
+}
+
+/* ---------------- Obstáculos y cueva ---------------- */
+function arbolito(ctx, sx, sy, t){
+  const mov = Math.sin(t / 700 + sx) * 1.2;
+  ctx.fillStyle = 'rgba(20,40,20,.25)'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 28, 10, 3.5, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  ctx.fillStyle = '#8A5A35'; ctx.beginPath(); ctx.rect(sx + 14, sy + 16, 4, 12); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7CC56A';
+  ctx.beginPath(); ctx.moveTo(sx + 16 + mov, sy + 1); ctx.lineTo(sx + 26 + mov * .5, sy + 13); ctx.lineTo(sx + 22, sy + 13); ctx.lineTo(sx + 27, sy + 20); ctx.lineTo(sx + 5, sy + 20); ctx.lineTo(sx + 10, sy + 13); ctx.lineTo(sx + 6 + mov * .5, sy + 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx + 12, sy + 10); ctx.lineTo(sx + 15, sy + 6); ctx.stroke();
+  // marquita de "se puede cortar"
+  ctx.strokeStyle = '#FFFDF8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx + 13, sy + 22); ctx.lineTo(sx + 19, sy + 20); ctx.stroke();
+}
+function tocon(ctx, sx, sy){
+  ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2;
+  ctx.fillStyle = '#8A5A35'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 24, 6, 3, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#E2B98A'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 23, 4, 2, 0, 0, 7); ctx.fill();
+}
+function rocaGrande(ctx, sx, sy, M){
+  ctx.fillStyle = 'rgba(20,30,40,.3)'; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 29, 15, 4.5, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  const g = ctx.createRadialGradient(sx + 11, sy + 9, 2, sx + 16, sy + 16, 18); g.addColorStop(0, '#C9CED6'); g.addColorStop(1, '#7C8592');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx + 16, sy + 16, 15, 13, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sx + 12, sy + 7); ctx.lineTo(sx + 16, sy + 14); ctx.lineTo(sx + 13, sy + 20); ctx.moveTo(sx + 16, sy + 14); ctx.lineTo(sx + 23, sy + 16); ctx.stroke();
+}
+function pisoCueva(ctx, sx, sy, x, y){
+  const h = hashXY(x, y);
+  if(h > .7){ ctx.fillStyle = 'rgba(30,20,15,.35)'; ctx.beginPath(); ctx.ellipse(sx + 8 + h * 14, sy + 10 + h * 10, 3, 2, 0, 0, 7); ctx.fill(); }
+  if(h < .12){ ctx.fillStyle = 'rgba(140,220,255,.55)'; ctx.beginPath(); ctx.moveTo(sx + 20, sy + 12); ctx.lineTo(sx + 23, sy + 18); ctx.lineTo(sx + 17, sy + 18); ctx.closePath(); ctx.fill(); }
+}
+
+/* ---------------- Ambiente: partículas, nubes, humo y clima ---------------- */
+const AMBIENTE = {
+  ceibo: {tipo: 'hojas', n: 12, mariposas: 3}, villapiedra: {tipo: 'polvo', n: 14}, camalote: {tipo: 'brillos', n: 16, mariposas: 1},
+  tormenta: {tipo: 'lluvia', n: 70, rayos: true}, fogon: {tipo: 'brasas', n: 30}, supremo: {tipo: 'motas', n: 22, mariposas: 2},
+  cueva: {tipo: 'polvo', n: 12}, gym_rulo: {tipo: 'brasas', n: 16}, gym_patinaje: {tipo: 'nieve', n: 34}, gym_tornado: {tipo: 'hojas', n: 10},
+  gym_flor: {tipo: 'hojas', n: 10, mariposas: 2}, gym_saltamontes: {tipo: 'motas', n: 10, mariposas: 2},
+};
+function ambiente(ctx, M, camX, camY, vw, vh, t){
+  const cfg = AMBIENTE[M.id];
+  // Sombras de nubes que cruzan despacio los mapas al aire libre.
+  if(!M.tema.interior && !M.tema.cueva){
+    for(let i = 0; i < 3; i++){
+      const ancho = M.w * TS + 600, x = ((t / 90 * (1 + i * .3) + i * 520) % ancho) - 300 - camX, y = (M.h * TS) * (.2 + i * .3) - camY + Math.sin(t / 9000 + i) * 40;
+      const g = ctx.createRadialGradient(x, y, 10, x, y, 170);
+      g.addColorStop(0, 'rgba(30,40,70,.10)'); g.addColorStop(1, 'rgba(30,40,70,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, 220, 120, 0, 0, 7); ctx.fill();
+    }
+    // Humo de las chimeneas de las casas.
+    for(const e of M.edificios) if(e.tipo === 'casa'){
+      const cx = (e.x + e.ancho - 1.2) * TS - camX, cy = e.y * TS - camY - 6;
+      if(cx < -40 || cx > vw + 40 || cy < -80 || cy > vh + 20) continue;
+      for(let k = 0; k < 4; k++){
+        const f = ((t / 2600 + k / 4 + e.x * .13) % 1);
+        ctx.fillStyle = `rgba(240,240,245,${.55 * (1 - f)})`;
+        ctx.beginPath(); ctx.arc(cx + Math.sin(f * 5 + k) * 5 + f * 10, cy - f * 46, 4 + f * 7, 0, 7); ctx.fill();
+      }
+    }
+  }
+  if(!cfg) return;
+  // Partículas fijas al mundo: se corren con la cámara y dan la vuelta por los bordes.
+  if(!MW.part || MW.part.mapa !== M.id){
+    const r = rng(M.id.length * 977 + 13);
+    MW.part = {mapa: M.id, lista: Array.from({length: cfg.n + (cfg.mariposas || 0)}, (_, i) => ({x: r() * vw, y: r() * vh, s: r(), mariposa: i >= cfg.n})), cam: {x: camX, y: camY}};
+  }
+  const P = MW.part, dx = camX - P.cam.x, dy = camY - P.cam.y; P.cam = {x: camX, y: camY};
+  const dt = Math.min(50, t - (P.t || t)); P.t = t;
+  for(const p of P.lista){
+    p.x -= dx; p.y -= dy;
+    const tipo = p.mariposa ? 'mariposa' : cfg.tipo;
+    if(tipo === 'hojas'){ p.y += dt * (.012 + p.s * .01); p.x += Math.sin(t / 700 + p.s * 9) * .5 + dt * .008; }
+    else if(tipo === 'polvo' || tipo === 'motas'){ p.x += Math.sin(t / 1500 + p.s * 20) * .15; p.y += Math.cos(t / 1800 + p.s * 13) * .12 - (tipo === 'motas' ? dt * .004 : 0); }
+    else if(tipo === 'brasas'){ p.y -= dt * (.02 + p.s * .03); p.x += Math.sin(t / 400 + p.s * 30) * .4; }
+    else if(tipo === 'lluvia'){ p.y += dt * (.5 + p.s * .3); p.x -= dt * .12; }
+    else if(tipo === 'nieve'){ p.y += dt * (.015 + p.s * .02); p.x += Math.sin(t / 900 + p.s * 17) * .35; }
+    else if(tipo === 'mariposa'){ p.x += Math.sin(t / 1300 + p.s * 40) * .7; p.y += Math.cos(t / 1700 + p.s * 25) * .5; }
+    if(p.x < -20) p.x += vw + 40; if(p.x > vw + 20) p.x -= vw + 40;
+    if(p.y < -20) p.y += vh + 40; if(p.y > vh + 20) p.y -= vh + 40;
+    ctx.save(); ctx.translate(p.x, p.y);
+    if(tipo === 'hojas'){ ctx.rotate(t / 600 + p.s * 10); ctx.fillStyle = ['#7CC56A', '#F2B63D', '#E28A4C'][Math.floor(p.s * 3)]; ctx.beginPath(); ctx.ellipse(0, 0, 4, 2, 0, 0, 7); ctx.fill(); }
+    else if(tipo === 'polvo'){ ctx.fillStyle = `rgba(255,248,220,${.25 + p.s * .3})`; ctx.beginPath(); ctx.arc(0, 0, 1.2 + p.s * 1.5, 0, 7); ctx.fill(); }
+    else if(tipo === 'motas'){ const a = .4 + Math.sin(t / 400 + p.s * 30) * .35; ctx.fillStyle = `rgba(255,226,120,${a})`; ctx.beginPath(); ctx.arc(0, 0, 1.5 + p.s * 1.5, 0, 7); ctx.fill(); }
+    else if(tipo === 'brillos'){ const a = Math.max(0, Math.sin(t / 300 + p.s * 50)); if(a > .6){ ctx.fillStyle = `rgba(255,255,255,${(a - .6) * 2.2})`; ctx.fillRect(-3, -.6, 6, 1.2); ctx.fillRect(-.6, -3, 1.2, 6); } }
+    else if(tipo === 'brasas'){ ctx.fillStyle = `rgba(255,${140 + p.s * 90 | 0},60,${.5 + p.s * .4})`; ctx.beginPath(); ctx.arc(0, 0, 1.5 + p.s * 1.6, 0, 7); ctx.fill(); }
+    else if(tipo === 'lluvia'){ ctx.strokeStyle = 'rgba(200,220,255,.45)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-3, 10); ctx.stroke(); }
+    else if(tipo === 'nieve'){ ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(0, 0, 1.5 + p.s * 1.8, 0, 7); ctx.fill(); }
+    else if(tipo === 'mariposa'){ const ala = Math.abs(Math.sin(t / 90 + p.s * 10)) * 4 + 1; ctx.fillStyle = ['#FF8FB1', '#FFD23F', '#9C7CD4'][Math.floor(p.s * 3)]; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(-ala / 2 - 1, 0, ala / 2 + .5, 3, 0, 0, 7); ctx.ellipse(ala / 2 + 1, 0, ala / 2 + .5, 3, 0, 0, 7); ctx.fill(); ctx.stroke(); }
+    ctx.restore();
+  }
+  if(cfg.tipo === 'lluvia'){ ctx.fillStyle = 'rgba(40,50,90,.12)'; ctx.fillRect(0, 0, vw, vh); }
+  if(cfg.rayos){
+    const ciclo = (t % 11000) / 11000;
+    if(ciclo > .96){ ctx.fillStyle = `rgba(255,255,240,${(1 - ciclo) * 6})`; ctx.fillRect(0, 0, vw, vh); }
+  }
+}
+// En la cueva las paredes son macizas: bloque oscuro con un borde de luz arriba.
+function paredCueva(ctx, sx, sy, x, y, M){
+  const piso = (xx, yy) => M.m[yy] && M.m[yy][xx] && M.m[yy][xx] !== '#';
+  ctx.fillStyle = '#3B302A'; ctx.fillRect(sx, sy, TS + 1, TS + 1);
+  const h = hashXY(x, y);
+  ctx.fillStyle = '#463A32'; ctx.fillRect(sx + 3 + h * 8, sy + 4 + h * 6, 10, 6);
+  if(piso(x, y + 1)){
+    // Frente de la pared, con grietas, que se ve desde abajo.
+    ctx.fillStyle = '#5C4D42'; ctx.fillRect(sx, sy + TS * .45, TS + 1, TS * .55 + 1);
+    ctx.strokeStyle = 'rgba(30,22,18,.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(sx + 8 + h * 10, sy + TS * .5); ctx.lineTo(sx + 12 + h * 8, sy + TS - 4); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(sx, sy + TS - 3, TS + 1, 3);
+  }
+  ctx.fillStyle = 'rgba(255,230,190,.10)';
+  if(piso(x, y - 1)) ctx.fillRect(sx, sy, TS + 1, 3);
+  if(piso(x - 1, y)) ctx.fillRect(sx, sy, 2, TS * .45);
+  if(piso(x + 1, y)) ctx.fillRect(sx + TS - 2, sy, 2, TS * .45);
 }

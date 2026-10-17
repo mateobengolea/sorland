@@ -103,17 +103,17 @@ const LIDERES = {
   tosca:{id:'tosca', titulo:'Líder', nombre:'Estela Gartija', medalla:'penasco', mov:'terremoto', tipoGym:'piedra', premio:400, ropa:'#8A8F99', pelo:'#C9C9C9',
     equipo:[['fosilito',10],['morrito',11],['tatupiedra',12]],
     antes:['¡Bienvenido al gimnasio de Villa Piedra!', 'Acá entrenamos duro, como las piedras de la sierra.', 'Si querés la Medalla Peñasco, vas a tener que romperme la defensa.'],
-    despues:['¡Uf! Me rompiste el caparazón.', 'Te ganaste la Medalla Peñasco. Con ella, el guardia del camino al puerto te deja pasar.'],
+    despues:['¡Uf! Me rompiste el caparazón.', 'Te ganaste la Medalla Peñasco. Con ella, tus criaturas pueden correr la roca que tapa el camino al puerto.'],
     yaGano:'Ya tenés mi medalla. Seguí hacia Puerto Camalote, al este de Pueblo Ceibo.'},
   iara:{id:'iara', titulo:'Líder', nombre:'Capitana Elsa Lado', medalla:'camalote', mov:'torrente', tipoGym:'agua', premio:700, ropa:'#3B82D6', pelo:'#2A2420',
     equipo:[['ranacua',14],['bagrecito',15],['carpincho',16]],
     antes:['¡Ahoy! Soy la Capitana Elsa Lado.', 'En este puerto el agua manda. ¿Vas a nadar o te vas a hundir?'],
-    despues:['¡Me dejaste a la deriva!', 'Tomá la Medalla Camalote. El camino al norte, a Cerro Tormenta, ya está abierto.'],
+    despues:['¡Me dejaste a la deriva!', 'Tomá la Medalla Camalote. Con Surf vas a poder cruzar el canal hacia Cerro Tormenta.'],
     yaGano:'Ya navegaste conmigo. Cerro Tormenta queda al norte del puerto.'},
   fulgencio:{id:'fulgencio', titulo:'Líder', nombre:'Aitor Menta', medalla:'relampago', mov:'descarga', tipoGym:'rayo', premio:1000, ropa:'#4656A0', pelo:'#FFD23F',
     equipo:[['pilon',18],['nubarron',19],['chispon',19],['yaguarayo',20]],
     antes:['¿Sentís el aire cargado? Es mi equipo, que ya te tiene ganas.', 'Soy Aitor Menta. Si aguantás la tormenta, la medalla es tuya.'],
-    despues:['¡Me dejaste sin batería!', 'La Medalla Relámpago es tuya. Al norte, en Monte Fogón, te espera el último líder.'],
+    despues:['¡Me dejaste sin batería!', 'La Medalla Relámpago es tuya. Al norte, pasando la Cueva Oscura, está Monte Fogón.'],
     yaGano:'Ya te ganaste el relámpago. Andá a Monte Fogón, al norte.'},
   rulo:{id:'rulo', titulo:'Líder', nombre:'Don Armando Bronca', medalla:'brasa', mov:'parrilla', tipoGym:'fuego', premio:1400, ropa:'#C2412B', pelo:'#3B2A22',
     equipo:[['fogonero',22],['ajipicante',23],['brasero',24],['zorrolumbre',25]],
@@ -160,15 +160,16 @@ function mapaCeibo(){
   casaConInterior(M, 20, 26, '#6BAF5B', {nombre: 'Casa de los Baeza', npc: {nombre: 'Abuelo Aquiles Baeza', ropa: '#7E5434', pelo: '#E9E2D3', regalo: true,
     frases: ['¡Hola, pibe! Pasá, pasá.', 'Yo de joven también recorría Sorlandia con mi Hornerito.', 'Tomá, llevate esto que a mí ya no me sirve.']}});
   M.borde('T');
-  // Salidas: al norte (Villa Piedra) y al este (Puerto Camalote), con guardia
+  // Salidas: al norte (Villa Piedra, tapada por un arbolito: Cortar) y al este (Puerto Camalote, tapada por una roca: Fuerza)
   M.camino(11, 1, 11, 3);
   M.salida(11, 0, 'villapiedra', 15, 24);
+  for(let x = 1; x <= 38; x++) if(x !== 11) M.m[1][x] = 'T';
+  // El arbolito está justo donde llegás desde el norte: viniendo de Villa Piedra siempre se puede bajar.
+  M.m[1][11] = 'c';
   for(let y = 14; y <= 28; y++) if(y !== 25) m[y][38] = 'T';
   M.camino(36, 25, 38, 25);
   M.salida(39, 25, 'camalote', 1, 14);
-  M.npc({id:'guardia_ceibo', x:38, y:25, tipo:'guardia', nombre:'Guardia Esteban Quito', requiere:'penasco', ropa:'#2F4A7A', pelo:'#22304A',
-    frases:['Alto ahí. El camino al puerto está cortado por un derrumbe.', 'Solo dejo pasar a quien tenga la Medalla Peñasco, del gimnasio de Villa Piedra.', 'Villa Piedra queda subiendo por el camino del norte, pasando las sierras.'],
-    abierto:['¡Esa es la Medalla Peñasco! Adelante, el camino al puerto está despejado.']});
+  M.m[25][37] = 'O';
   M.npc({id:'chela', x:14, y:24, tipo:'vecino', nombre:'Doña Susana Oria', ropa:'#E07BA0', pelo:'#BFBFBF',
     frases:['¡Hola, nene! ¿Así que saliste de aventura?', 'En Sorlandia hay cuatro líderes. Si les ganás, te dan una medalla cada uno.', 'El primero está en Villa Piedra, subiendo por el norte. Antes entrená bien en la pradera.', 'Si tu equipo queda cansado, andá al Centro de Rehabilitación. En el Market venden cápsulas.', 'Ah, y mirá bien el piso: a veces hay cosas tiradas.']});
   M.npc(entrenador('facu', 14, 17, 'Pibe', 'Elton Tito', [['pampito',4],['hornerito',4]], 60,
@@ -255,9 +256,10 @@ function mapaCamalote(){
   for(let x = 1; x <= 34; x++) if(x !== 14) M.m[1][x] = 'T';
   M.camino(14, 1, 14, 2);
   M.salida(14, 0, 'tormenta', 16, 26);
-  M.npc({id:'guardia_camalote', x:14, y:2, tipo:'guardia', nombre:'Guardia Inés Queleto', requiere:'camalote', ropa:'#2F4A7A', pelo:'#7E5434',
-    frases:['Más allá está Cerro Tormenta. Cae cada rayo que da miedo.', 'Solo pasa quien tenga la Medalla Camalote de la Capitana Elsa Lado.'],
-    abierto:['Con esa medalla vas a aguantar la tormenta. ¡Pasá!']});
+  // Un canal de agua separa el puerto del camino a Cerro Tormenta: hace falta Surf.
+  for(let y = 3; y <= 4; y++) for(let x = 1; x <= 27; x++) M.m[y][x] = '~';
+  M.npc({id:'nadador_cam', x:14, y:6, tipo:'vecino', nombre:'Bañero Esteban Ñadando', ropa:'#E2574C', pelo:'#C98A3C',
+    frases:['Del otro lado del canal sale el camino a Cerro Tormenta.', 'Está muy hondo para cruzar a pie. Con Surf, que enseña la Capitana Elsa Lado, se cruza nadando.']});
   M.npc({id:'vecino_cam', x:21, y:16, tipo:'vecino', nombre:'Marinero César Dina', ropa:'#FFFFFF', pelo:'#22304A', suelo:':',
     frases:['La Capitana Elsa Lado pelea con criaturas de Agua.', 'Lo que mejor les pega es el Rayo y la Planta. Con Fuego, ni lo intentes.']});
   M.npc(entrenador('lu', 22, 5, 'Surfista', 'Mary Nera', [['ranacua',14],['tortuguin',15]], 230,
@@ -297,10 +299,9 @@ function mapaTormenta(){
   M.m[3][5] = 'A'; M.altares['5,3'] = 'huracanto';
   for(let x = 1; x <= 30; x++) if(x !== 16) M.m[1][x] = 'T';
   M.camino(16, 1, 16, 2);
-  M.salida(16, 0, 'fogon', 16, 24);
-  M.npc({id:'guardia_tormenta', x:16, y:2, tipo:'guardia', nombre:'Guardia Igor Dito', requiere:'relampago', ropa:'#2F4A7A', pelo:'#C9C9C9',
-    frases:['El camino a Monte Fogón quema, literalmente.', 'Volvé cuando tengas la Medalla Relámpago de Aitor Menta.'],
-    abierto:['¡Una Medalla Relámpago! Pasá, y llevá agua que allá hace calor.']});
+  M.salida(16, 0, 'cueva', 13, 29);
+  M.npc({id:'linterna_tor', x:18, y:3, tipo:'vecino', nombre:'Espeleólogo Armando Linterna', ropa:'#C98A3C', pelo:'#3B2A22',
+    frases:['Al norte arranca la Cueva Oscura. Del otro lado está Monte Fogón.', 'Adentro no se ve nada. Con Destello, que enseña Elsa Ltamontes en Villa Piedra, se ilumina todo.', 'Y llevá Fuerza: hay rocas que tapan el paso.']});
   M.npc({id:'vecino_tor', x:12, y:20, tipo:'vecino', nombre:'Abuela Tere Moto', ropa:'#7A4FC9', pelo:'#E9E2D3', suelo:':',
     frases:['Aitor Menta usa criaturas de Rayo. Son rápidas como la luz.', 'Las de Piedra casi no sienten la electricidad. Pensalo.']});
   M.npc(entrenador('nieves', 26, 23, 'Esquiadora', 'Ivana Nieva', [['escarchin',17],['pinguinito',18]], 320,
@@ -335,7 +336,7 @@ function mapaFogon(){
     frases: ['Mido la temperatura del volcán todos los días.', 'En el cráter hay una luz que no es lava. Los viejos le dicen Intiraya.', 'Tomá, para que no te quemes.']}});
   M.rect(13, 20, 15, 21, ':'); M.rect(17, 20, 19, 21, ':');
   M.borde('#');
-  M.salida(16, 25, 'tormenta', 16, 1);
+  M.salida(16, 25, 'cueva', 13, 1);
   M.camino(27, 1, 27, 6);
   M.salida(27, 0, 'supremo', 15, 28);
   M.npc({id:'guardia_supremo', x:27, y:1, tipo:'guardia', nombre:'Guardiana Encarna Vales', requiere:'todas', ropa:'#C9A227', pelo:'#E9E2D3',
@@ -437,7 +438,72 @@ function repartirObjetos(M, cant){
     M.items.push({id: 'it_' + M.id + '_' + i, x, y});
   }
 }
-[mapaCeibo, mapaVillaPiedra, mapaCamalote, mapaTormenta, mapaFogon, mapaSupremo].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
+/* ---------------- Cueva Oscura: un laberinto entre Cerro Tormenta y Monte Fogón ---------------- */
+function mapaCueva(){
+  const W = 27, H = 31;
+  const M = nuevoMapa('cueva', 'Cueva Oscura', W, H, 9091, '#',
+    {pasto:'#5A4C40', pastoAlto:'#5A4C40', brizna:'#4A3E34', tierra:'#4E4136', arbol:'normal', fondo:'#120D0A', oscuro:true, cueva:true});
+  const r = rng(424242);
+  const dentro = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+  // Laberinto: celdas en coordenadas impares, pasillos cavados con búsqueda en profundidad.
+  const celda = (x, y) => x > 0 && y > 0 && x < W - 1 && y < H - 1;
+  const vis = new Set(['13,29']), pila = [[13, 29]];
+  M.m[29][13] = 'k';
+  while(pila.length){
+    const [x, y] = pila[pila.length - 1];
+    const vec = [[2, 0], [-2, 0], [0, 2], [0, -2]].map(([dx, dy]) => [x + dx, y + dy, dx, dy]).filter(([nx, ny]) => celda(nx, ny) && !vis.has(nx + ',' + ny));
+    if(!vec.length){ pila.pop(); continue; }
+    const [nx, ny, dx, dy] = vec[Math.floor(r() * vec.length)];
+    M.m[y + dy / 2][x + dx / 2] = 'k'; M.m[ny][nx] = 'k'; vis.add(nx + ',' + ny); pila.push([nx, ny]);
+  }
+  M.m[30][13] = 'k'; M.m[0][13] = 'k';
+  const libre = (x, y) => M.m[y][x] === 'k';
+  const bfs = desde => {
+    const prev = {}, v = new Set([desde.join(',')]), q = [desde];
+    while(q.length){ const [x, y] = q.shift();
+      for(const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+        if(!dentro(nx, ny) || v.has(k) || !libre(nx, ny)) continue; v.add(k); prev[k] = [x, y]; q.push([nx, ny]); } }
+    return {v, prev};
+  };
+  const llegaArriba = () => bfs([13, 29]).v.has('13,1');
+  // Camino de abajo hacia arriba. En un laberinto perfecto, cada casillero del camino es paso obligado.
+  const {prev} = bfs([13, 29]);
+  const camino = []; let p = [13, 1];
+  while(p && !(p[0] === 13 && p[1] === 29)){ camino.unshift(p); p = prev[p[0] + ',' + p[1]]; }
+  const vecinosK = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => dentro(x + dx, y + dy) && libre(x + dx, y + dy)).length;
+  const medio = camino.filter(([x, y], i) => i > camino.length * .4 && i < camino.length * .6 && vecinosK(x, y) === 2);
+  const roca = medio[Math.floor(medio.length / 2)] || camino[Math.floor(camino.length / 2)];
+  M.m[roca[1]][roca[0]] = 'O';
+  // Atajos y dos salas, solo si no dejan esquivar la roca.
+  const probar = cambios => {
+    const viejos = cambios.map(([x, y]) => [x, y, M.m[y][x]]);
+    cambios.forEach(([x, y]) => { if(!(x === roca[0] && y === roca[1])) M.m[y][x] = 'k'; });
+    if(llegaArriba()) viejos.forEach(([x, y, c]) => M.m[y][x] = c);
+  };
+  for(const [x0, y0] of [[3, 17], [17, 7], [15, 21]]){ const c = []; for(let y = y0; y < y0 + 3; y++) for(let x = x0; x < x0 + 5; x++) c.push([x, y]); probar(c); }
+  for(let i = 0; i < 60; i++){
+    const x = 1 + Math.floor(r() * (W - 2)), y = 1 + Math.floor(r() * (H - 2));
+    if(M.m[y][x] === '#' && ((x % 2 === 0 && y % 2 === 1) || (x % 2 === 1 && y % 2 === 0))) probar([[x, y]]);
+  }
+  M.salida(13, 30, 'tormenta', 16, 1);
+  M.salida(13, 0, 'fogon', 16, 24);
+  M.m[30][13] = 'k'; M.m[0][13] = 'k';
+  M.rocaCamino = roca;
+  // Entrenadores en callejones sin salida.
+  const enCamino = new Set(camino.map(([x, y]) => x + ',' + y));
+  const callejones = [];
+  for(let y = 1; y < H - 1; y++) for(let x = 1; x < W - 1; x++)
+    if(libre(x, y) && !enCamino.has(x + ',' + y) && vecinosK(x, y) === 1) callejones.push([x, y]);
+  const abajo = callejones.filter(([, y]) => y > 16), arriba = callejones.filter(([, y]) => y <= 14);
+  const t1 = abajo[Math.floor(r() * abajo.length)], t2 = arriba[Math.floor(r() * arriba.length)];
+  if(t1) M.npc({...entrenador('cueva_minero', t1[0], t1[1], 'Minero', 'Elmer Tillo', [['cuarzon', 20], ['morro', 20]], 380,
+    ['¡Cuidado con la cabeza! Acá abajo pica todo.'], ['Me quedé sin pico.'], '#C98A3C'), suelo: 'k'});
+  if(t2) M.npc({...entrenador('cueva_espeleo', t2[0], t2[1], 'Espeleóloga', 'Estela Ctita', [['fosilon', 21], ['hormigon', 21], ['chispon', 21]], 420,
+    ['¿Viste las estalactitas? A todas les puse nombre.'], ['Me ganaste a oscuras.'], '#7A4FC9'), suelo: 'k'});
+  M.zonas = [['cueva', 0, 0, W - 1, H - 1]]; M.zonaBase = 'cueva';
+  return M;
+}
+[mapaCeibo, mapaVillaPiedra, mapaCamalote, mapaTormenta, mapaFogon, mapaSupremo, mapaCueva].forEach(f => { const M = f(); repartirObjetos(M, 4); MAPAS[M.id] = M; });
 INTERIORES.forEach((info, n) => { const M = mapaInterior(info, n); MAPAS[M.id] = M; });
 const SALIDA_CASA = {mapa: 'ceibo', x: 11, y: 24};
 
@@ -564,6 +630,26 @@ function guardiaAbierto(n){
   if(typeof S === 'undefined' || !S || !S.medallas) return false;
   return n.requiere === 'todas' ? MEDALLAS.every(m => S.medallas[m.id]) : !!S.medallas[n.requiere];
 }
+/* ---------------- Habilidades de campo ---------------- */
+// Las enseñan los líderes: con su medalla, tus criaturas las pueden usar fuera de combate.
+const HABILIDADES = {
+  cortar:   {nom: 'Cortar',   medalla: 'ombu',     lider: 'flor',        desc: 'Corta los arbolitos finitos que tapan el camino.'},
+  fuerza:   {nom: 'Fuerza',   medalla: 'penasco',  lider: 'tosca',       desc: 'Corre las rocas grandes.'},
+  destello: {nom: 'Destello', medalla: 'panal',    lider: 'saltamontes', desc: 'Ilumina las cuevas oscuras.'},
+  surf:     {nom: 'Surf',     medalla: 'camalote', lider: 'iara',        desc: 'Cruza el agua nadando.'},
+  vuelo:    {nom: 'Vuelo',    medalla: 'pampero',  lider: 'tornado',     desc: 'Te lleva volando a cualquier pueblo que ya visitaste.'},
+};
+const tieneHab = h => !!(typeof S !== 'undefined' && S && S.medallas && S.medallas[HABILIDADES[h].medalla]);
+const OBSTACULO = {c: 'cortar', O: 'fuerza'};
+const quitado = (M, x, y) => !!(S && S.quitados && S.quitados[M.id + ':' + x + ',' + y]);
+function obstaculoEn(M, x, y){
+  const c = M.m[y] && M.m[y][x];
+  return OBSTACULO[c] && !quitado(M, x, y) ? OBSTACULO[c] : null;
+}
 function transitable(M, x, y){
-  return x >= 0 && y >= 0 && x < M.w && y < M.h && !BLOQUEA.has(M.m[y][x]) && !npcEn(M, x, y);
+  if(x < 0 || y < 0 || x >= M.w || y >= M.h || npcEn(M, x, y)) return false;
+  const c = M.m[y][x];
+  if(OBSTACULO[c]) return quitado(M, x, y);
+  if(c === '~') return tieneHab('surf') && !M.tema.interior;
+  return !BLOQUEA.has(c);
 }

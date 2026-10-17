@@ -241,6 +241,7 @@ const ZONAS = {
   volcan:{nom:'Laderas del Volcán', niveles:[19,24], aparecen:[['zorrolumbre',16],['brasita',8],['brasero',8],['morro',10],['fogonero',10],['ajipicante',8],['tatupenon',8],['fosilon',6],['cuarzon',6],['hormigon',6],['luzmala',3]]},
   interior:{nom:'', niveles:[1,1], aparecen:[]},
   supremo:{nom:'Cumbre Suprema', niveles:[1,1], aparecen:[]},
+  cueva:{nom:'Cueva Oscura', niveles:[18,22], aparecen:[['cuarcito',22],['fosilon',14],['morro',14],['hormigon',14],['grillon',10],['chispon',10],['cuarzon',10],['geodon',3]]},
   victoria:{nom:'Camino de la Victoria', niveles:[24,30], aparecen:[['carpincho',8],['hornero',7],['chispon',7],['ceibal',6],['morro',7],['cardonal',6],['condoralto',5],['bagron',6],['tormenton',4],['pampero',7],['nandu',7],['ranacua',6],['yerbatin',6],['cuarzon',5],['pilon',6],['escarchon',5],['hormigon',6],['mariposon',5],['abejorro',5],['grillon',5],['vaquiton',5],['tormentin',2],['luzmala',2]]},
 };
 

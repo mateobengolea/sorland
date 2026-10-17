@@ -296,6 +296,8 @@ async function ganarCombate(){
         S.discos[e.mov] = true; S.ensenar = e.mov;
         await mensaje(`${e.nombre} te regaló su movimiento: ${MOVS[e.mov].nom}.`, 2200);
       }
+      const hab = Object.values(HABILIDADES).find(h => h.medalla === e.medalla);
+      if(hab) await mensaje(`Con la ${m.nom}, tus criaturas pueden usar ${hab.nom} fuera de combate. ${hab.desc}`, 2600);
       if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las ocho medallas! El camino a la Cumbre Suprema está abierto.', 2400);
     }
   } else if(B.legendaria){
@@ -455,7 +457,8 @@ function pintarEquipo(){
       : '<div class="vacio">Acá viven las criaturas que no entran en tu equipo.</div>';
   } else if(t === 'medallas'){
     const n = cantMedallas();
-    cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === MEDALLAS.length ? '¡Tenés las ocho! Te esperan la Cumbre Suprema y las leyendas.' : `Medallas: ${n} de ${MEDALLAS.length}`}</p>` + MEDALLAS.map(m => {
+    cuerpo = `<div class="item habilidades" style="grid-column:1/-1"><h3>Habilidades de campo</h3>${Object.values(HABILIDADES).map(h => `<p class="${tieneHab(Object.keys(HABILIDADES).find(k => HABILIDADES[k] === h)) ? 'hab-si' : 'hab-no'}"><b>${h.nom}</b> · ${h.desc} <small>(${MEDALLAS.find(m => m.id === h.medalla).nom})</small></p>`).join('')}</div>`
+      + `<p class="vacio" style="grid-column:1/-1;padding:4px">${n === MEDALLAS.length ? '¡Tenés las ocho! Te esperan la Cumbre Suprema y las leyendas.' : `Medallas: ${n} de ${MEDALLAS.length}`}</p>` + MEDALLAS.map(m => {
       const L = Object.values(LIDERES).find(l => l.medalla === m.id), tiene = S.medallas[m.id];
       return `<div class="item album"><span class="cr-album" style="display:grid;place-items:center">${svgMedalla(m, 96, !tiene)}</span>
         <h3>${m.nom}</h3><span class="chip-tipo" style="background:${TIPOS[m.tipo].color}">${TIPOS[m.tipo].nom}</span>

@@ -8,7 +8,9 @@
 let DU = null;
 
 function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function enviarMapa(payload){ if(ON.canal) ON.canal.send({type: 'broadcast', event: 'duelo', payload: {...payload, de: usuarioId, apodo}}); }
+// Los pedidos de duelo van por el canal global: así se puede invitar a un amigo que está en otro mapa.
+function enviarMapa(payload){ const c = (typeof ONG !== 'undefined' && ONG.canal && ONG.listo) ? ONG.canal : ON.canal; if(c) c.send({type: 'broadcast', event: 'duelo', payload: {...payload, de: usuarioId, apodo}}); }
+const puedeDuelo = () => (vista === 'mundo' || (vista === 'casa' && S.mundo)) && !DU && !(MW && MW.dlg);
 
 const POR_DUELO = 3;
 function todasMisCriaturas(){ return [...S.equipo, ...S.reserva]; }
@@ -97,13 +99,15 @@ function esperarRespuesta(id, quien, ms){
 
 function recibirDuelo(p){
   if(p.tipo === 'pedido'){
-    if(DU || vista !== 'mundo' || $('#velo') || (MW && MW.dlg)){ enviarMapa({tipo: 'rechazo', para: p.de, motivo: 'ocupado'}); return; }
+    const hojaLibre = !$('#velo') || ['amigos', 'online', 'ranking', 'perfil', 'mochila', 'tienda'].includes(hojaActual);
+    if(!puedeDuelo() || !hojaLibre){ enviarMapa({tipo: 'rechazo', para: p.de, motivo: 'ocupado'}); return; }
+    cerrarHoja();
     mostrarPedido(p);
   } else if(p.tipo === 'acepta'){
     if(!ON.pedido || ON.pedido.para !== p.de) return;
     const propio = ON.pedido.equipo || equipoDuelo();
     ON.pedido = null; clearTimeout(ON.timerPedido);
-    if(vista !== 'mundo' || DU){ enviarMapa({tipo: 'cancelado', para: p.de}); avisar('No pudiste arrancar el duelo porque estabas ocupado'); return; }
+    if(!puedeDuelo()){ enviarMapa({tipo: 'cancelado', para: p.de}); avisar('No pudiste arrancar el duelo porque estabas ocupado'); return; }
     DU = {lado: 'A', sala: p.sala, seed: p.seed | 0, rival: {id: p.de, apodo: p.apodo}};
     for(const ms of [0, 700, 1500, 2600]) setTimeout(() => enviarMapa({tipo: 'inicio', para: p.de, sala: p.sala, equipo: propio}), ms);
     empezarDuelo(propio, p.equipo);
@@ -131,7 +135,7 @@ function mostrarPedido(p){
   velo.onclick = null;
   velo.innerHTML = `<div class="hoja" role="dialog" aria-label="Pedido de duelo">
     <div class="hoja-cab"><h2>¡Te desafían!</h2></div>
-    <p class="pedido-txt"><b id="pd-nom"></b> (nivel ${p.nivel | 0}) quiere pelear un duelo con vos.</p>
+    <p class="pedido-txt"><b id="pd-nom"></b> (nivel ${p.nivel | 0})${typeof esAmigo === 'function' && esAmigo(p.de) ? ', tu amigo,' : ''} quiere pelear un duelo con vos.</p>
     <p class="rotulo-chico">Duelo 3 contra 3: si aceptás, elegís tus 3 criaturas. Arrancan con toda la vida, no se usan objetos y tu equipo no se cansa.</p>
     <div class="acciones-jugador"><button class="grande" id="pd-si">Aceptar</button><button class="btn btn-2" id="pd-no">Ahora no</button></div></div>`;
   $('#pd-nom').textContent = p.apodo;
@@ -141,7 +145,7 @@ function mostrarPedido(p){
     if(!si){ enviarMapa({tipo: 'rechazo', para: p.de}); return; }
     enviarMapa({tipo: 'eligiendo', para: p.de});
     const equipo = await elegirParaDuelo(p.apodo, 30, true);
-    if(!equipo || DU || vista !== 'mundo'){ enviarMapa({tipo: 'rechazo', para: p.de}); return; }
+    if(!equipo || !puedeDuelo()){ enviarMapa({tipo: 'rechazo', para: p.de}); return; }
     const sala = 'sl:duelo:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const seed = Math.floor(Math.random() * 2147483647);
     DU = {lado: 'B', sala, seed, rival: {id: p.de, apodo: p.apodo}, equipoPropio: equipo, esperandoInicio: true};

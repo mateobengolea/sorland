@@ -442,3 +442,23 @@ h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.05;text-wrap:bal
 .escenario .bichito svg,.escenario .ent-casa svg{width:100%;height:100%}
 .mueble .quitar{line-height:1;font-size:14px}
 .elegible:disabled{opacity:.45;filter:grayscale(.6)}
+.mundo.volando #lienzo{animation:vuela .65s ease-in forwards}@keyframes vuela{to{filter:brightness(2.4) saturate(.3);transform:scale(1.08)}}.destino-vuelo{text-align:left;font:inherit;cursor:pointer}.destino-vuelo:disabled{opacity:.5;cursor:default}
+.habilidades p{margin:4px 0;font-size:.85rem}.hab-no{opacity:.45}.hab-si b{color:#2E7D4F}
+
+/* ======================= Amigos ======================= */
+.nav{grid-template-columns:repeat(5,1fr);gap:6px}
+.nav button{font-size:.8rem;padding:10px 2px}
+[data-aviso-amigos]{position:relative}
+[data-aviso-amigos].con-aviso::after{content:attr(data-cant);position:absolute;top:-7px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#E2574C;color:#fff;font:800 11px/18px Nunito,sans-serif;border:2px solid #fff;box-sizing:content-box}
+.sub-amigos{margin:10px 2px 2px;font-weight:800;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-suave)}
+.fila-amigo,.fila-online[data-perfil]{cursor:pointer}
+.fila-online small .punto-online,.pf-estado .punto-online{background:#B8BFCB;box-shadow:none;animation:none;display:inline-block;margin-right:5px;vertical-align:middle}
+.fila-online small.on .punto-online,.pf-estado.on .punto-online{background:var(--verde);box-shadow:0 0 0 3px rgba(76,194,122,.25)}
+.fo-acc{display:flex;gap:4px;align-items:center}
+.fo-acc .btn{padding:6px 10px;font-size:.8rem}
+.ficha-jugador.perfil{align-items:center}
+.pf-estado{margin:0 0 4px;font-weight:800;color:var(--tinta-suave)}
+.pf-estado.on{color:#2E7D4F}
+.fo-acc .btn,#ver-ranking{border:2px solid var(--tinta);border-radius:10px;background:var(--sol);font-weight:800;cursor:pointer}
+#ver-ranking{padding:10px;width:100%}
+.fo-acc .btn:disabled{background:#E3E8EF;color:var(--tinta-suave)}

@@ -188,7 +188,7 @@ function cabeceraHTML(){
       <span class="top-avatar">${svgEntrenador(S.entrenador)}</span>
       <div class="quien"><h1 id="nom"></h1>${S.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}${typeof RK !== 'undefined' && RK.ficha ? `<span id="rango-top">${chipRango(RK.ficha.puntos)}</span>` : '<span id="rango-top"></span>'}<span class="medallas-top">${MEDALLAS.map(m => svgMedalla(m, 15, !S.medallas[m.id])).join('')}<small>${n}/${MEDALLAS.length}</small></span></div>
       <div class="top-der"><div class="monedas" title="Monedas"><span class="moneda">$</span><span id="mon"></span></div>
-      <button class="online-badge" id="online-badge" hidden></button></div>
+      <button class="online-badge" id="online-badge" data-aviso-amigos hidden></button></div>
     </header>`;
 }
 function pintarJuego(){
@@ -212,6 +212,7 @@ function pintarJuego(){
       <button id="n-equipo">Criaturas</button>
       <button id="n-mochila">Mochila</button>
       <button id="n-decorar">Decorar</button>
+      <button id="n-amigos" data-aviso-amigos>Amigos</button>
       <button id="n-ranking">Ranking</button>
     </nav>
     <p class="pie">Tu casa: decorala con lo que compres en el Market de cada pueblo. Entrar acá cura a todo tu equipo.</p>
@@ -226,6 +227,8 @@ function pintarJuego(){
 }
 function prepararBadge(){
   const r = $('#n-ranking'); if(r) r.onclick = abrirRanking;
+  const am = $('#n-amigos'); if(am) am.onclick = () => abrirAmigos('amigos');
+  if(typeof pintarAvisoAmigos === 'function') pintarAvisoAmigos();
   if(typeof actualizarFicha === 'function') actualizarFicha();
   const b = $('#online-badge'); if(!b) return;
   b.onclick = abrirOnline;
