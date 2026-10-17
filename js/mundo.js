@@ -194,13 +194,14 @@ function abrirVuelo(){
     <div class="lista-online">${pueblos.map(id => { const ok = S.visitados && S.visitados[id] && destinoVuelo(id), aca = S.mundo.mapa === id;
       return `<button class="fila-online destino-vuelo" data-volar="${id}" ${ok && !aca ? '' : 'disabled'}><span class="fo-txt"><b>${MAPAS[id].nombre}</b><small>${aca ? 'Estás acá' : ok ? 'Tocá para volar' : 'Todavía no lo visitaste'}</small></span></button>`; }).join('')}</div></div>`;
   v.querySelector('.cerrar').onclick = cerrarHoja;
-  v.querySelectorAll('[data-volar]').forEach(b => b.onclick = () => {
-    const d = destinoVuelo(b.dataset.volar); if(!d) return;
-    cerrarHoja();
-    if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; avisar('Saliste del Cuartel: vuelve a empezar.'); }
-    const lienzo = $('#mundo'); if(lienzo) lienzo.classList.add('volando');
-    setTimeout(() => { salirDelMundo(); S.mundo = {...d, mira: 'abajo'}; guardar(); pintarMundo(); avisar(`¡Llegaste volando a ${MAPAS[d.mapa].nombre}!`); }, 650);
-  });
+  v.querySelectorAll('[data-volar]').forEach(b => b.onclick = () => volarA(b.dataset.volar));
+}
+function volarA(id){
+  const d = destinoVuelo(id); if(!d) return;
+  cerrarHoja();
+  if(S.cuartel && S.cuartel.racha > 0){ S.cuartel.racha = 0; avisar('Saliste del Cuartel: vuelve a empezar.'); }
+  const lienzo = $('#mundo'); if(lienzo) lienzo.classList.add('volando');
+  setTimeout(() => { salirDelMundo(); S.mundo = {...d, mira: 'abajo'}; guardar(); pintarMundo(); avisar(`¡Llegaste volando a ${MAPAS[d.mapa].nombre}!`); }, 650);
 }
 
 function alLlegar(){
@@ -291,6 +292,7 @@ async function hablarCon(n){
   const dx = MW.pos.x - n.x, dy = MW.pos.y - n.y;
   n.mira = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'der' : 'izq') : (dy > 0 ? 'abajo' : 'arriba');
   MW.mira = OPUESTA[n.mira];
+  if(n.accion){ MW.ocupado = true; try { await n.accion(n); } finally { if(MW) MW.ocupado = false; } return; }
   if(n.tipo === 'vecino'){
     if(typeof charlaSecreta === 'function' && await charlaSecreta(n)) return;
     if(n.regalo && !S.regalos[n.id]){
@@ -1076,7 +1078,8 @@ function abrirMapa(){
   for(const [id, p] of Object.entries(REGION)){
     const [x, y] = px(p), conocido = vis[id] || id === aca, gym = Object.values(LIDERES).find(L => crearEdificioDe(id, L.id));
     const med = gym && S.medallas[gym.medalla];
-    svg += `<g transform="translate(${x} ${y})">${id === aca ? '<circle r="17" fill="none" stroke="#E2574C" stroke-width="3" class="aca-pulso"/>' : ''}
+    const vuela = tieneHab('vuelo') && vis[id] && id !== aca && destinoVuelo(id) && MW && !MW.ocupado;
+    svg += `<g transform="translate(${x} ${y})" ${vuela ? `data-volar="${id}" class="destino-mapa" role="button" tabindex="0" aria-label="Volar a ${MAPAS[id].nombre}"` : ''}>${vuela ? '<circle r="15" fill="#4CC27A" opacity=".35" class="aca-pulso"/>' : ''}${id === aca ? '<circle r="17" fill="none" stroke="#E2574C" stroke-width="3" class="aca-pulso"/>' : ''}
       <circle r="11" fill="${conocido ? (id === 'cueva' ? '#6E5A4A' : '#FFD23F') : '#D9DEE6'}" stroke="#22304A" stroke-width="2.5"/>
       ${med ? '<circle cx="9" cy="-9" r="5" fill="#FFD23F" stroke="#22304A" stroke-width="1.5"/><path d="M7 -9 l1.5 1.5 l3 -3" fill="none" stroke="#22304A" stroke-width="1.5"/>' : ''}
       <text y="25" text-anchor="middle" font-size="10.5" font-weight="800" fill="#22304A" stroke="#FFFDF8" stroke-width="3" paint-order="stroke">${conocido ? MAPAS[id].nombre : '???'}</text></g>`;
@@ -1084,9 +1087,10 @@ function abrirMapa(){
   svg += '</svg>';
   v.innerHTML = `<div class="hoja hoja-mapa" role="dialog" aria-label="Mapa"><div class="hoja-cab"><h2>Mapa</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <div class="pestanas" role="tablist"><button role="tab" data-tab="region" aria-selected="true">Sorlandia</button><button role="tab" data-tab="zona" aria-selected="false">${esc(M.nombre)}</button></div>
-    <div class="mapa-cuerpo" id="mapa-region">${svg}<p class="rotulo-chico">Las etiquetas marcan lo que hace falta para pasar: en verde, lo que ya podés usar. El círculo rojo es donde estás.</p></div>
+    <div class="mapa-cuerpo" id="mapa-region">${svg}<p class="rotulo-chico">${tieneHab('vuelo') ? '<b>Tocá un pueblo que ya visitaste para volar hasta ahí.</b> ' : 'Con la medalla de Aitor Nado (Villa Barrilete) vas a poder volar a los pueblos que ya visitaste. '}Las etiquetas marcan lo que hace falta para pasar: en verde, lo que ya podés usar. El círculo rojo es donde estás.</p></div>
     <div class="mapa-cuerpo" id="mapa-zona" hidden><canvas id="minimapa"></canvas><p class="rotulo-chico">Punto rojo: vos. Flechas: salidas. Casitas: puertas.</p></div></div>`;
   v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelectorAll('[data-volar]').forEach(g => { g.onclick = () => volarA(g.dataset.volar); g.onkeydown = e => { if(e.key === 'Enter') volarA(g.dataset.volar); }; });
   v.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
     v.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
     $('#mapa-region').hidden = b.dataset.tab !== 'region'; $('#mapa-zona').hidden = b.dataset.tab !== 'zona';

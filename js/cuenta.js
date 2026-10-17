@@ -88,12 +88,43 @@ function traducirError(e){
   if(/valid email/i.test(m)) return 'Ese mail no parece válido.';
   return 'Algo salió mal: ' + m;
 }
+
+/* ---------------- Logo de Sorlandia ---------------- */
+function svgLogo(){
+  return `<svg class="logo-sorlandia" viewBox="0 0 360 230" role="img" aria-label="Sorlandia">
+    <defs>
+      <linearGradient id="lg-cielo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FC8F0"/><stop offset="1" stop-color="#D6F0FB"/></linearGradient>
+      <linearGradient id="lg-letras" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE45C"/><stop offset=".55" stop-color="#FFC23A"/><stop offset="1" stop-color="#F28A2E"/></linearGradient>
+      <clipPath id="lg-circ"><circle cx="180" cy="98" r="86"/></clipPath>
+      <path id="lg-arco" d="M4 168 Q180 52 356 168"/>
+    </defs>
+    <circle cx="180" cy="98" r="92" fill="#22304A"/>
+    <g clip-path="url(#lg-circ)">
+      <rect x="80" y="0" width="200" height="200" fill="url(#lg-cielo)"/>
+      <g opacity=".55" stroke="#FFF6C8" stroke-width="10">${Array.from({length: 12}, (_, i) => `<path d="M180 70 L${180 + Math.cos(i * Math.PI / 6) * 140} ${70 + Math.sin(i * Math.PI / 6) * 140}"/>`).join('')}</g>
+      <circle cx="180" cy="70" r="26" fill="#FFE45C" stroke="#22304A" stroke-width="3"/>
+      <path d="M80 140 Q130 100 180 128 Q230 96 290 132 L290 200 L80 200Z" fill="#8DD17C" stroke="#22304A" stroke-width="3"/>
+      <path d="M80 160 Q150 136 210 156 Q250 146 290 158 L290 200 L80 200Z" fill="#5FB45A" stroke="#22304A" stroke-width="3"/>
+      <path d="M116 132 v-18 M110 116 l6 -6 l6 6" stroke="#6B4426" stroke-width="3" fill="none"/>
+      <g transform="translate(116 104)">${[-40, 0, 40].map(r => `<path d="M0 0 C-6 -10 -2 -20 3 -22 C7 -16 7 -8 0 0Z" transform="rotate(${r})" fill="#E2493C" stroke="#22304A" stroke-width="1.5"/>`).join('')}</g>
+    </g>
+    <circle cx="180" cy="98" r="86" fill="none" stroke="#FFFDF8" stroke-width="4"/>
+    <circle cx="180" cy="98" r="92" fill="none" stroke="#22304A" stroke-width="4"/>
+    <text font-family="'Baloo 2', system-ui, sans-serif" font-weight="800" font-size="54" letter-spacing="1" text-anchor="middle" stroke="#22304A" stroke-width="13" stroke-linejoin="round" fill="#22304A"><textPath href="#lg-arco" startOffset="50%">SORLANDIA</textPath></text>
+    <text font-family="'Baloo 2', system-ui, sans-serif" font-weight="800" font-size="54" letter-spacing="1" text-anchor="middle" stroke="#FFFDF8" stroke-width="5" stroke-linejoin="round" fill="url(#lg-letras)" paint-order="stroke"><textPath href="#lg-arco" startOffset="50%">SORLANDIA</textPath></text>
+    <g transform="translate(180 196)">
+      <path d="M-120 -16 H120 L108 0 L120 16 H-120 L-108 0Z" fill="#E2574C" stroke="#22304A" stroke-width="3" stroke-linejoin="round"/>
+      <text y="6" text-anchor="middle" font-family="'Baloo 2', system-ui, sans-serif" font-weight="800" font-size="16" fill="#FFFDF8" letter-spacing="2">AVENTURAS EN LA PAMPA</text>
+    </g>
+    <g fill="#FFE45C" stroke="#22304A" stroke-width="2"><path d="M300 26 l5 12 l12 5 l-12 5 l-5 12 l-5 -12 l-12 -5 l12 -5z"/></g>
+    <g fill="#FFE45C" stroke="#22304A" stroke-width="2"><path d="M54 52 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/></g>
+  </svg>`;
+}
 function pintarCargando(){
-  $('#app').innerHTML = `<div class="eleccion"><div class="titulo"><h1>Sorlandia</h1><p>Cargando...</p></div></div>`;
+  $('#app').innerHTML = `<div class="eleccion"><div class="titulo">${svgLogo()}<h1 class="solo-lector">Sorlandia</h1><p>Cargando...</p></div></div>`;
 }
 function pintarAcceso(vista, aviso){
   const tabs = vista === 'entrar' || vista === 'registro';
-  const bichos = `<div class="iniciales" aria-hidden="true">${INICIALES.map(k => `<div class="inicial" style="box-shadow:none">${svgEspecie(k,{humor:'feliz'})}<h2>${ESPECIES[k].nombre}</h2></div>`).join('')}</div>`;
   let form = '';
   if(vista === 'entrar') form = `
       <label for="mail">Mail</label><input id="mail" type="email" required autocomplete="email" placeholder="nombre@mail.com">
@@ -117,8 +148,7 @@ function pintarAcceso(vista, aviso){
       <button class="grande" type="submit">Guardar contraseña</button>`;
   $('#app').innerHTML = `
     <div class="eleccion">
-      <div class="titulo"><h1>Sorlandia</h1><p>Elegí tu criatura, recorré Sorlandia y ganá las ocho medallas.</p></div>
-      ${bichos}
+      <div class="titulo">${svgLogo()}<h1 class="solo-lector">Sorlandia</h1><p>Elegí tu criatura, recorré Sorlandia y ganá las ocho medallas.</p></div>
       <form class="panel ficha" id="form-acceso" novalidate>
         ${tabs ? `<div class="pestanas" role="tablist" style="margin:0">
           <button type="button" role="tab" data-v="entrar" aria-selected="${vista==='entrar'}">Entrar</button>

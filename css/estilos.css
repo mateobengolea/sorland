@@ -659,3 +659,18 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .capsula-vuela svg{width:30px;height:30px}
 .combate .texto-combate{background:#1B2244;color:#FFFDF8;border-color:#0E1430;position:relative;padding-left:44px}
 .combate .texto-combate::before{content:"";position:absolute;left:12px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#FFD23F 0 30%,#E2A21E 31% 60%,transparent 61%),#3B4A8C;border:2px solid #FFD23F}
+
+/* ======================= Logo ======================= */
+.logo-sorlandia{display:block;width:min(340px,86vw);height:auto;margin:0 auto 4px;filter:drop-shadow(0 6px 0 rgba(34,48,74,.18))}
+.solo-lector{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.destino-mapa{cursor:pointer}
+
+/* ======================= Rompecabezas de las Ruinas ======================= */
+.puzzle{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:min(300px,82vw);aspect-ratio:1;margin:8px auto 4px;padding:6px;background:#8A7A64;border:3px solid var(--tinta);border-radius:14px}
+.puzzle .pieza{position:relative;overflow:hidden;padding:0;border:2px solid var(--tinta);border-radius:6px;background:#E9DFC8;cursor:pointer}
+.puzzle .pieza span{position:absolute;width:300%;height:300%;pointer-events:none}
+.puzzle .pieza span svg{width:100%;height:100%}
+.puzzle .pieza.hueco{background:rgba(34,48,74,.35);cursor:default}
+.puzzle.listo{gap:0;animation:puzzleListo 1s ease-out}
+.puzzle.listo .pieza{border-color:transparent;border-radius:0}
+@keyframes puzzleListo{40%{box-shadow:0 0 0 10px rgba(255,210,63,.6)}}

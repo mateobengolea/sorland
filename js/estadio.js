@@ -69,9 +69,6 @@ function svgTribuna(color = '#E2574C'){
   for(const x of [18, 382]) s += `<path d="M${x} 136 L${x} 6" stroke="#9AA2AD" stroke-width="4"/><rect x="${x - 14}" y="0" width="28" height="14" rx="3" fill="#22304A"/>${[-8, 0, 8].map(d => `<circle cx="${x + d}" cy="7" r="3.4" fill="#FFF6C8" class="foco"/>`).join('')}`;
   // Banderines
   for(const x of [70, 200, 330]) s += `<path d="M${x} 44 L${x} 14" stroke="#22304A" stroke-width="2"/><path d="M${x} 14 L${x + 24} 20 L${x} 27Z" fill="${color}" stroke="#22304A" stroke-width="1.5" class="bandera"/>`;
-  // Pantalla gigante en el medio de la tribuna
-  s += `<g class="pantalla"><rect x="150" y="2" width="100" height="40" rx="4" fill="#22304A" stroke="#9AA2AD" stroke-width="3"/><rect x="155" y="6" width="90" height="32" rx="2" fill="#1B2244"/>
-    <text x="200" y="20" text-anchor="middle" font-size="10" font-weight="900" fill="#FFD23F" letter-spacing="1">SORLANDIA</text><text x="200" y="33" text-anchor="middle" font-size="9" font-weight="800" fill="#8FD3F7" letter-spacing="2">STADIUM</text></g>`;
   // Flashes de cámaras
   for(let i = 0; i < 7; i++) s += `<circle cx="${30 + i * 55}" cy="${66 + (i % 3) * 16}" r="4" fill="#FFFFFF" class="flash" style="animation-delay:${(i * .73) % 3}s"/>`;
   return s + '</svg>';
