@@ -653,3 +653,70 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 @keyframes subeNivel{0%{box-shadow:0 0 0 0 rgba(255,210,63,.9)}40%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,210,63,.5)}100%{transform:none;box-shadow:0 3px 0 var(--sombra)}}
 .bicho-combate.sube-nivel-bicho svg{animation:subeNivelB .9s ease-out}
 @keyframes subeNivelB{30%{filter:brightness(1.6) drop-shadow(0 0 12px #FFD23F)}}
+
+/* ======================= Estadio: vista lateral estilo Stadium ======================= */
+.arena.stadium{height:340px}
+.arena.stadium .escena{transform-origin:50% 60%;transition:transform .45s cubic-bezier(.3,.7,.3,1)}
+.arena.stadium .escena.lento{transition:transform 1.6s cubic-bezier(.45,.05,.25,1)}
+.arena.stadium .escena.sin-trans{transition:none!important}
+.arena.stadium .escena.cam-tribuna{transform-origin:50% 0;transform:scale(1.7) translateY(-2%)}
+.arena.stadium .escena.cam-intro{transform-origin:50% 35%;transform:scale(1.5)}
+.arena.stadium .escena.cam-cerca-propio{transform-origin:22% 64%;transform:scale(1.8);animation:empuje .9s ease-out forwards}
+.arena.stadium .escena.cam-cerca-rival{transform-origin:78% 64%;transform:scale(1.8);animation:empuje .9s ease-out forwards}
+@keyframes empuje{from{scale:1}to{scale:1.08}}
+.arena.stadium .plataforma{display:none}
+.arena.stadium .tarima{position:absolute;left:1.5%;right:1.5%;bottom:7%;height:40%;z-index:1}
+.arena.stadium .tarima svg{width:100%;height:100%;display:block;overflow:visible}
+.arena.stadium .bicho-combate{top:auto;bottom:29%;width:158px;height:158px}
+.arena.stadium .bicho-combate.propio{left:8%;right:auto}
+.arena.stadium .bicho-combate.rival{right:8%;left:auto}
+.arena.stadium .bicho-combate .giro{width:100%;height:100%}
+.arena.stadium .bicho-combate .giro.espejo{transform:scaleX(-1)}
+.arena.stadium .ent-combate.propio{left:-2%;bottom:30%;width:92px;height:128px}
+.arena.stadium .ent-combate.rival{right:-2%;left:auto;top:auto;bottom:30%;width:92px;height:128px}
+.arena.stadium .ficha-luch{top:auto;bottom:6px;width:calc(50% - 9px);max-width:none;min-width:0;border-width:3px;padding:4px 9px 5px}
+.arena.stadium .ficha-luch.propio{left:6px;right:auto;border-color:#C93A30;background:linear-gradient(#FFF4F2,#FFFDF8 40%)}
+.arena.stadium .ficha-luch.rival{right:6px;left:auto;border-color:#2C6CC0;background:linear-gradient(#EEF5FF,#FFFDF8 40%)}
+.arena.stadium .ficha-luch .fl-cab b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-equipo{display:flex;gap:3px;margin-bottom:1px}
+.fl-equipo i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--tinta);background:linear-gradient(#E2574C 0 45%,var(--tinta) 45% 55%,#FFFDF8 55%)}
+.fl-equipo i.caido{filter:grayscale(1);opacity:.35}
+.capsula-vuela{position:absolute;left:0;top:0;z-index:5;width:30px;height:30px;pointer-events:none}
+.capsula-vuela svg{width:30px;height:30px}
+/* Locutor */
+.combate .texto-combate{background:#1B2244;color:#FFFDF8;border-color:#0E1430;position:relative;padding-left:44px}
+.combate .texto-combate::before{content:"";position:absolute;left:12px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#FFD23F 0 30%,#E2A21E 31% 60%,transparent 61%),#3B4A8C;border:2px solid #FFD23F}
+/* Poderes en rombo, como los botones C */
+.menu-combate.rombo{grid-template-columns:repeat(4,1fr);grid-template-areas:". a a ." "b b c c" ". d d ." "v v v v"}
+.menu-combate.rombo > button:nth-child(1){grid-area:a}
+.menu-combate.rombo > button:nth-child(2){grid-area:b}
+.menu-combate.rombo > button:nth-child(3){grid-area:c}
+.menu-combate.rombo > button:nth-child(4){grid-area:d}
+.menu-combate.rombo > .mc-volver{grid-area:v}
+.menu-combate.rombo > .mc-mov::after{position:absolute;right:6px;top:5px;width:19px;height:19px;border-radius:50%;background:#FFD23F;border:2px solid var(--tinta);font-size:.62rem;line-height:15px;text-align:center;color:var(--tinta)}
+.menu-combate.rombo > .mc-mov:nth-child(1)::after{content:"▲"}
+.menu-combate.rombo > .mc-mov:nth-child(2)::after{content:"◀"}
+.menu-combate.rombo > .mc-mov:nth-child(3)::after{content:"▶"}
+.menu-combate.rombo > .mc-mov:nth-child(4)::after{content:"▼"}
+.menu-combate.rombo > .mc-mov b{padding-right:20px}
+@media (max-width:520px){
+  .arena.stadium{height:330px}
+  .arena.stadium .bicho-combate{width:132px;height:132px;bottom:31%}
+  .arena.stadium .bicho-combate.propio{left:5%}.arena.stadium .bicho-combate.rival{right:5%}
+  .arena.stadium .ent-combate.propio,.arena.stadium .ent-combate.rival{width:76px;height:106px}
+  .arena.stadium .ficha-luch{font-size:.9rem}
+}
+@media (prefers-reduced-motion:reduce){.arena.stadium .escena{transition:none;animation:none}}
+/* Estadio: HUD compacto abajo y campo más arriba */
+.arena.stadium .ficha-luch .chip-tipo{display:none}
+.arena.stadium .ficha-luch{gap:1px;padding:3px 8px 4px}
+.arena.stadium .ficha-luch .fl-cab{font-size:.84rem;line-height:1.15}
+.arena.stadium .ficha-luch .fl-barra{height:8px}
+.arena.stadium .ficha-luch .fl-num{font-size:.7rem;line-height:1.1}
+.arena.stadium .ficha-luch .fl-xp{height:5px;margin-top:1px}
+.arena.stadium .ficha-luch .fl-xp-txt{font-size:.6rem}
+.arena.stadium .ficha-luch .fl-equipo i{width:8px;height:8px}
+.arena.stadium .tarima{bottom:21%;height:34%}
+.arena.stadium .bicho-combate{bottom:39%}
+.arena.stadium .ent-combate.propio,.arena.stadium .ent-combate.rival{bottom:40%}
+@media (max-width:520px){.arena.stadium .bicho-combate{bottom:40%}}

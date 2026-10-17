@@ -79,11 +79,12 @@ function pintarCombate(){
   $('#app').innerHTML = `
     <section class="combate">
       ${B.ent ? `<div class="banda-ent">${B.ent.lider ? 'Gimnasio · ' : ''}${B.ent.titulo} <b></b> · <span id="cuenta-rivales"></span></div>` : ''}
-      <div class="arena arena-${ARENAS[z] || 'ciudad'} ${B.ent ? 'con-estadio' : 'salvaje'}">
-        <div class="escena cam-intro">
+      <div class="arena stadium arena-${ARENAS[z] || 'ciudad'} ${B.ent ? 'con-estadio' : 'salvaje'}">
+        <div class="escena ${B.ent ? 'cam-tribuna' : 'cam-intro'}">
           ${svgFondoArena(ARENAS[z] || 'ciudad')}
           ${B.ent ? svgTribuna(B.ent.lider ? TIPOS[LIDERES[B.ent.lider] ? LIDERES[B.ent.lider].tipoGym || 'normal' : 'normal'].color : '#E2574C') : ''}
           ${svgCampo(ARENAS[z] || 'ciudad', !!B.ent)}
+          <div class="tarima">${svgTarima(ARENAS[z] || 'ciudad', !!B.ent)}</div>
           <div class="nube n1"></div><div class="nube n2"></div>
           <div class="plataforma rival"></div><div class="plataforma propio"></div>
           ${B.ent ? `<div class="ent-combate rival" id="e-rival">${svgEntrenador(aspectoNpc(B.ent))}</div>` : ''}
@@ -98,16 +99,16 @@ function pintarCombate(){
       <div class="menu-combate" id="menu-combate"></div>
     </section>`;
   if(B.ent) $('.banda-ent b').textContent = B.ent.nombre;
-  $('#b-rival').innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
+  $('#b-rival').innerHTML = svgLuchador(B.salvaje.esp, B.salvaje.shiny);
   pintarPropio();
   fichas();
   if(!B.ent) animar('b-rival', 'entra-rival', 700);
-  requestAnimationFrame(() => requestAnimationFrame(() => { const e = $('.arena .escena'); if(e) e.classList.remove('cam-intro'); }));
+  arrancarCamara();
 }
 const nomRival = () => B.ent ? `${B.salvaje.nombre} de ${B.ent.nombre}` : `${B.salvaje.nombre} salvaje`;
 function pintarPropio(){
   const l = activo();
-  $('#b-propio').innerHTML = svgEspecie(l.esp, {humor: 'bien', shiny: l.shiny, vista: 'lado'});
+  $('#b-propio').innerHTML = svgLuchador(l.esp, l.shiny);
 }
 function fichaHTML(l, propio){
   const pct = Math.max(0, l.hp / l.max * 100);
@@ -115,7 +116,7 @@ function fichaHTML(l, propio){
   return `<div class="fl-cab"><b></b><span>Nv ${l.nivel}</span></div>
     <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span>
     <div class="barra fl-barra"><i style="width:${pct}%;background:${col}"></i></div>
-    ${propio ? `<div class="fl-num">${l.hp} / ${l.max}</div>` : ''}
+    <div class="fl-num">${l.hp} / ${l.max}</div>
     ${propio && l.ref && l.ref.xp !== undefined ? (() => { const p = Math.min(100, Math.floor((l.ref.xp || 0) / xpPara(l.ref.nivel) * 100));
       return `<div class="fl-xp" title="Experiencia: ${p}%"><i style="width:${p}%"></i></div><div class="fl-xp-txt">Faltan ${100 - p}% para Nv ${l.ref.nivel + 1}</div>`; })() : ''}`;
 }
@@ -126,6 +127,10 @@ function fichas(){
   $('#f-propio').innerHTML = fichaHTML(activo(), true); $('#f-propio b').textContent = activo().nombre + brillo(activo());
   const cr = $('#cuenta-rivales');
   if(cr) cr.innerHTML = B.rivales.map(r => `<i class="pip ${r.hp > 0 ? '' : 'caido'}"></i>`).join('');
+  // Fila de cápsulas de cada equipo, como en el estadio.
+  const bolas = lista => `<div class="fl-equipo">${lista.map(x => `<i class="${x.hp > 0 ? '' : 'caido'}"></i>`).join('')}</div>`;
+  $('#f-propio').insertAdjacentHTML('afterbegin', bolas(B.lista));
+  $('#f-rival').insertAdjacentHTML('afterbegin', bolas(B.ent ? B.rivales : [B.salvaje]));
 }
 async function mensaje(t, ms = 950){
   const el = $('#t-combate'); if(!el) return;
@@ -151,7 +156,7 @@ function menu(tipo){
     m.querySelector('[data-a=equipo]').onclick = () => menu('equipo');
     m.querySelector('[data-a=huir]').onclick = () => turno({tipo: 'huir'});
   } else if(tipo === 'pelear'){
-    m.className = 'menu-combate grilla-2';
+    m.className = 'menu-combate rombo';
     const movs = movsDe(l), sinUsos = movs.every(id => ppDe(l.ref, id) <= 0);
     // Si no le queda ningún uso, solo puede forcejear.
     m.innerHTML = (sinUsos ? ['forcejeo'] : movs).map(id => {
@@ -329,7 +334,7 @@ async function ganarCombate(){
     B.ri++; B.salvaje = B.rivales[B.ri]; B.peleo = new Set([B.i]);
     S.album.vistos[B.salvaje.esp] = true;
     const br = $('#b-rival'); br.classList.add('oculto'); br.classList.remove('desmayo');
-    br.innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
+    br.innerHTML = svgLuchador(B.salvaje.esp, B.salvaje.shiny);
     fichas();
     const m4 = mensaje(`${B.ent.nombre} sacó a ${B.salvaje.nombre}.`, 1100);
     await sacarCriatura('rival'); await m4;
