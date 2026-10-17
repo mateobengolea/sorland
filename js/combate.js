@@ -76,14 +76,13 @@ const activo = () => B.lista[B.i];
 
 function pintarCombate(){
   const z = B.zona;
+  if(B.ent) B.tema = B.ent.tipoGym && TEMAS_ESTADIO[B.ent.tipoGym] ? B.ent.tipoGym : tipoDominante(B.rivales);
   $('#app').innerHTML = `
     <section class="combate">
       ${B.ent ? `<div class="banda-ent">${B.ent.lider ? 'Gimnasio · ' : ''}${B.ent.titulo} <b></b> · <span id="cuenta-rivales"></span></div>` : ''}
-      <div class="arena arena-${ARENAS[z] || 'ciudad'} ${B.ent ? 'con-estadio' : 'salvaje'}">
+      <div class="arena arena-${ARENAS[z] || 'ciudad'} ${B.ent ? 'con-estadio est-' + B.tema : 'salvaje'}">
         <div class="escena">
-          ${svgFondoArena(ARENAS[z] || 'ciudad')}
-          ${B.ent ? svgTribuna(B.ent.lider ? TIPOS[LIDERES[B.ent.lider] ? LIDERES[B.ent.lider].tipoGym || 'normal' : 'normal'].color : '#E2574C') : ''}
-          ${svgCampo(ARENAS[z] || 'ciudad', !!B.ent)}
+          ${B.ent ? estadioHTML(B.tema) : svgFondoArena(ARENAS[z] || 'ciudad') + svgCampo(ARENAS[z] || 'ciudad', false)}
           <div class="nube n1"></div><div class="nube n2"></div>
           <div class="plataforma rival"></div><div class="plataforma propio"></div>
           ${B.ent ? `<div class="ent-combate rival" id="e-rival">${svgEntrenador(aspectoNpc(B.ent))}</div>` : ''}

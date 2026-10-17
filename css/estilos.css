@@ -674,3 +674,19 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .puzzle.listo{gap:0;animation:puzzleListo 1s ease-out}
 .puzzle.listo .pieza{border-color:transparent;border-radius:0}
 @keyframes puzzleListo{40%{box-shadow:0 0 0 10px rgba(255,210,63,.6)}}
+
+/* ======================= Estadios temáticos ======================= */
+.campo-svg .lava{animation:lava 1.6s ease-in-out infinite}
+@keyframes lava{50%{stroke:#FFD23F}}
+.campo-svg .brasa{animation:brasa 2s ease-in-out infinite}
+@keyframes brasa{50%{opacity:.2}}
+.campo-svg .chispa{opacity:0;animation:chispaC 1.4s linear infinite}
+@keyframes chispaC{0%,70%,100%{opacity:0}75%,85%{opacity:1}}
+.arena.est-agua .plataforma{background:radial-gradient(ellipse at 50% 40%,#9BD36A,#5E9E45 70%)!important;border:2px solid #22304A}
+.arena.est-fuego .plataforma{background:radial-gradient(ellipse at 50% 40%,#7E6A5A,#3A2C24 70%)!important;border:2px solid #FF8A3D;box-shadow:0 0 12px rgba(255,138,61,.6)}
+.arena.est-hielo .plataforma{background:radial-gradient(ellipse at 50% 40%,#FFFFFF,#BFE6FB 70%)!important;border:2px solid #7EC0E8}
+.arena.est-viento .plataforma{background:radial-gradient(ellipse at 50% 40%,#FFFFFF,#E6F4FB 70%)!important;border:2px solid #FFFFFF;box-shadow:0 4px 10px rgba(34,48,74,.2)}
+.arena.est-rayo .plataforma{background:radial-gradient(ellipse at 50% 40%,#9AA6B8,#4E5868 70%)!important;border:2px solid #7FD4FF;box-shadow:0 0 12px rgba(127,212,255,.6)}
+.arena.est-bicho .plataforma{background:radial-gradient(ellipse at 50% 40%,#C9E08A,#7EA03E 70%)!important;border:2px solid #C9A227}
+.arena.est-piedra .plataforma{background:radial-gradient(ellipse at 50% 40%,#C9CED6,#8A929E 70%)!important;border:2px solid #22304A}
+@media (prefers-reduced-motion:reduce){.campo-svg .lava,.campo-svg .brasa,.campo-svg .chispa{animation:none}}

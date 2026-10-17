@@ -193,13 +193,14 @@ function empezarDuelo(equipoA, equipoB){
 const actDu = lado => DU.st[lado].lista[DU.st[lado].i];
 function nomDu(lado){ const l = actDu(lado); return lado === DU.lado ? l.nombre : `${l.nombre} de ${DU.rival.apodo}`; }
 
+function temaDuelo(){ const l = DU && DU.st && DU.st[DU.otro] && DU.st[DU.otro].lista; return l && l.length ? tipoDominante(l) : 'normal'; }
 function pintarDuelo(){
   $('#app').innerHTML = `
     <section class="combate">
       <div class="banda-ent">Duelo contra <b id="du-rival"></b> <span id="cuenta-rivales"></span></div>
-      <div class="arena arena-ciudad con-estadio">
+      <div class="arena arena-ciudad con-estadio est-${temaDuelo()}">
         <div class="escena">
-          ${svgFondoArena('ciudad')}${svgTribuna('#7A4FC9')}${svgCampo('ciudad', true)}
+          ${estadioHTML(temaDuelo())}
           <div class="nube n1"></div><div class="nube n2"></div>
           <div class="plataforma rival"></div><div class="plataforma propio"></div>
           <div class="bicho-combate rival" id="b-rival"></div>

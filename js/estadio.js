@@ -103,3 +103,93 @@ function ovacion(){
   const original = animar;
   animar = function(id, clase, ms){ if(clase === 'desmayo') ovacion(); return original(id, clase, ms); };
 })();
+
+/* =====================================================================
+   Estadios temáticos: el estadio cambia según el tipo del equipo rival.
+   ===================================================================== */
+const TEMAS_ESTADIO = {
+  normal: {fondo: 'pradera', campo: ['#7CC46A', '#6AB45A'], borde: '#5E9E50', tribuna: ['#4A5578', '#2F3A5C'], lineas: true},
+  planta: {fondo: 'bosque', campo: ['#6FBF5E', '#5EAE4E'], borde: '#3E7E3B', tribuna: ['#2E5E30', '#1E4220'], lineas: true},
+  fuego:  {fondo: 'volcan', campo: ['#5E4A3E', '#4E3E34'], borde: '#3A2C24', tribuna: ['#6E2A20', '#4A1A14'], lineas: false},
+  agua:   {fondo: 'rio', campo: ['#5AB4E8', '#4AA4DA'], borde: '#3A8CC4', tribuna: ['#2C5E8C', '#1C3E62'], lineas: false},
+  piedra: {fondo: 'sierras', campo: ['#D6B97E', '#C9A86E'], borde: '#9C8458', tribuna: ['#6E5A44', '#4E3E2E'], lineas: true},
+  rayo:   {fondo: 'ciudad', campo: ['#5A6478', '#4E5868'], borde: '#3A4252', tribuna: ['#3A3A58', '#24243A'], lineas: false},
+  hielo:  {fondo: 'cumbres', campo: ['#E6F4FB', '#D3EAF5'], borde: '#A8CCE0', tribuna: ['#5E7E9A', '#3E5E7A'], lineas: true},
+  viento: {fondo: 'cumbres', campo: ['#CDEBFA', '#B9E0F5'], borde: '#FFFFFF', tribuna: ['#7FA6C8', '#5E86A8'], lineas: false},
+  bicho:  {fondo: 'bosque', campo: ['#8DB04A', '#7EA03E'], borde: '#5E7E2A', tribuna: ['#4E6A2A', '#36501A'], lineas: false},
+};
+function tipoDominante(lista){
+  const c = {}; let mejor = 'normal', max = 0;
+  for(const x of lista){ const t = x.tipo || (ESPECIES[x.esp] && ESPECIES[x.esp].tipo) || 'normal'; c[t] = (c[t] || 0) + 1; if(c[t] > max){ max = c[t]; mejor = t; } }
+  return TEMAS_ESTADIO[mejor] ? mejor : 'normal';
+}
+// Decoración del campo de cada tipo (sobre el campo en perspectiva).
+function decoCampo(tipo, H){
+  const xs = t => [80 - 240 * t, 320 + 240 * t], at = (t, f) => { const [a, b] = xs(t); return a + (b - a) * f; };
+  let s = '';
+  const rnd = i => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  if(tipo === 'agua'){
+    for(let i = 0; i < 14; i++){ const t = rnd(i) * .9 + .05, y = prof(H, t), x = at(t, rnd(i + 30)), k = .5 + t;
+      s += `<path d="M${x - 14 * k} ${y} q${7 * k} ${-5 * k} ${14 * k} 0 t${14 * k} 0" fill="none" stroke="#DDF3FF" stroke-width="${2 * k}" stroke-linecap="round" opacity=".8"/>`; }
+    for(let i = 0; i < 5; i++){ const t = rnd(i + 7) * .8 + .1, x = at(t, rnd(i + 11)), y = prof(H, t), k = .6 + t;
+      s += `<ellipse cx="${x}" cy="${y}" rx="${12 * k}" ry="${4 * k}" fill="#6FBF5E" stroke="#22304A" stroke-width="1.2"/><path d="M${x} ${y} l${10 * k} ${-2 * k}" stroke="#4E9A3E" stroke-width="1.5"/>`; }
+  } else if(tipo === 'fuego'){
+    for(let i = 0; i < 9; i++){ const t = rnd(i) * .85 + .1, y = prof(H, t), x = at(t, rnd(i + 5)), k = .5 + t;
+      s += `<path class="lava" d="M${x - 30 * k} ${y} l${12 * k} ${-3 * k} l${10 * k} ${4 * k} l${14 * k} ${-4 * k} l${12 * k} ${3 * k}" fill="none" stroke="#FF8A3D" stroke-width="${3 * k}" stroke-linecap="round" stroke-linejoin="round"/>`; }
+    for(let i = 0; i < 16; i++){ const t = rnd(i + 3), x = at(t, rnd(i + 21)), y = prof(H, t); s += `<circle cx="${x}" cy="${y}" r="${1.5 + t * 2}" fill="#FFD23F" class="brasa" style="animation-delay:${rnd(i) * 2}s"/>`; }
+  } else if(tipo === 'rayo'){
+    for(let i = 1; i < 8; i++){ const t = i / 8, [a, b] = xs(t); s += `<path d="M${a} ${prof(H, t)} L${b} ${prof(H, t)}" stroke="#7FD4FF" stroke-width="1.4" opacity=".6"/>`; }
+    for(let i = 0; i <= 10; i++){ const f = i / 10; s += `<path d="M${at(0, f)} ${H} L${at(1, f)} 300" stroke="#7FD4FF" stroke-width="1.4" opacity=".6"/>`; }
+    s += `<path class="chispa" d="M150 ${prof(H, .4)} l12 -6 l-4 10 l14 -6" fill="none" stroke="#FFE45C" stroke-width="3" stroke-linecap="round"/><path class="chispa" style="animation-delay:.7s" d="M260 ${prof(H, .7)} l12 -6 l-4 10 l14 -6" fill="none" stroke="#FFE45C" stroke-width="3" stroke-linecap="round"/>`;
+  } else if(tipo === 'hielo'){
+    for(let i = 0; i < 12; i++){ const t = rnd(i) * .9 + .05, y = prof(H, t), x = at(t, rnd(i + 9)), k = .5 + t;
+      s += `<path d="M${x} ${y} l${30 * k} ${-6 * k}" stroke="#FFFFFF" stroke-width="${2.5 * k}" stroke-linecap="round" opacity=".85"/>`; }
+    s += `<path d="M0 ${H} L${xs(0)[0]} ${H} L${xs(1)[0]} 300 L0 300Z M400 ${H} L${xs(0)[1]} ${H} L${xs(1)[1]} 300 L400 300Z" fill="#FFFFFF" opacity=".75"/>`;
+  } else if(tipo === 'viento'){
+    for(let i = 0; i < 10; i++){ const t = rnd(i) * .9 + .05, y = prof(H, t), x = at(t, rnd(i + 13)), k = .6 + t;
+      s += `<g fill="#FFFFFF" opacity=".95"><ellipse cx="${x}" cy="${y}" rx="${26 * k}" ry="${8 * k}"/><ellipse cx="${x + 12 * k}" cy="${y - 5 * k}" rx="${14 * k}" ry="${7 * k}"/></g>`; }
+    s += `<path d="M0 ${H} L${xs(0)[0]} ${H} L${xs(1)[0]} 300 L0 300Z M400 ${H} L${xs(0)[1]} ${H} L${xs(1)[1]} 300 L400 300Z" fill="#FFFFFF" opacity=".85"/>`;
+  } else if(tipo === 'bicho'){
+    for(let i = 0; i < 22; i++){ const t = rnd(i) * .9 + .05, y = prof(H, t), x = at(t, rnd(i + 17)), r = 5 + t * 8;
+      s += `<path d="M${x - r} ${y} l${r / 2} ${-r * .45} h${r} l${r / 2} ${r * .45} l${-r / 2} ${r * .45} h${-r}Z" fill="#FFD23F" opacity=".35" stroke="#C9A227" stroke-width="1"/>`; }
+    for(let i = 0; i < 4; i++){ const x = [30, 370, 60, 340][i], y = prof(H, [.3, .35, .8, .85][i]); s += `<path d="M${x} ${y} C${x - 20} ${y - 30} ${x + 10} ${y - 50} ${x + 20} ${y - 30} C${x + 26} ${y - 16} ${x + 12} ${y} ${x} ${y}Z" fill="#5E9E45" stroke="#22304A" stroke-width="1.5"/>`; }
+  } else if(tipo === 'planta'){
+    for(let i = 0; i < 18; i++){ const t = rnd(i), x = at(t, rnd(i + 5) < .5 ? rnd(i) * .12 : .88 + rnd(i) * .12), y = prof(H, t); s += `<circle cx="${x}" cy="${y}" r="${2 + t * 3}" fill="${['#FF8FB1', '#FFD23F', '#E2493C'][i % 3]}"/>`; }
+    s += `<path d="M0 ${H + 6} Q100 ${H - 8} 200 ${H + 2} Q300 ${H - 10} 400 ${H + 6} L400 ${H + 14} L0 ${H + 14}Z" fill="#3E7E3B"/>`;
+  } else if(tipo === 'piedra'){
+    for(let i = 0; i < 8; i++){ const t = rnd(i) * .85 + .1, y = prof(H, t), x = at(t, rnd(i + 3) < .5 ? rnd(i) * .15 : .85 + rnd(i) * .15), k = .5 + t;
+      s += `<path d="M${x - 14 * k} ${y} L${x - 9 * k} ${y - 14 * k} L${x + 4 * k} ${y - 18 * k} L${x + 14 * k} ${y - 6 * k} L${x + 12 * k} ${y}Z" fill="#9AA2AD" stroke="#22304A" stroke-width="1.5"/>`; }
+    for(let i = 0; i < 6; i++){ const t = rnd(i + 40) * .8 + .15, y = prof(H, t), x = at(t, .3 + rnd(i) * .4); s += `<path d="M${x} ${y} l8 3 l6 -4 l9 2" fill="none" stroke="#9C8458" stroke-width="1.6"/>`; }
+  }
+  return s;
+}
+function svgCampoTema(tipo){
+  const T = TEMAS_ESTADIO[tipo] || TEMAS_ESTADIO.normal, H = 132, [c1, c2] = T.campo;
+  const xs = t => [80 - 240 * t, 320 + 240 * t];
+  let s = `<svg class="campo-svg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
+    <rect y="${H}" width="400" height="${300 - H}" fill="${T.borde}"/>`;
+  for(let i = 0; i < 8; i++){
+    const t0 = i / 8, t1 = (i + 1) / 8, [a0, b0] = xs(t0), [a1, b1] = xs(t1);
+    s += `<path d="M${a0} ${prof(H, t0)} L${b0} ${prof(H, t0)} L${b1} ${prof(H, t1)} L${a1} ${prof(H, t1)}Z" fill="${i % 2 ? c2 : c1}"/>`;
+  }
+  s += decoCampo(tipo, H);
+  if(T.lineas){
+    const ln = `fill="none" stroke="${tipo === 'hielo' ? '#7EC0E8' : '#FFFFFF'}" stroke-width="2.4" opacity=".85" stroke-linejoin="round"`;
+    const m = .08, [a, b] = xs(m), [c, d] = xs(1.1), tm = .42, ym = prof(H, tm), [am, bm] = xs(tm);
+    s += `<path d="M${a + 30} ${prof(H, m)} L${b - 30} ${prof(H, m)} L${d - 60} ${prof(H, 1.1)} M${a + 30} ${prof(H, m)} L${c + 60} ${prof(H, 1.1)}" ${ln}/>
+      <path d="M${am + 22} ${ym} L${bm - 22} ${ym}" ${ln}/><ellipse cx="200" cy="${ym}" rx="70" ry="${(300 - H) * .1}" ${ln}/>`;
+  }
+  // Emblema del tipo en el centro del campo
+  const ym = prof(H, .42);
+  s += `<ellipse cx="200" cy="${ym}" rx="26" ry="9" fill="${TIPOS[tipo] ? TIPOS[tipo].color : '#D6D0C2'}" stroke="#22304A" stroke-width="1.5" opacity=".9"/>`;
+  s += `<defs><linearGradient id="niebla-tema" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".4"/><stop offset=".35" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>
+    <rect y="${H}" width="400" height="${300 - H}" fill="url(#niebla-tema)"/></svg>`;
+  return s;
+}
+// Estadio completo para un tipo: cielo/paisaje, tribuna del color del tipo y campo temático.
+function estadioHTML(tipo){
+  const T = TEMAS_ESTADIO[tipo] || TEMAS_ESTADIO.normal;
+  let trib = svgTribuna(TIPOS[tipo] ? TIPOS[tipo].color : '#E2574C');
+  trib = trib.replace('fill="#4A5578"', `fill="${T.tribuna[0]}"`).replace('fill="#2F3A5C"', `fill="${T.tribuna[1]}"`);
+  return svgFondoArena(T.fondo) + trib + svgCampoTema(tipo);
+}
