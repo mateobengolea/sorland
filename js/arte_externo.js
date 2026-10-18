@@ -26,7 +26,7 @@ function archivoCriatura(esp, vista, shiny){
     if(!x) return original(esp, o);
     const e = ESPECIES[esp], aura = o.aura === false ? '' : auraTipo(e.tipo);
     const filtro = x.filtro ? ' style="filter:hue-rotate(155deg) saturate(1.35)"' : '';
-    const img = `<image href="${rutaArte('criaturas', x.f)}" x="0" y="0" width="200" height="200" preserveAspectRatio="xMidYMax meet"/>`;
+    const img = `<image href="${rutaArte('criaturas', x.f)}" x="0" y="0" width="200" height="200" preserveAspectRatio="xMidYMax meet"${x.espejo ? ' transform="translate(200 0) scale(-1 1)"' : ''}/>`;
     return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${SOMBRA}${aura}<g class="cuerpo vivo"${filtro}>${img}</g></svg>`;
   };
   // En el mapa las criaturas se dibujan en canvas: ahí la imagen se carga directo.
