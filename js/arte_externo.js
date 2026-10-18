@@ -5,7 +5,7 @@
    Formato esperado (ver ARTE-LEEME): PNG con fondo transparente.
    ===================================================================== */
 const ARTE_EXT = {criaturas: {}, objetos: {}, medallas: {}, fondos: {}, otros: {}, listo: false};
-const rutaArte = (carpeta, archivo) => `assets/${carpeta}/${archivo}`;
+const rutaArte = (carpeta, archivo) => `assets/${carpeta}/${archivo}${ARTE_EXT.v ? '?v=' + ARTE_EXT.v : ''}`;
 fetch('assets/arte.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => {
   if(!j) return;
   Object.assign(ARTE_EXT, j, {listo: true});
