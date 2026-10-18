@@ -34,9 +34,18 @@ function archivoCriatura(esp, vista, shiny){
   const cache = {};
   imagenCriatura = function(esp, shiny, vista = 'frente'){
     const x = archivoCriatura(esp, vista, shiny);
-    if(!x || x.filtro) return origImg(esp, shiny, vista);
+    if(!x) return origImg(esp, shiny, vista);
     const k = esp + shiny + vista;
-    if(!cache[k]){ cache[k] = new Image(); cache[k].src = rutaArte('criaturas', x.f); }
+    if(!cache[k]){
+      const im = new Image(); im.src = rutaArte('criaturas', x.f);
+      if(!x.filtro) cache[k] = im;
+      else {
+        // Shiny: la misma imagen con los colores girados, pintada en un lienzo aparte.
+        const cv = document.createElement('canvas'); cv.complete = false; cv.naturalWidth = 0; cache[k] = cv;
+        im.onload = () => { cv.width = im.naturalWidth; cv.height = im.naturalHeight; const g = cv.getContext('2d');
+          g.filter = 'hue-rotate(155deg) saturate(1.35)'; g.drawImage(im, 0, 0); cv.complete = true; cv.naturalWidth = im.naturalWidth; };
+      }
+    }
     return cache[k];
   };
   const origIcono = iconoObjeto;
