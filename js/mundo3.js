@@ -55,6 +55,9 @@ function mapaMalbec(){
   casaConInterior(M, 24, 10, '#7A6A9E', {nombre: 'Casa del Piedrero', npc: {nombre: 'Piedrero Ónix Brillante', ropa: '#7A6A9E', pelo: '#2A2420', accion: piedrero}});
   M.npc({id: 'vecina_malbec', x: 12, y: 9, tipo: 'vecino', nombre: 'Doña Uva Pasa', ropa: '#B03A5E', pelo: '#E9E2D3', suelo: ':',
     frases: ['¡Bienvenido a Pueblo Malbec, tierra de viñedos!', 'Al norte está la Mina Abandonada. Adentro hay piedras que brillan... y algo más grande que duerme.', 'Llevá Fuerza: hay rocas tapando los pasillos.']});
+  M.npc({id: 'guardia_mina', x: 16, y: 4, tipo: 'guardia', nombre: 'Minero Carbón Pirita', requiere: 'panal', ropa: '#5A4A40', pelo: '#2A2420', suelo: ':',
+    frases: ['¡Alto! Adentro de la mina no se ve nada: es oscuridad total.', 'Volvé cuando tengas Destello. Lo enseña Elsa Ltamontes, la líder de Pueblo Panal (al este de Villa Piedra).'],
+    abierto: ['¡Tenés Destello! Ahora sí: adentro vas a ver todo.', 'Llevá también Fuerza: hay rocas tapando los pasillos.']});
   M.zonas = [['malbec', 4, 2, 29, 13], ['rutavino', 1, 14, 32, 28]]; M.zonaBase = 'rutavino';
   interioresDe(M);
   return M;
@@ -63,7 +66,7 @@ function mapaMina(){
   const W = 25, H = 23;
   const M = nuevoMapa('mina', 'Mina Abandonada', W, H, 5252, '#', {pasto: '#6E5E50', pastoAlto: '#6E5E50', brizna: '#5A4C40', tierra: '#5A4C40', arbol: 'normal', fondo: '#0E0A08', oscuro: true, cueva: true});
   const {prev, callejones, vecinos} = laberinto(M, W, H, [12, 21], 3131);
-  M.salida(12, 22, 'malbec', 16, 4); M.m[22][12] = 'k';
+  M.salida(12, 22, 'malbec', 16, 5); M.m[22][12] = 'k';
   const [ax, ay] = callejones[0];
   M.m[ay][ax] = 'A'; M.altares[ax + ',' + ay] = 'uritorco';
   // Dos rocas en el camino al altar: hace falta Fuerza.
@@ -77,7 +80,7 @@ function mapaMina(){
   if(t1) M.npc({...entrenador('mina_t1', t1[0], t1[1], 'Minero', 'Carbón Negrete', [['cuarzon', 23], ['morro', 23], ['pilon', 24]], 420, ['¡Esta veta es mía!'], ['Me quedé sin pico otra vez.'], '#5A4A40'), suelo: 'k'});
   if(t2) M.npc({...entrenador('mina_t2', t2[0], t2[1], 'Geóloga', 'Esmeralda Veta', [['geodon', 24], ['fosilon', 24]], 450, ['Encontré una geoda gigante. ¿Peleamos por ella?'], ['Te la regalo. Bah, no.'], '#4CC27A'), suelo: 'k'});
   M.zonas = [['mina', 0, 0, W - 1, H - 1]]; M.zonaBase = 'mina';
-  M.afuera = {mapa: 'malbec', x: 16, y: 4};
+  M.afuera = {mapa: 'malbec', x: 16, y: 5};
   M.entrada = {x: 12, y: 21};
   return M;
 }
@@ -293,3 +296,13 @@ function usarPiedra(o){
     }
   };
 })();
+
+/* La Cueva Oscura está a oscuras: sin Destello no te dejan pasar. */
+(() => {
+  const E = MAPAS.escarcha; if(!E || !E.npc) return;
+  E.npc({id: 'guardia_cueva', x: 13, y: 1, tipo: 'guardia', nombre: 'Espeleóloga Linterna Gómez', requiere: 'panal', ropa: '#C9A227', pelo: '#3B2A22',
+    frases: ['Al norte está la Cueva Oscura: un laberinto negro como la noche.', 'Sin Destello te vas a perder. Lo enseña Elsa Ltamontes en Pueblo Panal, al este de Villa Piedra.'],
+    abierto: ['¡Con Destello vas a ver el camino!', 'Del otro lado de la cueva está Monte Fogón.']});
+})();
+// Al salir de la cueva aparecés un paso más abajo, para no caer encima de la guardia.
+if(MAPAS.cueva && MAPAS.cueva.salidas['13,30']) MAPAS.cueva.salidas['13,30'].y = 2;

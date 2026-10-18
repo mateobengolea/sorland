@@ -63,7 +63,7 @@ function pintarMundo(){
     const quien = S.equipo[0] ? S.equipo[0].nombre : 'Tu criatura';
     setTimeout(() => { if(MW) dialogo(M.nombre, tieneHab('destello')
       ? [`${quien} usó Destello. ¡La cueva se iluminó!`]
-      : ['Está oscurísimo: casi no ves tus propios pies.', 'Con Destello, que enseña Elsa Ltamontes en Pueblo Panal, se vería todo.']); }, 400);
+      : ['Está oscurísimo: casi no ves tus propios pies.', 'Con Destello, que enseña Elsa Ltamontes en Pueblo Panal, se vería todo.', 'Si te perdés, en el Menú tenés «Salir de la cueva».']); }, 400);
   }
   if(S.ensenar){ const mov = S.ensenar; delete S.ensenar; setTimeout(() => { if(MW) elegirAprendiz(mov); }, 600); }
   if(S.cuartel && S.cuartel.continuar){ S.cuartel.continuar = false; setTimeout(() => { if(MW) siguienteCuartel(); }, 500); }
@@ -1032,9 +1032,22 @@ const ICONOS_MENU = {
   volar: '<path d="M8 38c10-2 18-10 22-22 2 10 10 18 22 20-10 4-24 6-44 2z" fill="#9FD4F5"/><path d="M20 36c6-2 10-6 12-12" fill="none" stroke-width="2.5"/>',
   hablar: '<path d="M10 14h40a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H26l-10 8v-8h-6a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFFDF8"/><circle cx="22" cy="28" r="2.5" fill="#22304A"/><circle cx="30" cy="28" r="2.5" fill="#22304A"/><circle cx="38" cy="28" r="2.5" fill="#22304A"/>',
   amigos: '<circle cx="22" cy="20" r="8" fill="#FFD23F"/><path d="M8 46c0-9 6-15 14-15s14 6 14 15z" fill="#FFD23F"/><circle cx="40" cy="22" r="7" fill="#FF8FB1"/><path d="M30 46c1-8 5-13 10-13 7 0 12 5 12 13z" fill="#FF8FB1"/>',
+  salircueva: '<path d="M10 52V26a20 20 0 0 1 40 0v26z" fill="#5A4C40"/><path d="M20 52V30a10 10 0 0 1 20 0v22z" fill="#FFE9A8"/><path d="M30 46V34M24 40l6-6 6 6" fill="none" stroke-width="3"/>',
   pescar: '<path d="M10 52 L44 10" stroke-width="4"/><path d="M44 10 C52 16 52 30 48 40" fill="none" stroke-width="1.5"/><circle cx="48" cy="44" r="4" fill="#E2574C"/><path d="M22 46 c4 -6 14 -6 18 0 c-4 6 -14 6 -18 0z M40 46 l6 -4 v8z" fill="#5AB4E8"/>',
   ranking: '<path d="M18 10h24v10c0 10-6 16-12 16s-12-6-12-16z" fill="#FFD23F"/><path d="M18 14H10c0 8 4 12 10 12M42 14h8c0 8-4 12-10 12" fill="none" stroke-width="3"/><rect x="24" y="36" width="12" height="6" fill="#C98A3C"/><rect x="18" y="42" width="24" height="8" rx="2" fill="#8A5A35"/>',
 };
+// Para no quedarse perdido a oscuras: te lleva a la entrada de la cueva.
+function salidaDeCueva(M){
+  if(M.afuera) return M.afuera;
+  const sal = Object.values(M.salidas || {}).filter(d => MAPAS[d.mapa]);
+  return sal.find(d => S.visitados && S.visitados[d.mapa]) || sal[0] || null;
+}
+function salirDeCueva(){
+  const M = mapaActual(), d = salidaDeCueva(M); if(!d) return;
+  cerrarHoja();
+  salirDelMundo(); S.mundo = {mapa: d.mapa, x: d.x, y: d.y, mira: 'abajo'}; guardar(); pintarMundo();
+  avisar(`Saliste de ${M.nombre}.`);
+}
 function abrirMenuMundo(){
   if(!MW || MW.ocupado) return;
   hojaActual = 'menu';
@@ -1043,13 +1056,14 @@ function abrirMenuMundo(){
   const op = [['criaturas', 'Criaturas'], ['mochila', 'Mochila'], ['mapa', 'Mapa'],
     ...(tieneHab('vuelo') && !M.tema.interior && !M.tema.cueva ? [['volar', 'Volar']] : []),
     ...((S.inv.objetos.cana || S.inv.objetos.supercana) && typeof pescar === 'function' ? [['pescar', 'Pescar']] : []),
+    ...(M.tema.cueva && salidaDeCueva(M) ? [['salircueva', 'Salir de la cueva']] : []),
     ['hablar', 'Hablar'], ['amigos', 'Amigos'], ['ranking', 'Ranking']];
   v.innerHTML = `<div class="hoja hoja-menu" role="dialog" aria-label="Menú"><div class="hoja-cab"><h2>Menú</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
     <div class="grilla-menu">${op.map(([k, n]) => `<button class="op-menu" data-op="${k}" ${k === 'amigos' ? 'data-aviso-amigos' : ''}><svg viewBox="0 0 60 60" aria-hidden="true"><g stroke="#22304A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${ICONOS_MENU[k]}</g></svg><span>${n}</span></button>`).join('')}</div></div>`;
   v.querySelector('.cerrar').onclick = cerrarHoja;
   if(typeof pintarAvisoAmigos === 'function') pintarAvisoAmigos();
   const acc = {criaturas: () => abrirEquipo(), mochila: () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); }, mapa: abrirMapa, volar: abrirVuelo,
-    hablar: () => { cerrarHoja(); if(typeof abrirHablar === 'function') abrirHablar(); }, pescar: () => { cerrarHoja(); pescar(); }, amigos: () => abrirAmigos('amigos'), ranking: abrirRanking};
+    hablar: () => { cerrarHoja(); if(typeof abrirHablar === 'function') abrirHablar(); }, pescar: () => { cerrarHoja(); pescar(); }, salircueva: salirDeCueva, amigos: () => abrirAmigos('amigos'), ranking: abrirRanking};
   v.querySelectorAll('[data-op]').forEach(b => b.onclick = () => acc[b.dataset.op]());
 }
 
