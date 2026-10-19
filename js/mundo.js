@@ -403,7 +403,7 @@ function premioAleatorio(generoso){
 function darPremio(p){
   if(p.obj){
     S.inv.objetos[p.obj] = (S.inv.objetos[p.obj] || 0) + p.n;
-    const o = POR_ID[p.obj], plural = {capsula: 'cápsulas', supercapsula: 'súper cápsulas', jarabe: 'jarabes', jarabemax: 'jarabes grandes'};
+    const o = POR_ID[p.obj], plural = {capsula: 'cápsulas', supercapsula: 'súper cápsulas', ultracapsula: 'Ultra cápsulas', jarabe: 'jarabes', jarabemax: 'jarabes grandes', jarabetotal: 'Jarabes totales', revivir: 'Revivir', revivirmax: 'Revivir máximo', yuyos: 'Tés de yuyos', energizante: 'Energizantes', alfajor: 'Alfajores de fuerza', matecocido: 'Mates cocidos', guiso: 'Guisos'};
     return p.n > 1 ? `${p.n} ${plural[p.obj] || o.nom}` : `${/jarabe/.test(p.obj) ? 'un' : 'una'} ${o.nom}`;
   }
   if(p.mueble){ const id = 'peluche_' + p.mueble; S.inv.muebles[id] = (S.inv.muebles[id] || 0) + 1; return `un ${POR_ID[id].nom} para tu casa`; }

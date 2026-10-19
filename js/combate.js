@@ -242,6 +242,8 @@ async function turno(acc){
       await sacarCriatura('propio'); await m3;
       if(forzado){ B.forzado = false; return; }
       if(await turnoRival()) return;
+    } else if(acc.tipo === 'huir' && B.ent && B.ent.jefe){
+      await mensaje('Te retirás de la pelea. Tu daño queda anotado.', 1100); return terminarCombate();
     } else if(acc.tipo === 'huir' && B.ent){
       await mensaje('¡No podés escaparte de una pelea entre entrenadores!', 1100); return;
     } else if(acc.tipo === 'huir'){
@@ -645,6 +647,13 @@ async function propioCaido(){
   if(B.lista.some(l => l.hp > 0)){ B.forzado = true; return; }
   B.fin = true;
   // En la Torre de Batalla perder no cuesta plata: se termina la racha y volvés al hall.
+  if(B.ent && B.ent.jefe){
+    await guardarCriatura('propio');
+    await mensaje('Tu equipo quedó agotado. Tu daño quedó anotado en la pelea contra el jefe.', 1600);
+    B.lista.forEach(guardarHp); curarEquipo();
+    const vuelta = B.ent.vuelta; B = null;
+    S.mundo = {...vuelta}; guardar(); pintarMundo(); return;
+  }
   if(B.ent && B.ent.torre){
     await guardarCriatura('propio');
     await mensaje('Tu equipo quedó agotado. ¡Se terminó la racha en la Torre!', 1600);
