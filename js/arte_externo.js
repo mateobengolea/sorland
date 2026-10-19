@@ -9,9 +9,34 @@ const rutaArte = (carpeta, archivo) => `assets/${carpeta}/${archivo}${ARTE_EXT.v
 fetch('assets/arte.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => {
   if(!j) return;
   Object.assign(ARTE_EXT, j, {listo: true});
+  for(const a of Object.values(ARTE_EXT.criaturas || {})) if(a.frente) probarArte(a.frente);
   if(typeof _criaturaCache !== 'undefined') for(const k of Object.keys(_criaturaCache)) delete _criaturaCache[k];
   if(typeof vista !== 'undefined' && vista === 'casa' && typeof pintarJuego === 'function') pintarJuego();
 }).catch(() => {});
+// Cada imagen se prueba antes de usarla: si no carga (celular viejo, red, archivo roto), queda el dibujo de siempre.
+const ARTE_OK = {};
+function probarArte(f){
+  if(f in ARTE_OK) return ARTE_OK[f];
+  ARTE_OK[f] = null;
+  const im = new Image();
+  im.onload = () => { ARTE_OK[f] = im.naturalWidth > 0; if(ARTE_OK[f]) refrescarArte(); };
+  im.onerror = () => { ARTE_OK[f] = false; };
+  im.src = rutaArte('criaturas', f);
+  return null;
+}
+let _refrescoArte = 0;
+function refrescarArte(){
+  clearTimeout(_refrescoArte);
+  _refrescoArte = setTimeout(() => {
+    if(typeof _criaturaCache !== 'undefined') for(const k of Object.keys(_criaturaCache)) delete _criaturaCache[k];
+    // Cambia en el lugar los dibujos que ya estaban en pantalla.
+    document.querySelectorAll('svg[data-esp]').forEach(el => {
+      const esp = el.dataset.esp, o = JSON.parse(el.dataset.o || '{}');
+      const x = archivoCriatura(esp, o.vista || 'frente', o.shiny);
+      if(x && ARTE_OK[x.f]){ const t = document.createElement('div'); t.innerHTML = svgEspecie(esp, o); if(t.firstElementChild) el.replaceWith(t.firstElementChild); }
+    });
+  }, 120);
+}
 // Elige el archivo de la vista pedida; si no hay, usa el de frente.
 function archivoCriatura(esp, vista, shiny){
   const a = ARTE_EXT.criaturas[esp]; if(!a) return null;
@@ -19,11 +44,16 @@ function archivoCriatura(esp, vista, shiny){
   if(shiny && a.shiny) return {f: a.shiny, filtro: false};
   return {f: a[vista] || a.frente, filtro: !!shiny, espejo: vista === 'lado' && !a.lado};
 }
+// Para el combate y el álbum: si la imagen todavía no cargó o falló, el dibujo original.
+function arteListo(x){ if(!x) return false; const ok = probarArte(x.f); return ok === true; }
 (() => {
   const original = svgEspecie;
   svgEspecie = function(esp, o = {}){
     const x = archivoCriatura(esp, o.vista || 'frente', o.shiny);
-    if(!x) return original(esp, o);
+    if(!arteListo(x)){
+      const sv = original(esp, o);
+      return x ? sv.replace('<svg', `<svg data-esp="${esp}" data-o='${JSON.stringify({vista: o.vista, shiny: o.shiny, humor: o.humor, aura: o.aura}).replace(/'/g, '')}'`) : sv;
+    }
     const e = ESPECIES[esp], aura = o.aura === false ? '' : auraTipo(e.tipo);
     const filtro = x.filtro ? ' style="filter:hue-rotate(155deg) saturate(1.35)"' : '';
     const img = `<image href="${rutaArte('criaturas', x.f)}" x="0" y="0" width="200" height="200" preserveAspectRatio="xMidYMax meet"${x.espejo ? ' transform="translate(200 0) scale(-1 1)"' : ''}/>`;
@@ -34,7 +64,7 @@ function archivoCriatura(esp, vista, shiny){
   const cache = {};
   imagenCriatura = function(esp, shiny, vista = 'frente'){
     const x = archivoCriatura(esp, vista, shiny);
-    if(!x) return origImg(esp, shiny, vista);
+    if(!arteListo(x)) return origImg(esp, shiny, vista);
     const k = esp + shiny + vista;
     if(!cache[k]){
       const im = new Image(); im.src = rutaArte('criaturas', x.f);
