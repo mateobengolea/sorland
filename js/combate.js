@@ -134,7 +134,7 @@ function fichaHTML(l, propio){
   const pct = Math.max(0, l.hp / l.max * 100);
   const col = pct > 50 ? 'var(--verde)' : pct > 20 ? 'var(--ambar)' : 'var(--rojo)';
   return `<div class="fl-cab"><b></b><span>Nv ${l.nivel}</span></div>
-    <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span>
+    <span class="chip-tipo" style="background:${TIPOS[l.tipo].color}">${TIPOS[l.tipo].nom}</span>${typeof chipEstado === 'function' ? chipEstado(l) : ''}
     <div class="barra fl-barra"><i style="width:${pct}%;background:${col}"></i></div>
     ${propio ? `<div class="fl-num">${l.hp} / ${l.max}</div>` : ''}
     ${propio && l.ref && l.ref.xp !== undefined ? (() => { const p = Math.min(100, Math.floor((l.ref.xp || 0) / xpPara(l.ref.nivel) * 100));
@@ -261,6 +261,11 @@ async function turno(acc){
           await mensaje(`¡${yo.nombre} recargó todos sus poderes!`);
         }
       }
+      else if(o.usa === 'estado'){
+        if(!yo.estado){ await mensaje(`${yo.nombre} no tiene ningún estado para curar.`, 900); return; }
+        S.inv.objetos[o.id]--; const antes = ESTADOS[yo.estado].nom.toLowerCase(); yo.estado = null; fichas();
+        await mensaje(`${yo.nombre} tomó ${o.nom} y ya no está ${antes}.`);
+      }
       else if(o.revive){
         const l = B.lista[acc.dest];
         if(!l || l.hp > 0) return;
@@ -268,8 +273,9 @@ async function turno(acc){
         l.hp = Math.max(1, Math.round(l.max * o.revive)); guardarHp(l);
         await mensaje(`¡${l.nombre} se levantó con ${l.hp} de vida!`);
       } else {
-        if(yo.hp >= yo.max){ await mensaje(`${yo.nombre} ya tiene la vida llena.`, 800); return; }
+        if(yo.hp >= yo.max && !(o.cura >= 999 && yo.estado)){ await mensaje(`${yo.nombre} ya tiene la vida llena.`, 800); return; }
         S.inv.objetos[o.id]--;
+        if(o.cura >= 999) yo.estado = null;
         const antes = yo.hp; yo.hp = Math.min(yo.max, yo.hp + o.cura); fichas();
         await mensaje(`${yo.nombre} tomó ${o.nom} y recuperó ${yo.hp - antes} de vida.`);
       }
@@ -280,7 +286,7 @@ async function turno(acc){
         if(ppDe(yo.ref, acc.mov) <= 0){ await mensaje(`¡A ${yo.nombre} no le quedan usos de ${mov.nom}!`); return; }
         gastarPP(yo.ref, acc.mov);
       } else await mensaje(`¡A ${yo.nombre} no le quedan usos de ningún poder!`, 900);
-      const velYo = yo.stats.velocidad * (yo.penal || 1), velEl = el.stats.velocidad;
+      const velYo = yo.stats.velocidad * (yo.penal || 1) * (yo.estado === 'paralizado' ? .5 : 1), velEl = el.stats.velocidad * (el.estado === 'paralizado' ? .5 : 1);
       const primeroYo = velYo > velEl || (velYo === velEl && Math.random() < .5);
       if(primeroYo){
         await atacar(yo, el, mov, true); if(el.hp <= 0) return ganarCombate();
@@ -290,27 +296,96 @@ async function turno(acc){
         await atacar(yo, el, mov, true); if(el.hp <= 0) return ganarCombate();
       }
     }
+    if(B && !B.fin && !B.forzado && await finTurnoEstados()) return;
   } finally {
     if(B && !B.fin){ B.ocupado = false; menu(B.forzado ? 'equipo' : 'principal'); }
   }
+}
+// Al final de cada turno, la quemadura lastima un poquito. Devuelve true si alguien cayó.
+async function finTurnoEstados(){
+  const el = B.salvaje, yo = activo();
+  for(const [l, propio] of [[el, false], [yo, true]]){
+    const d = typeof danioQuemadura === 'function' ? danioQuemadura(l) : 0; if(!d) continue;
+    l.hp = Math.max(0, l.hp - d);
+    animar(propio ? 'b-propio' : 'b-rival', 'golpeado', 400); numeroDanio(propio ? 'b-propio' : 'b-rival', d, false, 1); fichas();
+    await mensaje(`${propio ? l.nombre : nomRival()} sufre por la quemadura.`, 800);
+    if(l.hp <= 0){ if(propio){ await propioCaido(); } else { await ganarCombate(); } return true; }
+  }
+  return false;
+}
+// Antes de atacar: ¿duerme, está congelado, paralizado o confundido?
+async function puedeActuar(l, propio){
+  if(typeof chequeoEstado !== 'function' || !l.estado) return true;
+  const r = chequeoEstado(l), quien = propio ? l.nombre : nomRival();
+  for(const t of r.msgs) await mensaje(t.startsWith('¡') ? t : `${quien} ${t}.`, 800);
+  if(r.danio){
+    l.hp = Math.max(1, l.hp - r.danio);
+    animar(propio ? 'b-propio' : 'b-rival', 'golpeado', 400); numeroDanio(propio ? 'b-propio' : 'b-rival', r.danio, false, 1);
+  }
+  fichas();
+  return r.actua;
 }
 
 // Devuelve true si el combate se interrumpió (tu criatura cayó).
 async function turnoRival(){
   const el = B.salvaje, yo = activo();
   const movs = poderesDe(el.esp, el.nivel);
-  let id = movs[Math.floor(Math.random() * movs.length)];
-  if(MOVS[id].efecto && Math.random() < .5) id = movs.find(m => !MOVS[m].efecto) || id;
-  if(B.ent && Math.random() < (B.ent.lider ? .75 : .55)){
-    const valor = m => MOVS[m].poder * (MOVS[m].tipo === el.tipo ? 1.25 : 1) * efectividad(MOVS[m].tipo, yo.tipo) * MOVS[m].prec / 100;
-    id = movs.reduce((a, b) => valor(b) > valor(a) ? b : a);
-  }
+  const fuerte = B.ent && (B.ent.lider || B.ent.cuartel || B.ent.cuartel2);
+  const listo = !B.ent ? .35 : fuerte ? 1 : .8;
+  // Los entrenadores se curan y cambian de criatura cuando les conviene.
+  if(B.ent && await decisionEntrenador(el, yo, fuerte)) return false;
+  const id = elegirPoderRival(el, yo, movs, listo);
   await atacar(el, yo, MOVS[id], false);
   if(yo.hp <= 0){ await propioCaido(); return true; }
   return false;
 }
 
+async function decisionEntrenador(el, yo, fuerte){
+  if(B.curasRival === undefined) B.curasRival = fuerte ? 2 : (B.rivales.length >= 3 ? 1 : 0);
+  if(B.cambiosRival === undefined) B.cambiosRival = 0;
+  const e = B.ent;
+  // Curarse con poca vida.
+  if(B.curasRival > 0 && el.hp / el.max < .25 && Math.random() < (fuerte ? .85 : .5)){
+    B.curasRival--;
+    const antes = el.hp; el.hp = Math.min(el.max, el.hp + Math.round(el.max * .5)); el.estado = null; fichas();
+    animar('b-rival', 'sale', 400);
+    await mensaje(`${e.nombre} usó un Jarabe grande: ${el.nombre} recuperó ${el.hp - antes} de vida.`, 1300);
+    return true;
+  }
+  // Curar un estado que lo deja sin moverse.
+  if(B.curasRival > 0 && ['dormido', 'congelado', 'paralizado'].includes(el.estado) && Math.random() < (fuerte ? .5 : .25)){
+    B.curasRival--; el.estado = null; fichas();
+    await mensaje(`${e.nombre} le dio Té de yuyos a ${el.nombre}. ¡Ya está bien!`, 1300);
+    return true;
+  }
+  // Cambiar si está en clara desventaja y tiene a alguien mejor para este rival.
+  if(B.cambiosRival < 2 && B.rivales.length - 1 > B.ri && Math.random() < (fuerte ? .7 : .3)){
+    const misMovs = movsDe(yo).filter(m => MOVS[m] && MOVS[m].poder);
+    const peligro = r => Math.max(1, ...misMovs.map(m => efectividad(MOVS[m].tipo, r.tipo) * (MOVS[m].tipo === yo.tipo ? 1.25 : 1)));
+    const ahora = peligro(el);
+    if(ahora >= 2){
+      let mejor = -1, pm = ahora;
+      for(let j = B.ri + 1; j < B.rivales.length; j++){ const r = B.rivales[j]; if(r.hp > 0 && peligro(r) < pm){ pm = peligro(r); mejor = j; } }
+      if(mejor >= 0 && pm <= 1.25){
+        B.cambiosRival++;
+        await mensaje(`${e.nombre}: «¡${el.nombre}, volvé!»`, 900);
+        await guardarCriatura('rival', false);
+        [B.rivales[B.ri], B.rivales[mejor]] = [B.rivales[mejor], B.rivales[B.ri]];
+        B.salvaje = B.rivales[B.ri];
+        S.album.vistos[B.salvaje.esp] = true;
+        const br = $('#b-rival'); br.classList.add('oculto'); br.classList.remove('desmayo', 'vuelve');
+        br.innerHTML = svgEspecie(B.salvaje.esp, {humor: 'bien', shiny: B.salvaje.shiny});
+        fichas();
+        const m4 = mensaje(`${e.nombre} sacó a ${B.salvaje.nombre}.`, 1000);
+        await sacarCriatura('rival'); await m4;
+        return true;
+      }
+    }
+  }
+  return false;
+}
 async function atacar(a, d, mov, esPropio){
+  if(!(await puedeActuar(a, esPropio))) return;
   const quien = esPropio ? a.nombre : nomRival();
   const idA = esPropio ? 'b-propio' : 'b-rival', idD = esPropio ? 'b-rival' : 'b-propio';
   await mensaje(`${quien} usó ${mov.nom}.`, 420);
@@ -320,6 +395,12 @@ async function atacar(a, d, mov, esPropio){
   if(mov.efecto === 'bajaFuerza'){
     d.modFuerza = Math.max(.5, (d.modFuerza || 1) * .75);
     await mensaje(`Le bajó la fuerza a ${esPropio ? nomRival() : d.nombre}.`);
+    return;
+  }
+  const nomD = esPropio ? nomRival() : d.nombre;
+  if(!mov.poder && mov.estado){
+    if(aplicarEstado(d, mov.estado)){ fichas(); animar(idD, 'golpeado', 400); await mensaje(`¡${nomD} ${ESTADOS[mov.estado].al}!`, 1000); }
+    else await mensaje(d.estado ? `${nomD} ya tiene un estado. No hizo efecto.` : 'No hizo efecto.', 900);
     return;
   }
   const {danio, ef, critico} = calcularDanio(a, d, mov);
@@ -332,6 +413,7 @@ async function atacar(a, d, mov, esPropio){
   if(critico) await mensaje('¡Golpe crítico!', 750);
   if(ef > 1) await mensaje('¡Es muy efectivo!', 750);
   else if(ef < 1) await mensaje('No es muy efectivo...', 750);
+  if(mov.estado && d.hp > 0 && Math.random() < (mov.prob || 0) && aplicarEstado(d, mov.estado)){ fichas(); await mensaje(`¡${esPropio ? nomRival() : d.nombre} ${ESTADOS[mov.estado].al}!`, 1000); }
 }
 
 async function ganarCombate(){

@@ -340,7 +340,7 @@ function statsPorNivel(base, nivel){
   return {vida: base.vida + (nivel-1)*2, fuerza: Math.round(base.fuerza + (nivel-1)*.8), velocidad: Math.round(base.velocidad + (nivel-1)*.8)};
 }
 function calcularDanio(atacante, defensor, mov, rnd = Math.random){
-  const atk = atacante.stats.fuerza * (atacante.modFuerza || 1);
+  const atk = atacante.stats.fuerza * (atacante.modFuerza || 1) * (atacante.estado === 'quemado' ? .7 : 1);
   const def = 4 + defensor.stats.vida * .35 + defensor.nivel * .5;
   const stab = mov.tipo === atacante.tipo ? 1.25 : 1;
   const ef = efectividad(mov.tipo, defensor.tipo);

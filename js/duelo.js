@@ -265,9 +265,9 @@ function menuDuelo(tipo){
     m.querySelector('[data-v]').onclick = () => menuDuelo('principal');
   } else if(tipo === 'mochila'){
     const quedan = OBJ_DUELO - (DU.objUsados || 0), lleno = yo.hp >= yo.max;
-    const objs = OBJETOS.filter(o => o.cura && S.inv.objetos[o.id] > 0);
+    const objs = OBJETOS.filter(o => (o.cura || o.usa === 'estado') && S.inv.objetos[o.id] > 0);
     $('#t-combate').textContent = quedan > 0 ? `Podés usar ${quedan} jarabe${quedan > 1 ? 's' : ''} más en este duelo.` : 'Ya usaste todos los jarabes de este duelo.';
-    m.innerHTML = (objs.length ? objs.map(o => `<button data-o="${o.id}" class="mc-obj" ${quedan <= 0 || lleno ? 'disabled' : ''}>${iconoObjeto(o, 30)}<span><b>${o.nom}</b><small>Tenés ${S.inv.objetos[o.id]}${lleno ? ' · Vida llena' : ''}</small></span></button>`).join('')
+    m.innerHTML = (objs.length ? objs.map(o => `<button data-o="${o.id}" class="mc-obj" ${quedan <= 0 || (o.usa === 'estado' ? !yo.estado : lleno) ? 'disabled' : ''}>${iconoObjeto(o, 30)}<span><b>${o.nom}</b><small>Tenés ${S.inv.objetos[o.id]}${lleno ? ' · Vida llena' : ''}</small></span></button>`).join('')
       : `<p class="mc-vacio">No tenés jarabes. Comprá en el Market.</p>`) + `<button class="mc-volver" data-v>Volver</button>`;
     m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
       const o = OBJETOS.find(x => x.id === b.dataset.o);
@@ -348,20 +348,27 @@ function resolverTurno(st, acc, rnd){
   }
   for(const l of ['A', 'B']){
     const a = acc[l]; if(a.tipo !== 'curar') continue;
-    const o = OBJETOS.find(x => x.id === a.obj && x.cura), c = st[l].lista[st[l].i];
+    const o = OBJETOS.find(x => x.id === a.obj && (x.cura || x.usa === 'estado')), c = st[l].lista[st[l].i];
     st[l].curas = (st[l].curas || 0) + 1;
     if(!o || !c || c.hp <= 0 || st[l].curas > OBJ_DUELO) continue;
-    c.hp = Math.min(c.max, c.hp + o.cura);
+    if(o.usa === 'estado' || o.cura >= 999) c.estado = null;
+    if(o.cura) c.hp = Math.min(c.max, c.hp + o.cura);
     ev.push({t: 'cura', lado: l, obj: o.id, hp: c.hp});
   }
   const atacan = ['A', 'B'].filter(l => acc[l].tipo === 'atacar').map(l => ({l, i: st[l].i}));
-  const vel = x => st[x.l].lista[x.i].stats.velocidad;
+  const vel = x => st[x.l].lista[x.i].stats.velocidad * (st[x.l].lista[x.i].estado === 'paralizado' ? .5 : 1);
   atacan.sort((x, y) => vel(y) - vel(x) || 0);
   if(atacan.length === 2 && vel(atacan[0]) === vel(atacan[1]) && rnd() < .5) atacan.reverse();
   for(const {l, i} of atacan){
     const a = st[l].lista[i];
     if(st[l].i !== i || a.hp <= 0) continue;
     const dl = otro(l), d = st[dl].lista[st[dl].i];
+    if(a.estado){
+      const ch = chequeoEstado(a, rnd);
+      for(const txt of ch.msgs) ev.push({t: 'estmsg', lado: l, txt});
+      if(ch.danio){ a.hp = Math.max(1, a.hp - ch.danio); ev.push({t: 'autogolpe', lado: l, hp: a.hp, danio: ch.danio}); }
+      if(!ch.actua) continue;
+    }
     // Solo poderes con usos; si no queda ninguno, forcejea. Lo mismo pasa en los dos navegadores.
     const conUsos = movsDe(a).filter(m => ppDe(a, m) > 0);
     const id = !conUsos.length ? 'forcejeo' : conUsos.includes(acc[l].mov) ? acc[l].mov : conUsos[0];
@@ -370,14 +377,26 @@ function resolverTurno(st, acc, rnd){
     ev.push({t: 'usa', lado: l, mov: id});
     if(rnd() * 100 >= mov.prec){ ev.push({t: 'falla'}); continue; }
     if(mov.efecto === 'bajaFuerza'){ d.modFuerza = Math.max(.5, (d.modFuerza || 1) * .75); ev.push({t: 'baja', lado: dl}); continue; }
+    if(!mov.poder && mov.estado){ ev.push(aplicarEstado(d, mov.estado, rnd) ? {t: 'estado', lado: dl, estado: mov.estado} : {t: 'sinEfecto'}); continue; }
     const r = calcularDanio(a, d, mov, rnd);
     d.hp = Math.max(0, d.hp - r.danio);
     ev.push({t: 'golpe', lado: dl, hp: d.hp, ef: r.ef, crit: r.critico, danio: r.danio});
+    if(mov.estado && d.hp > 0 && rnd() < (mov.prob || 0) && aplicarEstado(d, mov.estado, rnd)) ev.push({t: 'estado', lado: dl, estado: mov.estado});
     if(d.hp <= 0){
       ev.push({t: 'debil', lado: dl});
       const sig = st[dl].lista.findIndex(x => x.hp > 0);
       if(sig < 0){ ev.push({t: 'fin', ganador: l}); return ev; }
       st[dl].i = sig; ev.push({t: 'cambio', lado: dl, i: sig, auto: true});
+    }
+  }
+  for(const l of ['A', 'B']){
+    const c = st[l].lista[st[l].i], q = danioQuemadura(c); if(!q) continue;
+    c.hp = Math.max(0, c.hp - q); ev.push({t: 'quema', lado: l, hp: c.hp, danio: q});
+    if(c.hp <= 0){
+      ev.push({t: 'debil', lado: l});
+      const sig = st[l].lista.findIndex(x => x.hp > 0);
+      if(sig < 0){ ev.push({t: 'fin', ganador: otro(l)}); return ev; }
+      st[l].i = sig; ev.push({t: 'cambio', lado: l, i: sig, auto: true});
     }
   }
   return ev;
@@ -405,6 +424,12 @@ async function reproducir(eventos){
     } else if(e.t === 'cambio'){
       dibujarBichosDuelo(); animar(idB, 'sale', 400);
       await mensaje(mio ? `¡Dale, ${actDu(e.lado).nombre}!` : `${DU.rival.apodo} sacó a ${actDu(e.lado).nombre}.`, 1000);
+    } else if(e.t === 'estmsg'){ await mensaje(e.txt.startsWith('¡') ? e.txt : `${nomDu(e.lado)} ${e.txt}.`, 800);
+    } else if(e.t === 'autogolpe' || e.t === 'quema'){
+      animar(idB, 'golpeado', 400); numeroDanio(idB, e.danio, false, 1); fichasDuelo();
+      if(e.t === 'quema') await mensaje(`${nomDu(e.lado)} sufre por la quemadura.`, 800); else await espera(400);
+    } else if(e.t === 'estado'){ fichasDuelo(); await mensaje(`¡${nomDu(e.lado)} ${ESTADOS[e.estado].al}!`, 1000);
+    } else if(e.t === 'sinEfecto'){ await mensaje('No hizo efecto.', 800);
     } else if(e.t === 'cura'){
       animar(idB, 'sale', 400); fichasDuelo();
       await mensaje(`${nomDu(e.lado)} tomó ${OBJETOS.find(o => o.id === e.obj).nom} y recuperó vida.`, 1100);

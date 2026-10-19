@@ -158,6 +158,12 @@ async function reproducirMirada(eventos){
     } else if(e.t === 'cambio'){
       dibujarMirada(); animar(idB, 'sale', 400);
       await mensaje(`${MD.ap[e.lado]} sacó a ${actMd(e.lado).nombre}.`, 1000);
+    } else if(e.t === 'estmsg'){ await mensaje(e.txt.startsWith('¡') ? e.txt : `${nomMd(e.lado)} ${e.txt}.`, 800);
+    } else if(e.t === 'autogolpe' || e.t === 'quema'){
+      animar(idB, 'golpeado', 400); numeroDanio(idB, e.danio, false, 1); fichasMirada();
+      if(e.t === 'quema') await mensaje(`${nomMd(e.lado)} sufre por la quemadura.`, 800); else await espera(400);
+    } else if(e.t === 'estado'){ fichasMirada(); await mensaje(`¡${nomMd(e.lado)} ${ESTADOS[e.estado].al}!`, 1000);
+    } else if(e.t === 'sinEfecto'){ await mensaje('No hizo efecto.', 800);
     } else if(e.t === 'cura'){
       animar(idB, 'sale', 400); fichasMirada();
       await mensaje(`${nomMd(e.lado)} tomó ${OBJETOS.find(o => o.id === e.obj).nom} y recuperó vida.`, 1100);
