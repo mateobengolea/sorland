@@ -37,8 +37,11 @@ function nivelProgresivo(n){
   }
   return n;
 }
+// Revanchas y otras peleas con niveles ya pensados: no se estiran.
+var PELEA_NIVEL_FIJO = false;
 function escalarRival(r){
   if(!r || r.escalado || !ESPECIES[r.esp]) return r;
+  if(PELEA_NIVEL_FIJO){ r.escalado = true; return r; }
   if(typeof enRegion2 === 'function' && enRegion2()){ r.escalado = true; return r; }
   const n = nivelProgresivo(r.nivel);
   if(n !== r.nivel){ r.nivel = n; r.stats = statsPorNivel(ESPECIES[r.esp].base, n); r.hp = vidaMax(r.stats, n); }
@@ -47,6 +50,7 @@ function escalarRival(r){
 }
 function empezarCombate(rivales, zona, ent){
   rivales.forEach(escalarRival);
+  PELEA_NIVEL_FIJO = false;
   vista = 'combate';
   if(typeof marcarPelea === 'function') marcarPelea('combate');
   cerrarHoja();
