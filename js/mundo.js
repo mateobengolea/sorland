@@ -1033,6 +1033,7 @@ const ICONOS_MENU = {
   hablar: '<path d="M10 14h40a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H26l-10 8v-8h-6a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFFDF8"/><circle cx="22" cy="28" r="2.5" fill="#22304A"/><circle cx="30" cy="28" r="2.5" fill="#22304A"/><circle cx="38" cy="28" r="2.5" fill="#22304A"/>',
   amigos: '<circle cx="22" cy="20" r="8" fill="#FFD23F"/><path d="M8 46c0-9 6-15 14-15s14 6 14 15z" fill="#FFD23F"/><circle cx="40" cy="22" r="7" fill="#FF8FB1"/><path d="M30 46c1-8 5-13 10-13 7 0 12 5 12 13z" fill="#FF8FB1"/>',
   salircueva: '<path d="M10 52V26a20 20 0 0 1 40 0v26z" fill="#5A4C40"/><path d="M20 52V30a10 10 0 0 1 20 0v22z" fill="#FFE9A8"/><path d="M30 46V34M24 40l6-6 6 6" fill="none" stroke-width="3"/>',
+  misiones: '<rect x="12" y="8" width="36" height="46" rx="5" fill="#FFFDF8"/><path d="M22 8v-2h16v2" fill="none" stroke-width="3"/><path d="M19 24l4 4 7-8M19 38l4 4 7-8" fill="none" stroke="#4CC27A" stroke-width="3.5"/><path d="M34 26h8M34 40h8" stroke-width="3"/>',
   medallas: '<circle cx="30" cy="34" r="16" fill="#FFD23F"/><path d="M22 6 L30 20 L38 6" fill="none" stroke-width="5" stroke="#3B82D6"/><path d="M30 25 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1z" fill="#FFF6B8"/>',
   pescar: '<path d="M10 52 L44 10" stroke-width="4"/><path d="M44 10 C52 16 52 30 48 40" fill="none" stroke-width="1.5"/><circle cx="48" cy="44" r="4" fill="#E2574C"/><path d="M22 46 c4 -6 14 -6 18 0 c-4 6 -14 6 -18 0z M40 46 l6 -4 v8z" fill="#5AB4E8"/>',
   ranking: '<path d="M18 10h24v10c0 10-6 16-12 16s-12-6-12-16z" fill="#FFD23F"/><path d="M18 14H10c0 8 4 12 10 12M42 14h8c0 8-4 12-10 12" fill="none" stroke-width="3"/><rect x="24" y="36" width="12" height="6" fill="#C98A3C"/><rect x="18" y="42" width="24" height="8" rx="2" fill="#8A5A35"/>',
@@ -1054,7 +1055,7 @@ function abrirMenuMundo(){
   hojaActual = 'menu';
   const v = nuevoVelo();
   const M = mapaActual();
-  const op = [['criaturas', 'Criaturas'], ['mochila', 'Mochila'], ['mapa', 'Mapa'], ['medallas', 'Medallas'],
+  const op = [['criaturas', 'Criaturas'], ['mochila', 'Mochila'], ['mapa', 'Mapa'], ['medallas', 'Medallas'], ['misiones', 'Misiones'],
     ...(tieneHab('vuelo') && !M.tema.interior && !M.tema.cueva ? [['volar', 'Volar']] : []),
     ...((S.inv.objetos.cana || S.inv.objetos.supercana) && typeof pescar === 'function' ? [['pescar', 'Pescar']] : []),
     ...(M.tema.cueva && salidaDeCueva(M) ? [['salircueva', 'Salir de la cueva']] : []),
@@ -1063,7 +1064,7 @@ function abrirMenuMundo(){
     <div class="grilla-menu">${op.map(([k, n]) => `<button class="op-menu" data-op="${k}" ${k === 'amigos' ? 'data-aviso-amigos' : ''}><svg viewBox="0 0 60 60" aria-hidden="true"><g stroke="#22304A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${ICONOS_MENU[k]}</g></svg><span>${n}</span></button>`).join('')}</div></div>`;
   v.querySelector('.cerrar').onclick = cerrarHoja;
   if(typeof pintarAvisoAmigos === 'function') pintarAvisoAmigos();
-  const acc = {criaturas: () => abrirEquipo(), medallas: () => abrirEquipo('medallas'), mochila: () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); }, mapa: abrirMapa, volar: abrirVuelo,
+  const acc = {criaturas: () => abrirEquipo(), medallas: () => abrirEquipo('medallas'), misiones: () => abrirMisiones(), mochila: () => { pestana.mochila = 'aventura'; abrirHoja('mochila'); }, mapa: abrirMapa, volar: abrirVuelo,
     hablar: () => { cerrarHoja(); if(typeof abrirHablar === 'function') abrirHablar(); }, pescar: () => { cerrarHoja(); pescar(); }, salircueva: salirDeCueva, amigos: () => abrirAmigos('amigos'), ranking: abrirRanking};
   v.querySelectorAll('[data-op]').forEach(b => b.onclick = () => acc[b.dataset.op]());
 }

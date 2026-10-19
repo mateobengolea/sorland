@@ -90,6 +90,7 @@ async function abrirPerfil(id, base = {}){
           <p>${nivel ? `<b>Nivel ${nivel}</b> · ` : ''}${f.puntos != null ? chipRango(f.puntos) : ''}${f.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}</p>
           <p class="medallas-mini">${MEDALLAS.map((m, i) => svgMedalla(m, 20, i >= (f.medallas || 0))).join('')}</p>
           ${f.album != null ? `<p class="rotulo-chico" style="margin:2px 0 0">Álbum: ${f.album} criaturas · Duelos: ${f.ganados || 0} ganados</p>` : ''}
+          ${f.ent && (f.ent.logros || f.ent.torre) ? `<p class="rotulo-chico" style="margin:2px 0 0">${f.ent.logros ? `🏆 ${f.ent.logros} logros` : ''}${f.ent.logros && f.ent.torre ? ' · ' : ''}${f.ent.torre ? `Torre: ${f.ent.torre} pisos` : ''}</p>` : ''}
         </div></div>
       <div class="acciones-jugador">
         ${est === 'amigos' ? `<button class="grande" id="pf-duelo" ${online ? '' : 'disabled'}>${online ? 'Invitar a duelo' : 'No está conectado'}</button>${online ? '<button class="btn" id="pf-trueque">Intercambiar criaturas</button>' : ''}<button class="btn btn-2" id="pf-quitar">Quitar de amigos</button>`

@@ -63,6 +63,7 @@ async function despuesDelPiso(){
   }
   t.racha++;
   if(t.racha > (t.mejor || 0)) t.mejor = t.racha;
+  if(typeof registrar === 'function') registrar('torre');
   let extra = '';
   if(t.racha % 7 === 0){ extra = darPremio([{obj: 'ultracapsula', n: 3}, {obj: 'jarabetotal', n: 3}, {obj: 'revivirmax', n: 2}, {obj: 'alfajor', n: 1}, {obj: 'matecocido', n: 1}][(t.racha / 7 - 1) % 5]); }
   guardar();

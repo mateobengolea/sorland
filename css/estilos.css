@@ -718,3 +718,9 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 @keyframes ferry-navega{0%{transform:translateX(-45vw) rotate(-3deg)}25%{transform:translateX(-20vw) rotate(3deg)}50%{transform:translateX(0) rotate(-3deg)}75%{transform:translateX(20vw) rotate(3deg)}100%{transform:translateX(45vw) rotate(0)}}
 button.medallas-top{background:none;border:0;padding:0;cursor:pointer;font:inherit}
 .chip-estado{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:999px;border:2px solid var(--tinta);font-size:.62rem;font-weight:900;color:#22304A;vertical-align:middle}
+.item.mision.lista{border-color:var(--verde)}
+.item.mision.cobrada{opacity:.6}
+.item.logro{opacity:.55}
+.item.logro.ok{opacity:1;border-color:#C9A227}
+.item.logro small{font-weight:800;color:var(--tinta-suave)}
+.item.mision .barra{width:100%;display:block;height:10px}
