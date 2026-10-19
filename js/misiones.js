@@ -63,7 +63,7 @@ const LOGROS = [
   {id: 'med16', nom: 'Dieciséis medallas', txt: 'Ganá las 8 medallas de la Costa Oriental.', ok: () => typeof cantMedallas2 === 'function' && cantMedallas2() >= 8, monedas: 4000},
   {id: 'campeon2', nom: 'Campeón Oriental', txt: 'Ganá la Liga de la Fortaleza del Cerro.', ok: () => !!S.campeon2, monedas: 6000},
   {id: 'gaucho', nom: 'Leyenda viva', txt: 'Ganale al Gaucho Eterno.', ok: () => !!(S.regalos && S.regalos.soldemayo), monedas: 10000},
-  {id: 'rival', nom: 'Rival superado', txt: 'Ganale a Nico Rivas 8 veces.', ok: () => S.rival && ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'].every(k => S.rival[k] === true), monedas: 4000},
+  {id: 'rival', nom: 'Rival superado', txt: 'Ganale a Mati Carpo 8 veces.', ok: () => S.rival && ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'].every(k => S.rival[k] === true), monedas: 4000},
   {id: 'cuatreros', nom: 'Justiciero', txt: 'Desbaratá los tres escondites de los Cuatreros.', ok: () => S.cuatreros && ['galpon', 'estancia', 'deposito'].every(k => S.cuatreros[k]), monedas: 5000},
   {id: 'puzzles', nom: 'Mente brillante', txt: 'Resolvé los tres rompecabezas.', ok: () => S.puzzles && ['lago', 'cantera', 'palancas'].every(k => S.puzzles[k]), monedas: 3000},
   {id: 'torre10', nom: 'Torre de 10', txt: 'Ganá 10 pisos seguidos en la Torre de Batalla.', ok: () => ((S.torre && S.torre.mejor) || 0) >= 10, monedas: 3000},

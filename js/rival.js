@@ -1,11 +1,11 @@
 'use strict';
 /* =====================================================================
-   El rival: Nico Rivas. Eligió la inicial que le gana a la tuya y te
+   El rival: Mati Carpo. Eligió la inicial que le gana a la tuya y te
    persigue toda la aventura. Aparece cuando entrás a ciertos lugares
    después de cierta cantidad de medallas, y siempre trae un equipo
    que creció desde la última vez.
    ===================================================================== */
-const RIVAL = {nombre: 'Nico Rivas', titulo: 'Rival', ropa: '#2A2420', pelo: '#E2574C'};
+const RIVAL = {nombre: 'Mati Carpo', titulo: 'Rival', ropa: '#2A2420', pelo: '#E2574C'};
 const CONTRA_INICIAL = {carosor: ['rufisor', 'rufisaurio', 'rufititan'], matesor: ['carosor', 'carosaurio', 'carotitan'], rufisor: ['matesor', 'matesaurio', 'matetitan']};
 function raizDe(esp){ let e = ESPECIES[esp], n = 0; while(e && e.de && n++ < 5) e = ESPECIES[e.de]; return e ? e.id : esp; }
 function inicialDelJugador(){
@@ -25,7 +25,7 @@ function inicialRival(nivel, region2){
 const ENCUENTROS_RIVAL = [
   {id: 'r1', mapa: 'villapiedra', medallas: 1, region2: false, nivel: 10, premio: 300,
     equipo: [['pampito', 8]],
-    antes: ['¡Eh, vos! Soy Nico Rivas. Elegí mi inicial justo para ganarte.', 'Vamos a ver quién llega primero a la Liga.'],
+    antes: ['¡Eh, vos! Soy Mati Carpo. Elegí mi inicial justo para ganarte.', 'Vamos a ver quién llega primero a la Liga.'],
     despues: ['¿Me ganaste? Fue suerte. La próxima no.'], regalo: {obj: 'jarabe', n: 3}},
   {id: 'r2', mapa: 'camalote', medallas: 3, region2: false, nivel: 16, premio: 700,
     equipo: [['hornero', 15], ['carpinchito', 14]],
