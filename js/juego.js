@@ -187,10 +187,13 @@ function fichaInicial(){
 
 /* ---------------- La casa ---------------- */
 function cabeceraHTML(){
-  const n = cantMedallas();
+  // En la Costa Oriental se muestran sus medallas; en Sorlandia, las de siempre.
+  const oriente = typeof enRegion2 === 'function' && typeof MEDALLAS2 !== 'undefined' && S.mundo && enRegion2(S.mundo.mapa);
+  const LISTA = oriente ? MEDALLAS2 : MEDALLAS;
+  const n = LISTA.filter(m => S.medallas[m.id]).length;
   return `<header class="panel top">
       <span class="top-avatar">${svgEntrenador(S.entrenador)}</span>
-      <div class="quien"><h1 id="nom"></h1>${S.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}${typeof RK !== 'undefined' && RK.ficha ? `<span id="rango-top">${chipRango(RK.ficha.puntos)}</span>` : '<span id="rango-top"></span>'}<span class="medallas-top">${MEDALLAS.map(m => svgMedalla(m, 15, !S.medallas[m.id])).join('')}<small>${n}/${MEDALLAS.length}</small></span></div>
+      <div class="quien"><h1 id="nom"></h1>${S.campeon ? '<span class="titulo-campeon">Campeón</span>' : ''}${typeof RK !== 'undefined' && RK.ficha ? `<span id="rango-top">${chipRango(RK.ficha.puntos)}</span>` : '<span id="rango-top"></span>'}<button class="medallas-top" id="medallas-top" type="button" aria-label="Ver medallas">${LISTA.map(m => svgMedalla(m, 15, !S.medallas[m.id])).join('')}<small>${n}/${LISTA.length}</small></button></div>
       <div class="top-der"><div class="monedas" title="Monedas"><span class="moneda">$</span><span id="mon"></span></div>
       <button class="online-badge" id="online-badge" data-aviso-amigos hidden></button></div>
     </header>`;

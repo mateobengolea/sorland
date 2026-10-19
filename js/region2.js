@@ -588,3 +588,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <circle cx="31" cy="20" r="2.5" fill="#E2574C"/></svg>`;
   };
 })();
+
+// Tocar las medallas de arriba abre la pestaña de medallas.
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('#medallas-top') && typeof abrirEquipo === 'function') abrirEquipo('medallas'); });
