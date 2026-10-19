@@ -202,9 +202,31 @@ for(const c of DEF_PUEBLOS_R2){
   for(let x = 1; x < C.w - 1; x++) C.m[22][x] = '~';
   C.npc({id: 'capitan_colonia', x: 6, y: 20, tipo: 'vecino', nombre: 'Capitana Proa Celeste', suelo: ':', ropa: '#FFFFFF', pelo: '#2A2420', accion: hablarFerry});
   const P = MAPAS.camalote; if(!P) return;
-  const sitio = lugarLibre(P, 30, 22) || [28, 20];
+  // En la plaza del puerto, justo donde empieza el muelle: bien a la vista.
+  const sitio = !BLOQUEA.has(P.m[16][24]) ? [24, 16] : (lugarLibre(P, 24, 16) || [24, 16]);
+  if(P.m[sitio[1]][sitio[0]] === ',') P.m[sitio[1]][sitio[0]] = ':';
   P.npc({id: 'capitan_camalote', x: sitio[0], y: sitio[1], tipo: 'vecino', nombre: 'Capitán del Ferry Ancla Firme', ropa: '#FFFFFF', pelo: '#3B2A22', accion: hablarFerry});
   P.ferry = {x: sitio[0], y: sitio[1]};
+  C.ferry = {x: 6, y: 20};
+})();
+// Un barco y un cartel de FERRY para que se vea desde lejos.
+(() => {
+  const dib = dibujarSecretos;
+  dibujarSecretos = function(ctx, M, camX, camY, t){
+    if(dib) dib(ctx, M, camX, camY, t);
+    if(!M || !M.ferry || (M.id !== 'camalote' && M.id !== 'colonia')) return;
+    const f = M.ferry, bx = M.id === 'camalote' ? (f.x + 4.5) * TS - camX : (f.x - 2) * TS - camX, by = M.id === 'camalote' ? (f.y + 1.6) * TS - camY : (f.y + 2.7) * TS - camY;
+    const meneo = Math.sin(t / 400) * 2;
+    ctx.save(); ctx.translate(bx, by + meneo);
+    ctx.fillStyle = '#FFFDF8'; ctx.strokeStyle = '#22304A'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(34, 0); ctx.lineTo(26, 14); ctx.lineTo(-28, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3B82D6'; ctx.fillRect(-28, 6, 56, 4);
+    ctx.fillStyle = '#FFFDF8'; ctx.beginPath(); ctx.rect(-16, -14, 30, 14); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#9FD4F5'; for(const x of [-12, -3, 6]) ctx.fillRect(x, -10, 6, 5);
+    ctx.fillStyle = '#E2574C'; ctx.beginPath(); ctx.rect(2, -24, 8, 10); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    etiqueta(ctx, '⛴ FERRY', (f.x + .5) * TS - camX, (f.y + 1) * TS - camY - 62, 'rgba(59,130,214,.95)');
+  };
 })();
 async function hablarFerry(n){
   const enOriente = enRegion2(S.mundo.mapa);
