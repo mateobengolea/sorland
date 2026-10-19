@@ -709,3 +709,4 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .capa-actualizar{position:fixed;inset:0;z-index:9999;background:rgba(34,48,74,.55);display:grid;place-items:center;padding:16px}
 .caja-actualizar{max-width:360px;text-align:center;display:flex;flex-direction:column;gap:10px}
 .caja-actualizar h2{font-size:1.4rem}
+.logo-img{width:min(460px,94vw);filter:drop-shadow(0 8px 10px rgba(34,48,74,.25))}
