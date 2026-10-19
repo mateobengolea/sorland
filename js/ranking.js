@@ -28,7 +28,7 @@ async function actualizarFicha(forzar = false){
   try {
     const {data, error} = await db.rpc('sl_actualizar_ficha', {
       p_album: Object.keys(S.album.capt || {}).length, p_shiny: Object.keys(S.album.shiny || {}).length,
-      p_medallas: cantMedallas(), p_campeon: !!S.campeon, p_ent: S.entrenador || null});
+      p_medallas: cantMedallas() + (typeof cantMedallas2 === 'function' ? cantMedallas2() : 0), p_campeon: !!S.campeon, p_ent: S.entrenador || null});
     if(error || !data) return RK.ficha;
     RK.ficha = data;
     pintarRangoTop();
