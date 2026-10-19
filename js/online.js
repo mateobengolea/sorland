@@ -333,3 +333,20 @@ function decir(txt){
   ON.miBurbuja = {txt: limpio, hasta: performance.now() + 5500};
   if(ON.canal) ON.canal.send({type: 'broadcast', event: 'decir', payload: {id: usuarioId, txt: limpio}});
 }
+
+/* ---------------- Los jugadores no se atraviesan ----------------
+   Un casillero ocupado por otro jugador del mismo mapa no se puede pisar.
+   Puertas y salidas quedan libres para que nadie tape una entrada. */
+(() => {
+  const orig = transitable;
+  transitable = function(M, x, y){
+    if(!orig(M, x, y)) return false;
+    if(!M || !ON || !ON.canal || ON.mapa !== M.id || !ON.otros || !ON.otros.size) return true;
+    const c = M.m[y] && M.m[y][x];
+    if(c === 'D' || c === 'x' || (M.salidas && M.salidas[x + ',' + y])) return true;
+    // Donde ya estás parado siempre vale (al cargar el mapa, por ejemplo).
+    if(S && S.mundo && S.mundo.mapa === M.id && S.mundo.x === x && S.mundo.y === y) return true;
+    for(const o of ON.otros.values()) if(Math.round(o.x) === x && Math.round(o.y) === y) return false;
+    return true;
+  };
+})();

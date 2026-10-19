@@ -705,3 +705,7 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .form-renombrar{display:flex;flex-direction:column;gap:8px;padding:4px 2px}
 .form-renombrar label{font-weight:800}
 .form-renombrar input{width:100%;padding:10px 12px;border:2.5px solid var(--tinta);border-radius:12px;font:inherit;font-weight:700;font-size:1.05rem;background:#fff}
+/* Aviso de actualización */
+.capa-actualizar{position:fixed;inset:0;z-index:9999;background:rgba(34,48,74,.55);display:grid;place-items:center;padding:16px}
+.caja-actualizar{max-width:360px;text-align:center;display:flex;flex-direction:column;gap:10px}
+.caja-actualizar h2{font-size:1.4rem}
