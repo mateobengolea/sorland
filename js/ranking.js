@@ -76,9 +76,9 @@ async function abrirRanking(){
 }
 async function pintarRanking(){
   const v = $('#velo'); if(!v || hojaActual !== 'ranking') return;
-  const duelos = RK.pestana === 'duelos';
+  const duelos = RK.pestana === 'duelos', torre = RK.pestana === 'torre';
   let q = db.from('ranking').select('user_id,apodo,puntos,ganados,perdidos,album,shiny,medallas,campeon,ent');
-  q = duelos ? q.order('puntos', {ascending: false}).order('ganados', {ascending: false}) : q.order('album', {ascending: false}).order('medallas', {ascending: false}).order('shiny', {ascending: false});
+  q = torre ? q.order('ent->torre', {ascending: false, nullsFirst: false}) : duelos ? q.order('puntos', {ascending: false}).order('ganados', {ascending: false}) : q.order('album', {ascending: false}).order('medallas', {ascending: false}).order('shiny', {ascending: false});
   const {data, error} = await q.limit(50);
   if(hojaActual !== 'ranking' || !$('#velo')) return;
   const f = RK.ficha;
@@ -87,13 +87,13 @@ async function pintarRanking(){
       <span class="rk-pos ${i < 3 ? 'podio p' + (i + 1) : ''}">${i + 1}</span>
       <span class="cr-mini" style="width:34px;height:46px">${svgEntrenador(p.ent || undefined)}</span>
       <span class="fo-txt"><b data-apodo="${i}"></b><small>${duelos ? `${p.ganados} ganados · ${p.perdidos} perdidos` : `${p.medallas ? '★ ' + p.medallas : 'Sin medallas'}${p.campeon ? ' · Campeón' : ''}${p.shiny ? ` · ${p.shiny} ✦` : ''}`}</small></span>
-      <span class="rk-val">${duelos ? chipRango(p.puntos) : `<b>${p.album}</b><small>/${total}</small>`}</span></div>`).join('');
+      <span class="rk-val">${torre ? `<b>${(p.ent && p.ent.torre) || 0}</b><small> pisos</small>` : duelos ? chipRango(p.puntos) : `<b>${p.album}</b><small>/${total}</small>`}</span></div>`).join('');
   v.innerHTML = `<div class="hoja" role="dialog" aria-label="Ranking"><div class="hoja-cab"><h2>Ranking</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
-    <div class="pestanas" role="tablist"><button role="tab" data-tab="duelos" aria-selected="${duelos}">Duelos</button><button role="tab" data-tab="album" aria-selected="${!duelos}">Álbum</button></div>
-    ${f ? `<div class="mi-rango">${duelos
+    <div class="pestanas" role="tablist"><button role="tab" data-tab="duelos" aria-selected="${duelos}">Duelos</button><button role="tab" data-tab="album" aria-selected="${!duelos && !torre}">Álbum</button><button role="tab" data-tab="torre" aria-selected="${torre}">Torre</button></div>
+    ${torre ? `<div class="mi-rango"><span>Tu mejor racha</span><b>${(S.torre && S.torre.mejor) || 0} pisos</b></div>` : f ? `<div class="mi-rango">${duelos
       ? `<span>Tu rango</span>${chipRango(f.puntos)}<span>Puesto <b>#${f.posicion}</b></span>`
       : `<span>Tu álbum</span><b>${Object.keys(S.album.capt || {}).length}/${total}</b><span>Puesto <b>#${f.posicion_album}</b></span>`}</div>` : ''}
-    <p class="rotulo-chico">${duelos
+    <p class="rotulo-chico">${torre ? 'La racha más larga en la Torre de Batalla de la Cumbre Suprema. Todas las criaturas pelean en nivel 70.' : duelos
       ? 'Ganá duelos contra otros jugadores para subir: Bronce, Plata (1100), Oro (1250), Platino (1400), Diamante (1550) y Leyenda (1700). Ganarle a alguien más fuerte da más puntos.'
       : 'Los que más criaturas distintas atraparon. A igual álbum, desempatan las medallas.'}</p>
     <div class="lista-online">${error ? '<p class="rotulo-chico">No se pudo cargar el ranking.</p>' : filas || '<p class="rotulo-chico">Todavía no hay nadie en la tabla.</p>'}</div></div>`;

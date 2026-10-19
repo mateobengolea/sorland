@@ -56,7 +56,7 @@ function empezarCombate(rivales, zona, ent){
   cerrarHoja();
   rivales.forEach(r => { r.max = r.hp; });
   const salvaje = rivales[0];
-  const lista = equipoLuchadores();
+  const lista = ent && ent.listaPropia ? ent.listaPropia : equipoLuchadores();
   const i = lista.findIndex(l => l.hp > 0);
   B = {salvaje, rivales, ri: 0, ent: ent || null, zona, lista, i, peleo: new Set([i]), ocupado: true, forzado: false, fin: false, legendaria: ESPECIES[salvaje.esp].legendaria ? salvaje.esp : null};
   S.album.vistos[salvaje.esp] = true;
@@ -426,14 +426,14 @@ async function ganarCombate(){
   animar('b-rival', 'desmayo', 900);
   await mensaje(`${nomRival()} se debilitó.`);
   fichas();
-  const xp = Math.round((el.nivel * 12 + 8) * (B.ent ? 1.5 : 1));
+  const xp = B.ent && B.ent.sinXP ? 0 : Math.round((el.nivel * 12 + 8) * (B.ent ? 1.5 : 1));
   // Gana experiencia toda criatura que peleó contra este rival y sigue en pie.
   const ganan = [...B.peleo].map(i => B.lista[i]).filter(l => l && l.hp > 0);
   if(!ganan.includes(yo) && yo.hp > 0) ganan.unshift(yo);
-  for(const l of ganan) await darXP(l, xp);
+  if(xp) for(const l of ganan) await darXP(l, xp);
   // El resto del equipo que sigue en pie también aprende mirando: un tercio de la experiencia.
   const miran = B.lista.filter(l => l && l.hp > 0 && !ganan.includes(l));
-  if(miran.length){
+  if(miran.length && xp){
     const parte = Math.max(1, Math.round(xp / 3));
     await mensaje(`El resto del equipo ganó ${parte} de experiencia mirando.`, 900);
     for(const l of miran) await darXP(l, parte, true);
@@ -644,6 +644,13 @@ async function propioCaido(){
   await mensaje(`${yo.nombre} se debilitó.`);
   if(B.lista.some(l => l.hp > 0)){ B.forzado = true; return; }
   B.fin = true;
+  // En la Torre de Batalla perder no cuesta plata: se termina la racha y volvés al hall.
+  if(B.ent && B.ent.torre){
+    await guardarCriatura('propio');
+    await mensaje('Tu equipo quedó agotado. ¡Se terminó la racha en la Torre!', 1600);
+    const vuelta = B.ent.vuelta; B = null;
+    S.mundo = {...vuelta}; guardar(); pintarMundo(); return;
+  }
   const perdida = Math.floor(S.monedas * .1);
   S.monedas -= perdida;
   const posada = S.respawn && MAPAS[S.respawn.mapa];
