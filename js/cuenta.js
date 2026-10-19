@@ -176,7 +176,7 @@ function traducirError(e){
 /* ---------------- Logo de Sorlandia ---------------- */
 // Logo con las criaturas del juego; si la imagen no carga, queda el dibujado.
 function svgLogo(){
-  return `<img class="logo-sorlandia logo-img" src="assets/logo.webp?v=1" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display=''">`
+  return `<img class="logo-sorlandia logo-img" src="assets/logo.webp?v=2" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display=''">`
     + svgLogoDibujado().replace('<svg', '<svg style="display:none"');
 }
 function svgLogoDibujado(){
