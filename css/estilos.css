@@ -710,3 +710,9 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .caja-actualizar{max-width:360px;text-align:center;display:flex;flex-direction:column;gap:10px}
 .caja-actualizar h2{font-size:1.4rem}
 .logo-img{width:min(460px,94vw);filter:drop-shadow(0 8px 10px rgba(34,48,74,.25))}
+/* Viaje en ferry */
+.capa-ferry{position:fixed;inset:0;z-index:9000;background:linear-gradient(#BFE6FB 0 55%,#3B82D6 55%);display:grid;place-items:center}
+.ferry-escena{text-align:center;color:#22304A;font-weight:800;font-size:1.1rem}
+.ferry-barco{font-size:5rem;animation:ferry-navega 2.6s ease-in-out forwards}
+.ferry-escena p{margin-top:14px;background:#FFFDF8;border:3px solid #22304A;border-radius:14px;padding:8px 14px}
+@keyframes ferry-navega{0%{transform:translateX(-45vw) rotate(-3deg)}25%{transform:translateX(-20vw) rotate(3deg)}50%{transform:translateX(0) rotate(-3deg)}75%{transform:translateX(20vw) rotate(3deg)}100%{transform:translateX(45vw) rotate(0)}}

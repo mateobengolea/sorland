@@ -39,6 +39,7 @@ function nivelProgresivo(n){
 }
 function escalarRival(r){
   if(!r || r.escalado || !ESPECIES[r.esp]) return r;
+  if(typeof enRegion2 === 'function' && enRegion2()){ r.escalado = true; return r; }
   const n = nivelProgresivo(r.nivel);
   if(n !== r.nivel){ r.nivel = n; r.stats = statsPorNivel(ESPECIES[r.esp].base, n); r.hp = vidaMax(r.stats, n); }
   r.escalado = true;
@@ -371,6 +372,19 @@ async function ganarCombate(){
     await mensaje(`¡Le ganaste a ${e.titulo} ${e.nombre}!`, 1100);
     for(const l of e.despues) await mensaje(`${e.nombre}: «${l}»`, 1700);
     await mensaje(`Ganaste ${e.premio} monedas.`);
+    if(e.cuartel2){
+      S.cuartel2 = S.cuartel2 || {racha: 0};
+      S.cuartel2.racha++; S.cuartel2.continuar = true;
+      if(e.campeona){
+        S.cuartel2.racha = 0; S.cuartel2.fama = true;
+        const primera = !S.campeon2;
+        S.campeon2 = S.campeon2 || Date.now();
+        S.salonFama2 = S.salonFama2 || [];
+        S.salonFama2.push({fecha: Date.now(), equipo: S.equipo.map(c => ({esp: c.esp, nombre: c.nombre, nivel: c.nivel, shiny: !!c.shiny}))});
+        mostrarCorona();
+        await mensaje(primera ? '¡Sos el Campeón de la Costa Oriental!' : '¡Defendiste el título de la Costa Oriental!', 2600);
+      }
+    }
     if(e.cuartel){
       S.cuartel.racha++;
       if(e.campeona){
@@ -382,11 +396,12 @@ async function ganarCombate(){
         mostrarCorona();
         await mensaje(primera ? '¡Sos el nuevo Campeón de Sorlandia!' : '¡Defendiste el título de Campeón!', 2600);
         if(primera){ S.inv.muebles.copa = (S.inv.muebles.copa || 0) + 1; await mensaje('Te dieron la Copa del Campeón para tu casa.', 1800); }
+        if(!S.inv.objetos.pasaje && POR_ID.pasaje){ S.inv.objetos.pasaje = 1; await mensaje('¡Y el Pasaje del Ferry! Con él podés viajar desde el muelle de Puerto Camalote a la Costa Oriental.', 2600); }
       } else S.cuartel.continuar = true;
     }
     if(e.medalla && !S.medallas[e.medalla]){
       S.medallas[e.medalla] = Date.now();
-      const m = MEDALLAS.find(x => x.id === e.medalla);
+      const m = [...MEDALLAS, ...(typeof MEDALLAS2 !== 'undefined' ? MEDALLAS2 : [])].find(x => x.id === e.medalla);
       mostrarMedalla(m);
       await mensaje(`¡Conseguiste la ${m.nom}!`, 2400);
       if(e.mov && MOVS[e.mov]){
@@ -395,7 +410,8 @@ async function ganarCombate(){
       }
       const hab = Object.values(HABILIDADES).find(h => h.medalla === e.medalla);
       if(hab) await mensaje(`Con la ${m.nom}, tus criaturas pueden usar ${hab.nom} fuera de combate. ${hab.desc}`, 2600);
-      if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las ocho medallas! El camino a la Cumbre Suprema está abierto.', 2400);
+      if(typeof MEDALLAS2 !== 'undefined' && MEDALLAS2.includes(m)){ if(MEDALLAS2.every(x => S.medallas[x.id])) await mensaje('¡Tenés las ocho medallas de la Costa Oriental! La Fortaleza del Cerro te espera.', 2400); }
+      else if(MEDALLAS.every(x => S.medallas[x.id])) await mensaje('¡Tenés las ocho medallas! El camino a la Cumbre Suprema está abierto.', 2400);
     }
   } else if(B.legendaria){
     S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
@@ -547,6 +563,7 @@ async function propioCaido(){
   const posada = S.respawn && MAPAS[S.respawn.mapa];
   if(B.legendaria) S.legendarios[B.legendaria] = {proxima: Date.now() + 24 * 3600 * 1000};
   if(S.cuartel){ S.cuartel.racha = 0; S.cuartel.continuar = false; }
+  if(S.cuartel2){ S.cuartel2.racha = 0; S.cuartel2.continuar = false; }
   await guardarCriatura('propio');
   await mensaje(`Tu equipo quedó agotado. Volvés corriendo ${posada ? 'al Centro de Rehabilitación' : 'a casa'}${perdida ? ` y se te caen ${perdida} monedas` : ''}.`, 1700);
   B.lista.forEach(guardarHp);
@@ -676,6 +693,14 @@ function pintarEquipo(){
         <h3>${m.nom}</h3><span class="chip-tipo" style="background:${TIPOS[m.tipo].color}">${TIPOS[m.tipo].nom}</span>
         <p>${tiene ? `Se la ganaste a ${L.nombre} en ${m.ciudad}.` : `La da ${L.nombre}, líder de ${m.ciudad}.`}</p></div>`;
     }).join('');
+    if(typeof MEDALLAS2 !== 'undefined' && (S.campeon || MEDALLAS2.some(m => S.medallas[m.id]))){
+      cuerpo += `<p class="vacio" style="grid-column:1/-1;padding:4px"><b>Costa Oriental</b> · Medallas: ${cantMedallas2()} de ${MEDALLAS2.length}${S.campeon2 ? ' · ¡Campeón Oriental!' : ''}</p>` + MEDALLAS2.map(m => {
+        const L = Object.values(LIDERES).find(l => l.medalla === m.id), tiene = S.medallas[m.id];
+        return `<div class="item album"><span class="cr-album" style="display:grid;place-items:center">${svgMedalla(m, 96, !tiene)}</span>
+          <h3>${m.nom}</h3><span class="chip-tipo" style="background:${TIPOS[m.tipo].color}">${TIPOS[m.tipo].nom}</span>
+          <p>${tiene ? `Se la ganaste a ${L.nombre} en ${m.ciudad}.` : `La da ${L.nombre}, líder de ${m.ciudad}.`}</p></div>`;
+      }).join('');
+    }
   } else {
     const atrapadas = NORMALES.filter(e => S.album.capt[e]).length, vistas = NORMALES.filter(e => S.album.vistos[e]).length;
     cuerpo = `<p class="vacio" style="grid-column:1/-1;padding:4px">Atrapadas ${atrapadas} de ${NORMALES.length} · Vistas ${vistas} · Legendarias ${LEGENDARIAS.filter(e => S.album.capt[e]).length} de ${LEGENDARIAS.length}</p>` + ORDEN_ALBUM.map((e, i) => {
