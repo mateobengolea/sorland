@@ -200,8 +200,8 @@ function trackMapa(){
   ON.canal.track(miPresencia());
 }
 // Avisa a los del mapa (y al contador global) que empecé o terminé una pelea.
-function marcarPelea(tipo, contra){
-  ON.pelea = tipo ? {tipo, contra: contra || ''} : null;
+function marcarPelea(tipo, contra, sala){
+  ON.pelea = tipo ? {tipo, contra: contra || '', ...(sala ? {sala} : {})} : null;
   if(ON.canal) ON.canal.send({type: 'broadcast', event: 'pelea', payload: {id: usuarioId, pelea: ON.pelea}});
   avisarDondeEstoy();
 }
@@ -277,14 +277,16 @@ function abrirInteraccion(o){
     <p class="rotulo-chico">Decile algo</p>
     <div class="frases">${FRASES.map(f => `<button data-f="${esc(f)}">${esc(f)}</button>`).join('')}</div>
     <div class="acciones-jugador">
-      ${o.pelea ? `<button class="grande" id="j-duelo" disabled>Está ${o.pelea.tipo === 'duelo' ? 'en un duelo' : 'en batalla'}</button>` : '<button class="grande" id="j-duelo">Desafiar a duelo</button>'}
+      ${o.pelea && o.pelea.tipo === 'duelo' && o.pelea.sala && typeof mirarDuelo === 'function' ? `<button class="grande" id="j-mirar">👀 Mirar su duelo</button>`
+        : o.pelea ? `<button class="grande" id="j-duelo" disabled>Está ${o.pelea.tipo === 'duelo' ? 'en un duelo' : 'en batalla'}</button>` : '<button class="grande" id="j-duelo">Desafiar a duelo</button>'}
       <button class="btn" id="j-perfil">${typeof estadoAmistad === 'function' && estadoAmistad(o.id) === 'amigos' ? 'Ver perfil · son amigos' : typeof estadoAmistad === 'function' && estadoAmistad(o.id) === 'enviada' ? 'Ver perfil · solicitud enviada' : 'Ver perfil y agregar a amigos'}</button>
       <button class="btn btn-2" id="j-silenciar">${sil ? 'Dejar de silenciar' : 'Silenciar sus mensajes'}</button>
     </div></div>`;
   $('#j-nom').textContent = o.apodo;
   velo.querySelector('.cerrar').onclick = cerrarHoja;
   velo.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { decir(b.dataset.f); cerrarHoja(); });
-  $('#j-duelo').onclick = () => { cerrarHoja(); pedirDuelo(o); };
+  if($('#j-duelo')) $('#j-duelo').onclick = () => { cerrarHoja(); pedirDuelo(o); };
+  if($('#j-mirar')) $('#j-mirar').onclick = () => { cerrarHoja(); mirarDuelo(o); };
   $('#j-perfil').onclick = () => abrirPerfil(o.id, o);
   $('#j-silenciar').onclick = () => {
     if(sil) ON.silenciados.delete(o.id); else ON.silenciados.add(o.id);

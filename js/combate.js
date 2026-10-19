@@ -594,6 +594,30 @@ function tarjetaCriatura(l, acciones){
     <p class="cr-evo">${evo}${l.shiny ? ' · ✦ Shiny' : ''}</p>
     ${acciones}</div>`;
 }
+// Ponerle (o cambiarle) el nombre a una criatura. Vacío = vuelve al nombre de la especie.
+function renombrarCriatura(c){
+  const v = $('#velo'); if(!v) return;
+  const sp = ESPECIES[c.esp];
+  v.innerHTML = `<div class="hoja" role="dialog" aria-label="Cambiar nombre"><div class="hoja-cab"><h2>Cambiar nombre</h2><button class="cerrar" aria-label="Cerrar">×</button></div>
+    <form class="form-renombrar" id="f-renombrar">
+      <span class="cr-mini" style="width:96px;height:96px;margin:0 auto;display:block">${svgEspecie(c.esp, {humor: 'feliz', shiny: c.shiny})}</span>
+      <label for="nuevo-nombre">¿Cómo se llama tu ${esc(sp.nombre)}?</label>
+      <input id="nuevo-nombre" maxlength="16" autocomplete="off" placeholder="${esc(sp.nombre)}">
+      <p class="rotulo-chico">Hasta 16 letras. Si lo dejás vacío, vuelve a llamarse ${esc(sp.nombre)}.</p>
+      <div class="acciones-jugador"><button class="grande" type="submit">Listo</button><button class="btn btn-2" type="button" id="rn-volver">Volver</button></div>
+    </form></div>`;
+  const inp = v.querySelector('#nuevo-nombre'); inp.value = c.nombre; inp.focus(); inp.select();
+  v.querySelector('.cerrar').onclick = cerrarHoja;
+  v.querySelector('#rn-volver').onclick = pintarEquipo;
+  v.querySelector('#f-renombrar').onsubmit = ev => {
+    ev.preventDefault();
+    const nuevo = inp.value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16) || sp.nombre;
+    const antes = c.nombre; c.nombre = nuevo; guardar();
+    if(nuevo !== antes) avisar(`Ahora se llama ${nuevo}`);
+    if(MW) MW.imgLider = null;
+    pintarEquipo();
+  };
+}
 function pintarEquipo(){
   const v = $('#velo'); if(!v) return;
   const t = pestana.equipo || 'equipo';
@@ -606,11 +630,13 @@ function pintarEquipo(){
     cuerpo = lista.map((l, i) => { nombres.push(l.nombre + brillo(l)); return tarjetaCriatura(l,
       `${l.hp < l.max && jarabe ? `<button class="btn" data-jarabe="${i}">Darle ${jarabe.nom}</button>` : ''}
        ${i > 0 ? `<button class="btn btn-2" data-primero="${i}">Que pelee primero</button>` : '<span class="etiqueta" style="margin-top:4px">Pelea primero</span>'}
-       ${lista.length > 1 ? `<button class="btn btn-2" data-acasa="${i}">Mandar a casa</button>` : ''}`); }).join('');
+       ${lista.length > 1 ? `<button class="btn btn-2" data-acasa="${i}">Mandar a casa</button>` : ''}
+       <button class="btn btn-2" data-renombrar="equipo:${i}">Cambiar nombre</button>`); }).join('');
     cuerpo += `<p class="vacio" style="grid-column:1/-1;padding:6px">Tu equipo: ${lista.length} de ${MAX_EQUIPO}. Tu casa y los Centros de Rehabilitación curan a todos.</p>`;
   } else if(t === 'casa'){
     cuerpo = S.reserva.length ? S.reserva.map((c, i) => { nombres.push(c.nombre + (c.shiny ? ' ✦' : '')); return tarjetaCriatura(comoLuchador(c),
-      `<button class="btn" data-alequipo="${i}" ${S.equipo.length >= MAX_EQUIPO ? 'disabled' : ''}>${S.equipo.length >= MAX_EQUIPO ? 'Equipo lleno' : 'Sumar al equipo'}</button>`); }).join('')
+      `<button class="btn" data-alequipo="${i}" ${S.equipo.length >= MAX_EQUIPO ? 'disabled' : ''}>${S.equipo.length >= MAX_EQUIPO ? 'Equipo lleno' : 'Sumar al equipo'}</button>
+       <button class="btn btn-2" data-renombrar="casa:${i}">Cambiar nombre</button>`); }).join('')
       : '<div class="vacio">Acá viven las criaturas que no entran en tu equipo.</div>';
   } else if(t === 'medallas'){
     const n = cantMedallas();
@@ -652,6 +678,10 @@ function pintarEquipo(){
     if(S.equipo.length <= 1) return;
     const [c] = S.equipo.splice(+b.dataset.acasa, 1); S.reserva.push(c); guardar(); pintarEquipo();
     if(MW) MW.imgLider = null;
+  });
+  v.querySelectorAll('[data-renombrar]').forEach(b => b.onclick = () => {
+    const [donde, i] = b.dataset.renombrar.split(':'), c = (donde === 'casa' ? S.reserva : S.equipo)[+i];
+    if(c) renombrarCriatura(c);
   });
   v.querySelectorAll('[data-alequipo]').forEach(b => b.onclick = () => {
     if(S.equipo.length >= MAX_EQUIPO) return;

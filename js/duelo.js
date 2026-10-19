@@ -12,7 +12,7 @@ function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = M
 function enviarMapa(payload){ const c = (typeof ONG !== 'undefined' && ONG.canal && ONG.listo) ? ONG.canal : ON.canal; if(c) c.send({type: 'broadcast', event: 'duelo', payload: {...payload, de: usuarioId, apodo}}); }
 const puedeDuelo = () => (vista === 'mundo' || (vista === 'casa' && S.mundo)) && !DU && !(MW && MW.dlg);
 
-const POR_DUELO = 3;
+const POR_DUELO = 3, OBJ_DUELO = 3;
 function todasMisCriaturas(){ return [...S.equipo, ...S.reserva]; }
 function paraDuelo(c){ return {esp: c.esp, nombre: String(c.nombre).slice(0, 16), nivel: c.nivel, stats: {...c.stats}, tipo: tipoDe(c.esp), shiny: !!c.shiny, movs: movsDe(c), ppExtra: {...(c.ppExtra || {})}}; }
 // Si no llegás a elegir a tiempo, van las 3 de más nivel.
@@ -22,18 +22,18 @@ function equipoDuelo(){
 
 /* ---------------- Elegir las 3 criaturas del duelo ---------------- */
 // Devuelve la lista elegida (en orden de salida), o null si cancelás.
-function elegirParaDuelo(rival, segundos, alVencer){
+function elegirParaDuelo(rival, segundos, alVencer, tope = POR_DUELO){
   return new Promise(res => {
     hojaActual = 'elegir-duelo';
     const v = nuevoVelo(false);
-    const todas = todasMisCriaturas(), meta = Math.min(POR_DUELO, todas.length);
+    const todas = todasMisCriaturas(), meta = Math.max(1, Math.min(POR_DUELO, tope, todas.length));
     const elegidas = [];
     let quedan = segundos, cerrado = false;
     const terminar = lista => { if(cerrado) return; cerrado = true; clearInterval(reloj); cerrarHoja(); res(lista); };
     const pintar = () => {
       v.innerHTML = `<div class="hoja hoja-elegir" role="dialog" aria-label="Elegí tus criaturas">
         <div class="hoja-cab"><h2>Elegí ${meta} para el duelo</h2><span class="reloj-duelo" id="ed-reloj">${quedan}s</span></div>
-        <p class="rotulo-chico">Contra <b id="ed-rival"></b>. Tocá en el orden en que van a salir: la 1 arranca la pelea. Todas pelean con la vida llena.</p>
+        <p class="rotulo-chico">Contra <b id="ed-rival"></b>${meta < POR_DUELO ? ` (duelo ${meta} contra ${meta})` : ''}. Tocá en el orden en que van a salir: la 1 arranca la pelea. Todas pelean con la vida llena.</p>
         <div class="grilla-elegir">${todas.map((c, i) => {
           const n = elegidas.indexOf(i);
           return `<button class="elegible${n >= 0 ? ' elegida' : ''}${c.shiny ? ' es-shiny' : ''}" data-i="${i}" style="--tipo:${TIPOS[tipoDe(c.esp)].color}">
@@ -93,7 +93,7 @@ async function pedirDuelo(o){
   if(!equipo) return;
   if(DU || ON.pedido) return;
   ON.pedido = {para: o.id, apodo: o.apodo, equipo};
-  enviarMapa({tipo: 'pedido', para: o.id, nivel: nivelEntrenador()});
+  enviarMapa({tipo: 'pedido', para: o.id, nivel: nivelEntrenador(), cuantas: equipo.length});
   avisar(`Le pediste un duelo a ${o.apodo}. Esperando respuesta...`);
   esperarRespuesta(o.id, o.apodo, 25000);
 }
@@ -110,7 +110,8 @@ function recibirDuelo(p){
     mostrarPedido(p);
   } else if(p.tipo === 'acepta'){
     if(!ON.pedido || ON.pedido.para !== p.de) return;
-    const propio = ON.pedido.equipo || equipoDuelo();
+    // Pelean tantas como tenga el que menos tiene.
+    const propio = (ON.pedido.equipo || equipoDuelo()).slice(0, Math.max(1, (p.equipo || []).length || POR_DUELO));
     ON.pedido = null; clearTimeout(ON.timerPedido);
     if(!puedeDuelo()){ enviarMapa({tipo: 'cancelado', para: p.de}); avisar('No pudiste arrancar el duelo porque estabas ocupado'); return; }
     DU = {lado: 'A', sala: p.sala, seed: p.seed | 0, rival: {id: p.de, apodo: p.apodo}};
@@ -133,6 +134,7 @@ function recibirDuelo(p){
   }
 }
 
+function cuantasDuelo(p){ return Math.max(1, Math.min(POR_DUELO, todasMisCriaturas().length, (p.cuantas | 0) || POR_DUELO)); }
 function mostrarPedido(p){
   hojaActual = 'pedido-duelo';
   let velo = $('#velo');
@@ -141,7 +143,7 @@ function mostrarPedido(p){
   velo.innerHTML = `<div class="hoja" role="dialog" aria-label="Pedido de duelo">
     <div class="hoja-cab"><h2>¡Te desafían!</h2></div>
     <p class="pedido-txt"><b id="pd-nom"></b> (nivel ${p.nivel | 0})${typeof esAmigo === 'function' && esAmigo(p.de) ? ', tu amigo,' : ''} quiere pelear un duelo con vos.</p>
-    <p class="rotulo-chico">Duelo 3 contra 3: si aceptás, elegís tus 3 criaturas. Arrancan con toda la vida, no se usan objetos y tu equipo no se cansa.</p>
+    <p class="rotulo-chico">Duelo ${cuantasDuelo(p)} contra ${cuantasDuelo(p)}: si aceptás, elegís tus criaturas. Arrancan con toda la vida, cada uno puede usar hasta ${OBJ_DUELO} jarabes y tu equipo no se cansa.</p>
     <div class="acciones-jugador"><button class="grande" id="pd-si">Aceptar</button><button class="btn btn-2" id="pd-no">Ahora no</button></div></div>`;
   $('#pd-nom').textContent = p.apodo;
   let respondido = false;
@@ -149,7 +151,7 @@ function mostrarPedido(p){
     if(respondido) return; respondido = true; cerrarHoja();
     if(!si){ enviarMapa({tipo: 'rechazo', para: p.de}); return; }
     enviarMapa({tipo: 'eligiendo', para: p.de});
-    const equipo = await elegirParaDuelo(p.apodo, 30, true);
+    const equipo = await elegirParaDuelo(p.apodo, 30, true, cuantasDuelo(p));
     if(!equipo || !puedeDuelo()){ enviarMapa({tipo: 'rechazo', para: p.de}); return; }
     const sala = 'sl:duelo:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const seed = Math.floor(Math.random() * 2147483647);
@@ -170,14 +172,15 @@ function empezarDuelo(equipoA, equipoB){
   cerrarHoja();
   vista = 'duelo';
   Object.assign(DU, {st: {A: armarLado(equipoA), B: armarLado(equipoB)}, turno: 1, mias: {}, suyas: {}, ocupado: false, fin: false,
-                     ultimaActividad: Date.now()});
+                     ultimaActividad: Date.now(), eqA: equipoA, eqB: equipoB, objUsados: 0});
   DU.otro = DU.lado === 'A' ? 'B' : 'A';
   if(typeof registrarDuelo === 'function') registrarDuelo(DU.sala, DU.rival.id);
-  if(typeof marcarPelea === 'function') marcarPelea('duelo', DU.rival.apodo);
+  if(typeof marcarPelea === 'function') marcarPelea('duelo', DU.rival.apodo, DU.sala);
   const canal = db.channel(DU.sala, {config: {private: true, broadcast: {self: false}}});
   DU.canal = canal;
   canal.on('broadcast', {event: 'accion'}, ({payload}) => recibirAccion(payload))
        .on('broadcast', {event: 'chau'}, ({payload}) => { if(DU && payload.de === DU.rival.id && !DU.fin && !DU.ocupado) rivalSeFue(); })
+       .on('broadcast', {event: 'mirar'}, ({payload}) => contarleAlQueMira(payload))
        .subscribe();
   DU.reenvio = setInterval(reenviar, 2500);
   pintarDuelo();
@@ -235,9 +238,10 @@ function menuDuelo(tipo){
   m.className = 'menu-combate grilla-2';
   if(tipo === 'principal'){
     $('#t-combate').textContent = `¿Qué hace ${yo.nombre}?`;
-    m.innerHTML = `<button class="mc-pelear" data-a="pelear">Pelear</button><button data-a="equipo">Equipo</button>
+    m.innerHTML = `<button class="mc-pelear" data-a="pelear">Pelear</button><button data-a="mochila">Mochila</button><button data-a="equipo">Equipo</button>
                    <button class="mc-volver" data-a="rendirse">Rendirse</button>`;
     m.querySelector('[data-a=pelear]').onclick = () => menuDuelo('pelear');
+    m.querySelector('[data-a=mochila]').onclick = () => menuDuelo('mochila');
     m.querySelector('[data-a=equipo]').onclick = () => menuDuelo('equipo');
     m.querySelector('[data-a=rendirse]').onclick = () => menuDuelo('rendirse');
   } else if(tipo === 'pelear'){
@@ -258,6 +262,19 @@ function menuDuelo(tipo){
         <span class="mc-eq-txt"><b></b><small>Nv ${x.nivel} · ${x.hp <= 0 ? 'Debilitado' : x.hp + '/' + x.max}${i === lado.i ? ' · Peleando' : ''}</small></span></button>`).join('')
       + `<button class="mc-volver" data-v>Volver</button>`;
     m.querySelectorAll('[data-i]').forEach((b, k) => { b.querySelector('b').textContent = lado.lista[k].nombre; b.onclick = () => elegirDuelo({tipo: 'cambio', i: +b.dataset.i}); });
+    m.querySelector('[data-v]').onclick = () => menuDuelo('principal');
+  } else if(tipo === 'mochila'){
+    const quedan = OBJ_DUELO - (DU.objUsados || 0), lleno = yo.hp >= yo.max;
+    const objs = OBJETOS.filter(o => o.cura && S.inv.objetos[o.id] > 0);
+    $('#t-combate').textContent = quedan > 0 ? `Podés usar ${quedan} jarabe${quedan > 1 ? 's' : ''} más en este duelo.` : 'Ya usaste todos los jarabes de este duelo.';
+    m.innerHTML = (objs.length ? objs.map(o => `<button data-o="${o.id}" class="mc-obj" ${quedan <= 0 || lleno ? 'disabled' : ''}>${iconoObjeto(o, 30)}<span><b>${o.nom}</b><small>Tenés ${S.inv.objetos[o.id]}${lleno ? ' · Vida llena' : ''}</small></span></button>`).join('')
+      : `<p class="mc-vacio">No tenés jarabes. Comprá en el Market.</p>`) + `<button class="mc-volver" data-v>Volver</button>`;
+    m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
+      const o = OBJETOS.find(x => x.id === b.dataset.o);
+      if(!o || !(S.inv.objetos[o.id] > 0) || (DU.objUsados || 0) >= OBJ_DUELO) return;
+      S.inv.objetos[o.id]--; DU.objUsados = (DU.objUsados || 0) + 1; guardar();
+      elegirDuelo({tipo: 'curar', obj: o.id});
+    });
     m.querySelector('[data-v]').onclick = () => menuDuelo('principal');
   } else if(tipo === 'rendirse'){
     $('#t-combate').textContent = '¿Seguro que te rendís?';
@@ -329,6 +346,14 @@ function resolverTurno(st, acc, rnd){
       if(dest && dest.hp > 0 && (a.i | 0) !== st[l].i){ st[l].i = a.i | 0; ev.push({t: 'cambio', lado: l, i: st[l].i}); }
     }
   }
+  for(const l of ['A', 'B']){
+    const a = acc[l]; if(a.tipo !== 'curar') continue;
+    const o = OBJETOS.find(x => x.id === a.obj && x.cura), c = st[l].lista[st[l].i];
+    st[l].curas = (st[l].curas || 0) + 1;
+    if(!o || !c || c.hp <= 0 || st[l].curas > OBJ_DUELO) continue;
+    c.hp = Math.min(c.max, c.hp + o.cura);
+    ev.push({t: 'cura', lado: l, obj: o.id, hp: c.hp});
+  }
   const atacan = ['A', 'B'].filter(l => acc[l].tipo === 'atacar').map(l => ({l, i: st[l].i}));
   const vel = x => st[x.l].lista[x.i].stats.velocidad;
   atacan.sort((x, y) => vel(y) - vel(x) || 0);
@@ -380,6 +405,9 @@ async function reproducir(eventos){
     } else if(e.t === 'cambio'){
       dibujarBichosDuelo(); animar(idB, 'sale', 400);
       await mensaje(mio ? `¡Dale, ${actDu(e.lado).nombre}!` : `${DU.rival.apodo} sacó a ${actDu(e.lado).nombre}.`, 1000);
+    } else if(e.t === 'cura'){
+      animar(idB, 'sale', 400); fichasDuelo();
+      await mensaje(`${nomDu(e.lado)} tomó ${OBJETOS.find(o => o.id === e.obj).nom} y recuperó vida.`, 1100);
     } else if(e.t === 'rinde'){
       await mensaje(mio ? 'Te rendiste.' : `${DU.rival.apodo} se rindió.`, 1100);
     }

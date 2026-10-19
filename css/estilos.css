@@ -701,3 +701,7 @@ svg .aura-chispa{animation:auraChispa 2s ease-in-out infinite;transform-box:fill
 .tq-anim .tq-carta:last-child{animation:tqDer 1s ease-in-out}
 @keyframes tqIzq{0%{transform:translateX(150px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
 @keyframes tqDer{0%{transform:translateX(-150px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+/* Cambiar nombre de una criatura */
+.form-renombrar{display:flex;flex-direction:column;gap:8px;padding:4px 2px}
+.form-renombrar label{font-weight:800}
+.form-renombrar input{width:100%;padding:10px 12px;border:2.5px solid var(--tinta);border-radius:12px;font:inherit;font-weight:700;font-size:1.05rem;background:#fff}
