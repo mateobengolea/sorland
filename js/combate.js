@@ -23,7 +23,29 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 
 const ARENAS = {pradera:'pradera', bosque:'bosque', rio:'rio', costa:'rio', sierras:'sierras', serrania:'sierras', cumbres:'cumbres', volcan:'volcan',
   bosquepanal:'bosque', lomasventosas:'pradera', vallehelado:'cumbres', cueva:'sierras'};
+/* ---------------- Dificultad progresiva ----------------
+   Los niveles de los datos (zonas, entrenadores, líderes y Cuartel) se estiran
+   para que la curva suba de a poco y el Cuartel Supremo quede en 55-70. */
+const CURVA_NIVEL = [[1, 1], [5, 5], [9, 10], [12, 15], [14, 20], [16, 25], [18, 31], [20, 37], [22, 43], [25, 49], [29, 55], [36, 70]];
+function nivelProgresivo(n){
+  n = +n || 1;
+  const C = CURVA_NIVEL, u = C[C.length - 1];
+  if(n >= u[0]) return Math.min(100, Math.round(u[1] + (n - u[0])));
+  for(let k = 1; k < C.length; k++){
+    const [x0, y0] = C[k - 1], [x1, y1] = C[k];
+    if(n <= x1) return Math.max(1, Math.round(y0 + (n - x0) * (y1 - y0) / (x1 - x0)));
+  }
+  return n;
+}
+function escalarRival(r){
+  if(!r || r.escalado || !ESPECIES[r.esp]) return r;
+  const n = nivelProgresivo(r.nivel);
+  if(n !== r.nivel){ r.nivel = n; r.stats = statsPorNivel(ESPECIES[r.esp].base, n); r.hp = vidaMax(r.stats, n); }
+  r.escalado = true;
+  return r;
+}
 function empezarCombate(rivales, zona, ent){
+  rivales.forEach(escalarRival);
   vista = 'combate';
   if(typeof marcarPelea === 'function') marcarPelea('combate');
   cerrarHoja();
@@ -322,6 +344,13 @@ async function ganarCombate(){
   const ganan = [...B.peleo].map(i => B.lista[i]).filter(l => l && l.hp > 0);
   if(!ganan.includes(yo) && yo.hp > 0) ganan.unshift(yo);
   for(const l of ganan) await darXP(l, xp);
+  // El resto del equipo que sigue en pie también aprende mirando: un tercio de la experiencia.
+  const miran = B.lista.filter(l => l && l.hp > 0 && !ganan.includes(l));
+  if(miran.length){
+    const parte = Math.max(1, Math.round(xp / 3));
+    await mensaje(`El resto del equipo ganó ${parte} de experiencia mirando.`, 900);
+    for(const l of miran) await darXP(l, parte, true);
+  }
   // ¿El entrenador tiene otra criatura?
   if(B.ent && B.ri < B.rivales.length - 1){
     B.ri++; B.salvaje = B.rivales[B.ri]; B.peleo = new Set([B.i]);
@@ -345,7 +374,7 @@ async function ganarCombate(){
     if(e.cuartel){
       S.cuartel.racha++;
       if(e.campeona){
-        S.cuartel.racha = 0;
+        S.cuartel.racha = 0; S.cuartel.fama = true; S.cuartel.continuar = true;
         const primera = !S.campeon;
         S.campeon = S.campeon || Date.now();
         S.salonFama = S.salonFama || [];
@@ -391,8 +420,8 @@ function mostrarMedalla(m){
   const arena = document.querySelector('.arena'); if(arena) arena.appendChild(d);
 }
 
-async function darXP(l, xp){
-  await mensaje(`${l.nombre} ganó ${xp} de experiencia.`, 800);
+async function darXP(l, xp, callado){
+  if(!callado) await mensaje(`${l.nombre} ganó ${xp} de experiencia.`, 800);
   const c = l.ref; asegurarMovs(c);
   const nivelAntes = c.nivel;
   c.xp = (c.xp || 0) + xp;

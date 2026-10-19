@@ -38,7 +38,7 @@ function sumarEntrenador(M, id, x, y, ...resto){
   M.npc(entrenador(id, p[0], p[1], ...resto));
 }
 function regalarCriatura(esp, nivel, extra = {}){
-  const c = nuevaCriatura(esp, nivel, extra);
+  const c = nuevaCriatura(esp, typeof nivelProgresivo === 'function' ? nivelProgresivo(nivel) : nivel, extra);
   const enEquipo = S.equipo.length < MAX_EQUIPO;
   if(enEquipo) S.equipo.push(c); else S.reserva.push(c);
   S.album.vistos[esp] = true; S.album.capt[esp] = (S.album.capt[esp] || 0) + 1; if(c.shiny) S.album.shiny[esp] = true;
