@@ -312,9 +312,10 @@ function pintarHoja(){
       let btn;
       if(bloq) btn = `<button class="btn" disabled>Con ${it.medallas} medalla${it.medallas > 1 ? 's' : ''}</button>`;
       else if(tiene) btn = `<button class="btn" disabled>Ya lo tenés</button>`;
+      else if(it.limiteDia && compradosHoy(it.id) >= it.limiteDia) btn = `<button class="btn" disabled>Agotado por hoy</button>`;
       else btn = `<button class="btn" data-comprar="${it.id}" ${S.monedas < it.precio ? 'disabled' : ''}>${S.monedas < it.precio ? 'No alcanza' : 'Comprar'}</button>`;
       const muestra = t === 'fondos' ? muestraFondo(it) : `<span class="em" style="${bloq ? 'filter:grayscale(1);opacity:.5' : ''}">${iconoItem(it)}</span>`;
-      const cant = t === 'aventura' ? `<p class="precio" style="margin:0">Tenés ${S.inv.objetos[it.id] || 0}</p>` : '';
+      const cant = t === 'aventura' ? `<p class="precio" style="margin:0">Tenés ${S.inv.objetos[it.id] || 0}${it.limiteDia ? ` · Quedan ${Math.max(0, it.limiteDia - compradosHoy(it.id))} hoy` : ''}</p>` : '';
       return `<div class="item">${muestra}<h3>${it.nom}</h3><p>${it.desc}</p>${cant}<span class="precio"><span class="moneda">$</span>${it.precio}</span>${btn}</div>`;
     }).join('');
   } else {
@@ -473,9 +474,12 @@ function elegirAprendiz(mov){
   v.querySelector('.cerrar').onclick = cerrarHoja;
   v.querySelector('#ap-despues').onclick = cerrarHoja;
 }
+// Algunos objetos tienen stock por día (por ejemplo, el caramelo que sube de nivel).
+function compradosHoy(id){ const d = new Date().toDateString(); if(!S.compras || S.compras.dia !== d) S.compras = {dia: d}; return S.compras[id] || 0; }
 function comprar(id){
   const it = POR_ID[id];
   if(S.monedas < it.precio || bloqueado(it)) return;
+  if(it.limiteDia){ if(compradosHoy(id) >= it.limiteDia){ avisar('Se agotó por hoy. Mañana hay más.'); return; } S.compras[id] = compradosHoy(id) + 1; }
   S.monedas -= it.precio;
   if(OBJETOS.includes(it)) S.inv.objetos[id] = (S.inv.objetos[id] || 0) + 1;
   else if(MUEBLES.includes(it)) S.inv.muebles[id] = (S.inv.muebles[id] || 0) + 1;

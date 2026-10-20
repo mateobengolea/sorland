@@ -48,7 +48,7 @@ const PIEDRAS = [
   {id: 'piedra_hielo', nom: 'Piedra Escarcha', colores: ['#7EC0E8', '#FFFFFF']},
   {id: 'piedra_viento', nom: 'Piedra Pluma', colores: ['#B9D7F2', '#FFFFFF']},
 ];
-for(const p of PIEDRAS) OBJETOS.push({...p, precio: 1200, medallas: 5, usa: 'piedra', icono: 'piedra', tipoObj: 'cura', enCombate: false,
+for(const p of PIEDRAS) OBJETOS.push({...p, precio: 3000, medallas: 5, usa: 'piedra', icono: 'piedra', tipoObj: 'cura', enCombate: false,
   desc: 'Una piedra que brilla. Si la toca un Cachorrín, evoluciona.'});
 OBJETOS.push({id: 'cana', nom: 'Caña de pescar', precio: 0, medallas: 99, usa: 'cana', icono: 'cana', clave: true, tipoObj: 'cura', enCombate: false, colores: ['#8A5A35', '#E2574C'],
   desc: 'Mirando al agua, usala para pescar. Salen peces chicos.'});

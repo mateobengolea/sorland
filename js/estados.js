@@ -49,7 +49,7 @@ for(const e of Object.values(ESPECIES)){
   e.aprende = [...e.aprende, [24, m]].sort((a, b) => a[0] - b[0]);
 }
 // Objeto que cura cualquier estado.
-OBJETOS.push({id: 'yuyos', nom: 'Té de yuyos', precio: 90, medallas: 1, usa: 'estado', icono: 'taza', enCombate: true, tipoObj: 'cura', colores: ['#7CC46A', '#FFF3B0'],
+OBJETOS.push({id: 'yuyos', nom: 'Té de yuyos', precio: 150, medallas: 2, usa: 'estado', icono: 'taza', enCombate: true, tipoObj: 'cura', colores: ['#7CC46A', '#FFF3B0'],
   desc: 'Cura quemaduras, sueño, parálisis, congelamiento y confusión. Sirve en combate.'});
 
 function aplicarEstado(d, estado, rnd = Math.random){
